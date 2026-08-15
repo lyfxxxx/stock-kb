@@ -467,6 +467,7 @@ SQLite 主要表：
   `D:\workspace\analysis-notes\百胜中国\2026-08-09-百胜中国-笔记.md`
 - 笔记审计：`python tools/audit_notes.py` 已通过（两篇笔记关键数字与数据库交叉验证一致）
 - 版本管理：2026-08-15 初始化 Git 仓库并完成首次提交；`data/`、`models/`、日志与 pid 由 `.gitignore` 排除，不入库
+- GitHub 远端：`https://github.com/lyfxxxx/stock-kb`（私有仓库，2026-08-15 创建并完成首次推送，默认分支 master）
 
 ### 评测结果（top_k=5）
 
@@ -485,7 +486,6 @@ SQLite 主要表：
 
 ### 待办（下一阶段）
 
-- 创建 GitHub 远端仓库并推送代码，建立远端备份与协作流程（gh CLI 需重新认证）；
 - 补充 end2end 类题目的人工判定与更多 ground truth；
 - 可选继续对比 jina-zh / reranker（BGE-M3 已完成对比；reranker 下载曾被打断，待你确认后再继续）；
 - 用 `stock-note` skill 端到端复跑两篇笔记并人工审核；
