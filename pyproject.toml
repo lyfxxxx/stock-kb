@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stock-kb"
+version = "0.1.0"
+description = "财报知识库：NAS 财报/研报解析、索引、检索与笔记生成"
+requires-python = ">=3.11"
+dependencies = [
+    "pdfplumber>=0.11",
+    "xlrd>=2.0.1",
+    "pandas>=2.0",
+    "PyYAML>=6.0",
+    "opencc-python-reimplemented>=0.1.7",
+    "fastembed>=0.8",
+    "sqlite-vec>=0.1.6",
+    "mcp>=1.0,<2",
+]
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.0"]
+ml = ["sentence-transformers>=3.0", "onnxruntime>=1.18", "sqlite-vec>=0.1.6"]
+gpu = ["torch>=2.6", "sentence-transformers>=3.0"]
+
+[project.scripts]
+stock-kb = "stock_kb.cli:main"
+
+[tool.setuptools]
+packages = ["stock_kb", "stock_kb.parsers"]

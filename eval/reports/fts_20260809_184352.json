@@ -1,0 +1,484 @@
+{
+  "top_k": 5,
+  "model": null,
+  "summary": {
+    "exact": {
+      "n": 6,
+      "recall_at_k": 0.0,
+      "hit_at_1": 0.0,
+      "mrr": 0.0
+    },
+    "keyword": {
+      "n": 6,
+      "recall_at_k": 0.0,
+      "hit_at_1": 0.0,
+      "mrr": 0.0
+    },
+    "semantic": {
+      "n": 6,
+      "recall_at_k": 0.0,
+      "hit_at_1": 0.0,
+      "mrr": 0.0
+    },
+    "cross": {
+      "n": 6,
+      "recall_at_k": 0.0,
+      "hit_at_1": 0.0,
+      "mrr": 0.0
+    },
+    "end2end": {
+      "n": 4,
+      "recall_at_k": 0.0,
+      "hit_at_1": 0.0,
+      "mrr": 0.0
+    }
+  },
+  "results": [
+    {
+      "id": "exact-01",
+      "type": "exact",
+      "question": "海底捞 2018 年营业收入是多少？",
+      "company": "海底捞",
+      "expected": [
+        {
+          "file": "2018年报.pdf",
+          "page": 158
+        }
+      ],
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "exact-02",
+      "type": "exact",
+      "question": "海底捞 2024 年营业收入是多少？",
+      "company": "海底捞",
+      "expected": [
+        {
+          "file": "2024年报.pdf",
+          "page": 142
+        }
+      ],
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "exact-03",
+      "type": "exact",
+      "question": "百胜中国 2023 年净利润是多少？",
+      "company": "百胜中国",
+      "expected": [
+        {
+          "file": "百胜中国_2023_Annual_Report.pdf",
+          "page": 109
+        }
+      ],
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "exact-04",
+      "type": "exact",
+      "question": "海底捞 2025 年上半年经营现金流情况",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "exact-05",
+      "type": "exact",
+      "question": "百胜中国 2024 年总资产",
+      "company": "百胜中国",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "exact-06",
+      "type": "exact",
+      "question": "海底捞 2023 年分红方案",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "keyword-01",
+      "type": "keyword",
+      "question": "翻台率",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": [
+        {
+          "company": "海底捞",
+          "title": "海底捞研报-国信-202502",
+          "page": 19
+        },
+        {
+          "company": "海底捞",
+          "title": "研报-国信证券-2025-火锅主业热辣滚烫",
+          "page": 19
+        },
+        {
+          "company": "海底捞",
+          "title": "研报-国信证券-2021-阿米巴模式师徒制",
+          "page": 23
+        },
+        {
+          "company": "海底捞",
+          "title": "海底捞研报-国信-202502",
+          "page": 20
+        },
+        {
+          "company": "海底捞",
+          "title": "研报-国信证券-2025-火锅主业热辣滚烫",
+          "page": 20
+        }
+      ]
+    },
+    {
+      "id": "keyword-02",
+      "type": "keyword",
+      "question": "同店销售",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": [
+        {
+          "company": "海底捞",
+          "title": "研报-国信证券HK-2021-餐饮业复苏中",
+          "page": 4
+        },
+        {
+          "company": "海底捞",
+          "title": "研报-浦银国际-2024-翻台率估值承压",
+          "page": 5
+        },
+        {
+          "company": "海底捞",
+          "title": "研报-东吴证券-2019-管理体系深度解析",
+          "page": 22
+        },
+        {
+          "company": "海底捞",
+          "title": "2019中报",
+          "page": 15
+        },
+        {
+          "company": "海底捞",
+          "title": "2019年报",
+          "page": 21
+        }
+      ]
+    },
+    {
+      "id": "keyword-03",
+      "type": "keyword",
+      "question": "门店净增",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": [
+        {
+          "company": "海底捞",
+          "title": "海底捞研报-国信-202502",
+          "page": 9
+        },
+        {
+          "company": "海底捞",
+          "title": "研报-国信证券-2025-火锅主业热辣滚烫",
+          "page": 9
+        },
+        {
+          "company": "海底捞",
+          "title": "研报-招银证券-2024-2024H1业绩点评",
+          "page": 2
+        },
+        {
+          "company": "海底捞",
+          "title": "研报-平安证券-2022-中报点评疫情关店承压",
+          "page": 1
+        },
+        {
+          "company": "海底捞",
+          "title": "研报-国信证券-2021-阿米巴模式师徒制",
+          "page": 22
+        }
+      ]
+    },
+    {
+      "id": "keyword-04",
+      "type": "keyword",
+      "question": "减值",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": [
+        {
+          "company": "海底捞",
+          "title": "2018年报",
+          "page": 177
+        },
+        {
+          "company": "海底捞",
+          "title": "2018年报",
+          "page": 180
+        },
+        {
+          "company": "海底捞",
+          "title": "2018年报",
+          "page": 184
+        },
+        {
+          "company": "海底捞",
+          "title": "2018年报",
+          "page": 187
+        },
+        {
+          "company": "海底捞",
+          "title": "2018年报",
+          "page": 195
+        }
+      ]
+    },
+    {
+      "id": "keyword-05",
+      "type": "keyword",
+      "question": "外卖占比",
+      "company": "百胜中国",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": [
+        {
+          "company": "百胜中国",
+          "title": "国信证券_百胜中国_同店销售增速重新转正",
+          "page": 2
+        },
+        {
+          "company": "百胜中国",
+          "title": "国信证券_百胜中国_同店销售增速重新转正",
+          "page": 1
+        },
+        {
+          "company": "百胜中国",
+          "title": "海通国际_百胜中国_2025Q2经营利润创新高",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "id": "keyword-06",
+      "type": "keyword",
+      "question": "资本开支",
+      "company": "百胜中国",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": [
+        {
+          "company": "百胜中国",
+          "title": "华源证券研报",
+          "page": 1
+        },
+        {
+          "company": "百胜中国",
+          "title": "百胜中国_招股书_中文版",
+          "page": 332
+        },
+        {
+          "company": "百胜中国",
+          "title": "百胜中国_招股书_中文版",
+          "page": 302
+        },
+        {
+          "company": "百胜中国",
+          "title": "国信证券_百胜中国_2024Q3经营数据改善",
+          "page": 3
+        },
+        {
+          "company": "百胜中国",
+          "title": "国信证券_百胜中国_同店销售增速重新转正",
+          "page": 5
+        }
+      ]
+    },
+    {
+      "id": "semantic-01",
+      "type": "semantic",
+      "question": "海底捞的现金流质量怎么样？",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "semantic-02",
+      "type": "semantic",
+      "question": "海底捞的扩张策略是什么？",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "semantic-03",
+      "type": "semantic",
+      "question": "百胜中国的成本管控措施",
+      "company": "百胜中国",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "semantic-04",
+      "type": "semantic",
+      "question": "海底捞翻台率变化趋势",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "semantic-05",
+      "type": "semantic",
+      "question": "百胜中国的门店增长来自哪里",
+      "company": "百胜中国",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "semantic-06",
+      "type": "semantic",
+      "question": "海底捞的员工激励方式",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "cross-01",
+      "type": "cross",
+      "question": "百胜中国 2023 年净利润是多少？",
+      "company": "百胜中国",
+      "expected": [
+        {
+          "file": "百胜中国_2023_Annual_Report.pdf",
+          "page": 109
+        }
+      ],
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "cross-02",
+      "type": "cross",
+      "question": "Yum China same-store sales trend",
+      "company": "百胜中国",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "cross-03",
+      "type": "cross",
+      "question": "海底捞 net profit 2024",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "cross-04",
+      "type": "cross",
+      "question": "百胜中国股息分红情况",
+      "company": "百胜中国",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "cross-05",
+      "type": "cross",
+      "question": "Haidilao restaurant count by year",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "cross-06",
+      "type": "cross",
+      "question": "2025 Annual Report revenue",
+      "company": "百胜中国",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "end2end-01",
+      "type": "end2end",
+      "question": "写海底捞笔记需要的三张表和经营数据",
+      "company": "海底捞",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "end2end-02",
+      "type": "end2end",
+      "question": "写百胜中国笔记需要的中英文年报与研报",
+      "company": "百胜中国",
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "end2end-03",
+      "type": "end2end",
+      "question": "海底捞与百胜中国同行对比的关键指标",
+      "company": null,
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    },
+    {
+      "id": "end2end-04",
+      "type": "end2end",
+      "question": "估值推演需要哪些材料和假设",
+      "company": null,
+      "expected": null,
+      "hit": false,
+      "rank": null,
+      "top_hits": []
+    }
+  ]
+}

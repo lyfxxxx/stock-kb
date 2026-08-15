@@ -1,0 +1,31 @@
+nas:
+  root: '\\Dxp4800-1305\财报&研报'
+  companies:
+    - "海底捞"
+    - "百胜中国"
+  read_only: true
+  exclude_dirs:
+    - "#recycle"
+
+data_dir: "data"
+db_path: "data/stock_kb.db"
+models_dir: "models"
+
+ocr:
+  enabled: true
+  langs: "chi_sim+eng"
+  min_chars: 80
+
+embedding:
+  # 初选默认，最终由评测决定
+  model: "BAAI/bge-small-zh-v1.5"
+  device: "cuda"
+  backend: "sentence-transformers"
+
+mcp:
+  host: "127.0.0.1"
+  port: 8931
+
+eval:
+  questions: "eval/questions.yaml"
+  top_k: 5

@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 运行时数据（不提交，属数据而非源码）
+data/
+models/
+
+# 日志与进程文件
+*.log
+*.pid
+
+# 本地环境
+.env
+.env.*
