@@ -2,6 +2,7 @@
 
 > 状态：方案稿（待你确认后开工）
 > 生成日期：2026-08-09
+> 最近更新：2026-08-15
 
 ## 1. 目标
 
@@ -450,20 +451,22 @@ SQLite 主要表：
 5. 制作 `stock-note` skill 并生成两篇试点笔记；
 6. 你审核笔记后，再迁移 Docker 并接入 Hermes Agent。
 
-## 15. 当前实施状态（2026-08-09）
+## 15. 当前实施状态（2026-08-15）
 
 ### 已完成（本机试点）
 
-- 项目骨架与 CLI：`scan / search / stats / eval / index / indicators / reclassify / reparse-statements / mcp`
+- 项目骨架与 CLI：`scan / search / stats / eval / index / indicators / reclassify / reparse-statements / mcp / models download`
 - 全量入库：60 份报告（海底捞 34 + 百胜中国 26）、8,128 页、8,718 条三表行项目、133 条指标
-- 检索：FTS5（trigram + 繁简归一化）+ 向量索引（bge-small-zh 与多语言 MiniLM；已从整页嵌入升级为段落分块嵌入，使用 sentence-transformers + CUDA）
+- 检索：FTS5（trigram + 繁简归一化）+ 向量索引（bge-small-zh、多语言 MiniLM、BGE-M3；已从整页嵌入升级为约 800 字/块的段落分块嵌入，使用 sentence-transformers + CUDA）
 - 评测：`eval/questions.yaml`（28 题，含 exact/keyword/semantic/cross/end2end）+ 自动评分与报告
 - MCP：7 个只读工具，stdio + Streamable HTTP 双传输，HTTP 支持 Bearer token 鉴权；stdio 与 HTTP 均已端到端验证
 - 增量扫描：`scan --watch-interval 秒数` 开关，默认关闭
+- 模型下载：`models download` 支持 hf-mirror 镜像 + hf_transfer 多线程 + snapshot_download 断点续传；缓存完整后离线加载可用
 - Skill：`stock-note` 已复制到 `C:\Users\89462\.codex\skills\stock-note`，可整体移植
 - 试点笔记：`D:\workspace\analysis-notes\海底捞\2026-08-09-海底捞-笔记.md` 与
   `D:\workspace\analysis-notes\百胜中国\2026-08-09-百胜中国-笔记.md`
 - 笔记审计：`python tools/audit_notes.py` 已通过（两篇笔记关键数字与数据库交叉验证一致）
+- 版本管理：2026-08-15 初始化 Git 仓库并完成首次提交；`data/`、`models/`、日志与 pid 由 `.gitignore` 排除，不入库
 
 ### 评测结果（top_k=5）
 
@@ -482,8 +485,8 @@ SQLite 主要表：
 
 ### 待办（下一阶段）
 
+- 创建 GitHub 远端仓库并推送代码，建立远端备份与协作流程（gh CLI 需重新认证）；
 - 补充 end2end 类题目的人工判定与更多 ground truth；
 - 可选继续对比 jina-zh / reranker（BGE-M3 已完成对比；reranker 下载曾被打断，待你确认后再继续）；
-- 模型下载已支持镜像 + hf_transfer 加速：`python -m stock_kb models download --model <ID>`
 - 用 `stock-note` skill 端到端复跑两篇笔记并人工审核；
 - 迁移 Docker 到 DXP-4800、接入 Hermes Agent；

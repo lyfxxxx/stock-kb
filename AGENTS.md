@@ -19,7 +19,7 @@ NAS 财报/研报 → 解析（pdfplumber/xlrd/OCR 兜底）→ SQLite（页文�
 
 - Windows 11 + Python 3.12.5（`pyproject.toml` 要求 `>=3.11`）。
 - 开发安装：`pip install -e ".[mcp,ml]"`；GPU 嵌入用 `pip install -e ".[gpu]"`（本机 4070 Ti SUPER）。
-- **本项目不是 git 仓库**：没有版本回滚能力，破坏性操作前先备份 `data/stock_kb.db`。
+- **本项目已纳入 Git 版本管理**（2026-08-15 初始化并完成首次提交；`data/`、`models/`、日志与 pid 由 `.gitignore` 排除、不入库）。`data/stock_kb.db` 仍不属于源码，破坏性操作前先备份。
 - 嵌入模型缓存在 `models/`，索引、查询全程离线；`models/`、`data/` 属于数据，不要当源码修改。
 - 语言与文档统一用中文；代码注释/标识符现状为中英混合，新代码跟随所在模块风格。
 
