@@ -39,7 +39,17 @@ def main(argv: list[str] | None = None) -> int:
 
     p_eval = sub.add_parser("eval", help="运行检索评测")
     p_eval.add_argument("--top-k", type=int, default=None)
-    p_eval.add_argument("--model", default=None, help="指定模型时评测混合检索")
+    p_eval.add_argument(
+        "--engine",
+        choices=["fts", "vector", "hybrid"],
+        default=None,
+        help="检索方式；默认：不指定 --model 时为 fts，指定 --model 时为 hybrid",
+    )
+    p_eval.add_argument(
+        "--model",
+        default=None,
+        help="向量/混合检索使用的嵌入模型；未指定时读取 config 的 embedding.model",
+    )
 
     p_index = sub.add_parser("index", help="构建向量索引")
     p_index.add_argument("--model", default="BAAI/bge-small-zh-v1.5")
@@ -136,7 +146,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.cmd == "eval":
-        data = eval_runner.run_eval(cfg, top_k=args.top_k, model=args.model)
+        data = eval_runner.run_eval(
+            cfg, top_k=args.top_k, model=args.model, engine=args.engine
+        )
         report = eval_runner.save_report(cfg, data)
         print(json.dumps(data["summary"], ensure_ascii=False, indent=2))
         print(f"报告：{report}")

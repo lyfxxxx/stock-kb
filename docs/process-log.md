@@ -186,10 +186,23 @@
 - 解决：笔记关键数字全部带“文件 + 页码”；`tools/audit_notes.py` 自动核对笔记文本与数据库三表交叉验证。
 - 教训：交付前用脚本审计，别靠肉眼。
 
+### 27. 评测度量增强：负样本入分 + 检索引擎矩阵 + 行级结构化判定
+
+- 现象：旧评测中负样本只展示不计分；结构化 `hit` 可由不同行的 source/value 拼凑满足；`eval` 只能测 FTS 或 hybrid，无法单独测向量；报告缺少可复现信息。
+- 解决：
+  - `eval_runner.py` 增加 `precision_at_k`、`negative_hit_at_k`、`negative_hit_at_1`、`negative_ranks`，并写入 Markdown 失败明细。
+  - 结构化改为同一行必须同时满足 field/source/page/value，单位与币种先透出可验证状态（DB 当前为空，显示 0/0）。
+  - `run_eval` 增加 `engine`（fts/vector/hybrid），CLI 增加 `--engine`；报告记录题目集 SHA-256、DB size/mtime、耗时。
+  - `eval/manual_review.md` 同步为 8 道 end2end；新增 `eval/OPTIMIZATION_PLAN.md` 记录完整优化计划与本轮结果。
+- 新基线暴露的问题：FTS keyword Neg@5=0.65、cross Neg@1=0.50，说明只拿 Recall 会高估检索质量；hybrid 降低了 keyword Recall 但负样本污染也下降。
+- 教训：先补度量，再调模型；ground truth 仍不独立，单位/币种校验仍需解析器回填后才能硬化。
+
 ## 七、当前已知局限与下一步
 
-- 评测样本少（28 题），ground truth 部分自标注 → 扩集 + 人工审核。
-- end2end 4 题待人工审核（见 `eval/manual_review.md`）。
+- 题库已扩到 80 题，但 cross 纯检索仅 6 题、semantic 无负样本；ground truth 仍部分自标注，独立 PDF golden 未完成。
+- end2end 8 题待人工审核（见 `eval/manual_review.md`）。
+- `statements.unit/currency` 当前全为空，单位/币种自动验证不可用。
+- MCP `search_reports` 仍只暴露 FTS，评测中的 hybrid 收益尚未对线上生效。
 - reranker / jina 对比未完成（reranker 下载曾被打断，可选）。
 - Docker 迁移到 DXP-4800 与 Hermes Agent 接入未开始（NAS 阶段）。
 - 自动扫描开关已实现（`scan --watch-interval`），但未在真实新增文件上验证。

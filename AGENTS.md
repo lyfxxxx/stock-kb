@@ -30,7 +30,8 @@ python -m stock_kb stats --json                  # 入库统计，不访问 NAS�
 python -m stock_kb search "翻台率" --top-k 5 --json           # FTS5 检索
 python -m stock_kb search "现金流质量" --hybrid --json        # 混合检索（需先建向量索引）
 python -m stock_kb eval                              # FTS5 基线评测
-python -m stock_kb eval --model BAAI/bge-small-zh-v1.5        # 混合检索评测
+python -m stock_kb eval --engine vector --model BAAI/bge-small-zh-v1.5   # 向量评测
+python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5   # 混合检索评测
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5       # 增量建向量索引
 python -m stock_kb indicators                       # 重算/写入财务指标
 python -m stock_kb reparse-statements --company 海底捞        # 从已存页文本重算三表（不重读 NAS）
@@ -67,8 +68,8 @@ python tools/test_mcp_http.py                       # 端到端测试
 | `stock_kb/reparse.py` | 从 `pages` 表重新提取三表，无需重新读 PDF |
 | `stock_kb/eval_runner.py` | 评测问题集执行、评分、报告输出 |
 | `stock_kb/serve/mcp_server.py` | FastMCP 服务：7 个只读工具 + HTTP Bearer 鉴权 |
-| `tools/` | 一次性/运维脚本（审计、检查、迁移、下载模型） |
-| `eval/` | `questions.yaml` 评测集、`reports/` 历史报告、人工审核表 |
+| `tools/` | 一次性/运维脚本（审计、检查、迁移、下载模型、生成人工复核底稿） |
+| `eval/` | `questions.yaml` 评测集、`reports/` 历史报告、人工审核表、人工复核工作底稿 |
 | `data/` | SQLite 库、日志、pid 文件（运行时产物） |
 | `models/` | Hugging Face 模型缓存（运行时产物） |
 | `skill/stock-note/` | 可移植的笔记生成 skill |
@@ -159,16 +160,16 @@ python tools/test_mcp_http.py                       # 端到端测试
 
 1. 用 `python -m stock_kb reparse-statements --company <公司>` 验证三表提取（不重读 NAS）；
 2. 页面文本变化时跑 `scan --company <公司> --limit 1` 或单文件脚本验证；
-3. 分块逻辑变化时：备份 DB → 清 `chunks` 与 `embedding_index` → `index --rebuild` → `eval --model <默认模型>` 回归；
+3. 分块逻辑变化时：备份 DB → 清 `chunks` 与 `embedding_index` → `index --rebuild` → `eval --engine hybrid --model <默认模型>` 回归；
 4. 对比 `eval/reports/` 历史基线与当前差异，不劣化才能收尾。
 
 ### 换/新增 embedding 模型
 
-在 `stock_kb/vector.py` 的 `MODEL_DIMS` 登记维度；确认模型已下载到 `models/`；`index --model <ID>`；用 `python -m stock_kb eval --model <ID>` 与 bge-small-zh 基线对比；在 `PLAN.md` 第 15 节记录结论。
+在 `stock_kb/vector.py` 的 `MODEL_DIMS` 登记维度；确认模型已下载到 `models/`；`index --model <ID>`；用 `python -m stock_kb eval --engine hybrid --model <ID>` 与 bge-small-zh 基线对比；在 `PLAN.md` 第 15 节记录结论。
 
 ### 新增评测题
 
-在 `eval/questions.yaml` 追加，字段约定：`type` 取 exact/keyword/semantic/cross/end2end；`expected[].file` 写**不含扩展名**的库内 title 片段，`page` 为页号；exact/cross 可带 `statement` 块走结构化判定；检索类带 `keywords`。加题后分别跑 `eval`（FTS）与 `eval --model`（混合）并人工核对判定。
+在 `eval/questions.yaml` 追加，字段约定：`type` 取 exact/keyword/semantic/cross/end2end；`expected[].file` 写**不含扩展名**的库内 title 片段，`page` 为页号；exact/cross 可带 `statement` 块走结构化判定；检索类带 `keywords`；负样本写 `expected.negatives`（会进入 Neg@k 统计）。加题后分别跑 `eval`（FTS）、`eval --engine vector --model <默认模型>`、`eval --engine hybrid --model <默认模型>` 并人工核对判定。结构化 golden 必须来自 PDF 独立核对，不能直接抄 DB 值。人工复核前先运行 `python tools/make_human_review_worksheet.py` 生成底稿，填写后回写题目。完整计划见 `eval/OPTIMIZATION_PLAN.md`。
 
 ### 更新文档
 
@@ -178,7 +179,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 
 - [ ] `python -m stock_kb stats --json` 正常，数字与改动前一致（除非本意就是改数据）；
 - [ ] `python -m stock_kb search "翻台率" --top-k 5 --json` 返回非空且命中正确；
-- [ ] `python -m stock_kb eval` 与 `python -m stock_kb eval --model BAAI/bge-small-zh-v1.5` 跑通，结果不低于当前基线（exact/keyword/semantic/cross 均为 1.000，见 `PLAN.md` 第 15 节）；
+- [ ] `python -m stock_kb eval` 与 `python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5` 跑通，核心指标不低于当前基线（FTS keyword Recall=0.750、hybrid semantic Recall=0.300、结构化 26/26，见 `PLAN.md` 第 16 节与 `eval/OPTIMIZATION_PLAN.md`），同时新增的 Neg@k 不得劣化；
 - [ ] 涉及三表/笔记时 `python tools/audit_notes.py` 通过；
 - [ ] 涉及 MCP 时 `tools/test_mcp_http.py` 通过（stdio 与 HTTP 至少各验证一次）；
 - [ ] 输出路径、环境变量、新增命令已写进文档。
@@ -198,7 +199,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 ## 12. 当前已知局限 / 待办
 
 - `sources` 表未填充；引用由 MCP 现场计算，够用但不可直接审计。
-- 评测集仅 28 题、部分 ground truth 自标注，样本量小；end2end 待人工审核（`eval/manual_review.md`）。
+- 评测集已扩到 80 题，但 cross 纯检索仅 6 题、ground truth 仍部分自标注；end2end 8 题待人工审核（`eval/manual_review.md`）；单位/币种尚不能自动验证。
 - reranker / jina 对比未完成（可选）。
 - Docker 迁移到 DXP-4800、Hermes Agent 接入尚未开始。
 - `scan --watch-interval` 自动扫描开关已实现但未在真实新增文件上验证。

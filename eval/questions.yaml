@@ -1,234 +1,1433 @@
-# 评测问题集 v0.1
-# type: exact(精确事实) / keyword(关键词) / semantic(语义) / cross(跨语言混合) / end2end(综合分析)
-# expected 中的 file/page 用于自动判定命中；暂缺的可后续补齐
+version: 2
+generated_at: 2026-08-15
+notes: >
+  数据来源为 D:\workspace\stock-kb\data\stock_kb.db（只读查询 reports/pages/statements）。
+  exact/cross 带 statement 的 expected_value 直接取自 statements.value；其余页码经 pages.content
+  核验过关键词或数值线索。数值单位：海底捞为人民币千元，百胜中国为百万美元（statements.unit 为空，
+  此处为人工标注）。file 字段对应 reports.title（不含扩展名）。状态：v1 自动核验，人工复核待完成。
 questions:
-  - id: exact-01
-    type: exact
-    question: 海底捞 2018 年营业收入是多少？
-    company: 海底捞
-    keywords: ["营业收入"]
-    statement:
-      type: income
-      year: 2018
-      line_contains: ["收入", "revenue"]
-    expected:
-      - file: 2018年报.pdf
-        page: 158
-  - id: exact-02
+  # ---------------- exact: 20 ----------------
+  - id: exact-001
     type: exact
     question: 海底捞 2024 年营业收入是多少？
     company: 海底捞
-    keywords: ["营业收入"]
+    keywords: ["营业收入", "收入"]
     statement:
       type: income
       year: 2024
-      line_contains: ["收入", "revenue"]
+      period_type: annual
+      line_contains: ["收入", "Revenue"]
+      expected_value: 42754687
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
     expected:
-      - file: 2024年报.pdf
-        page: 142
-  - id: exact-03
+      answer: 42754687
+      sources:
+        - file: "2024年报"
+          page: 142
+          table: "损益表"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2023年报"
+          page: 278
+  - id: exact-002
     type: exact
-    question: 百胜中国 2023 年净利润是多少？
-    company: 百胜中国
-    keywords: ["net income", "净利润"]
+    question: 海底捞 2024 年净利润（年内溢利）是多少？
+    company: 海底捞
+    keywords: ["净利润", "溢利"]
+    statement:
+      type: income
+      year: 2024
+      period_type: annual
+      line_contains: ["年内溢利", "Profit for the year"]
+      expected_value: 4700278
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: 4700278
+      sources:
+        - file: "2024年报"
+          page: 142
+          table: "损益表"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2023年报"
+          page: 278
+  - id: exact-003
+    type: exact
+    question: 海底捞 2023 年营业收入是多少？
+    company: 海底捞
+    keywords: ["营业收入", "收入"]
     statement:
       type: income
       year: 2023
-      line_contains: ["net income", "净利润"]
+      period_type: annual
+      line_contains: ["收入", "Revenue"]
+      expected_value: 41453348
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
     expected:
-      - file: 百胜中国_2023_Annual_Report.pdf
-        page: 109
-  - id: exact-04
+      answer: 41453348
+      sources:
+        - file: "2023年报"
+          page: 278
+          table: "损益表"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2022年报"
+          page: 243
+  - id: exact-004
     type: exact
-    question: 海底捞 2025 年上半年经营现金流情况
+    question: 海底捞 2023 年净利润（年内溢利）是多少？
     company: 海底捞
-    keywords: ["经营现金流", "cash flows"]
+    keywords: ["净利润", "溢利"]
+    statement:
+      type: income
+      year: 2023
+      period_type: annual
+      line_contains: ["年内溢利", "Profit for the year"]
+      expected_value: 4495399
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: 4495399
+      sources:
+        - file: "2023年报"
+          page: 278
+          table: "损益表"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2024年报"
+          page: 142
+  - id: exact-005
+    type: exact
+    question: 海底捞 2021 年年内亏损是多少？
+    company: 海底捞
+    keywords: ["亏损", "溢利"]
+    statement:
+      type: income
+      year: 2021
+      period_type: annual
+      line_contains: ["年内", "Profit", "loss"]
+      expected_value: -4161206
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: -4161206
+      sources:
+        - file: "2021年报"
+          page: 225
+          table: "损益表"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2020年报"
+          page: 213
+  - id: exact-006
+    type: exact
+    question: 海底捞 2020 年营业收入是多少？
+    company: 海底捞
+    keywords: ["营业收入", "收入"]
+    statement:
+      type: income
+      year: 2020
+      period_type: annual
+      line_contains: ["收入", "Revenue"]
+      expected_value: 28614255
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: 28614255
+      sources:
+        - file: "2020年报"
+          page: 213
+          table: "损益表"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2019年报"
+          page: 197
+  - id: exact-007
+    type: exact
+    question: 海底捞 2024 年经营活动所得现金净额是多少？
+    company: 海底捞
+    keywords: ["经营活动", "现金流"]
     statement:
       type: cashflow
-      year: 2025
-      line_contains: ["经营现金流", "cash flows"]
-  - id: exact-05
+      year: 2024
+      period_type: annual
+      line_contains: ["经营活动所得现金净额", "Net cash from operating activities"]
+      expected_value: 7634465
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: 7634465
+      sources:
+        - file: "2024年报"
+          page: 149
+          table: "现金流量表"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2025年报"
+          page: 159
+  - id: exact-008
     type: exact
-    question: 百胜中国 2024 年总资产
-    company: 百胜中国
-    keywords: ["total assets", "总资产"]
+    question: 海底捞 2023 年经营活动所得现金净额是多少？
+    company: 海底捞
+    keywords: ["经营活动", "现金流"]
+    statement:
+      type: cashflow
+      year: 2023
+      period_type: annual
+      line_contains: ["经营活动所得现金净额", "Net cash from operating activities"]
+      expected_value: 9000350
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: 9000350
+      sources:
+        - file: "2024年报"
+          page: 149
+          table: "现金流量表"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2023年报"
+          page: 285
+  - id: exact-009
+    type: exact
+    question: 海底捞 2024 年资产净值（Net Assets）是多少？
+    company: 海底捞
+    keywords: ["资产净值", "Net Assets"]
     statement:
       type: balance
       year: 2024
-      line_contains: ["total assets", "总资产"]
-  - id: exact-06
+      period_type: annual
+      line_contains: ["资产净值", "Net Assets"]
+      expected_value: 10417496
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: 10417496
+      sources:
+        - file: "2024年报"
+          page: 145
+          table: "综合财务状况表"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2025年报"
+          page: 155
+  - id: exact-010
     type: exact
-    question: 海底捞 2023 年分红方案
+    question: 海底捞 2025 年营业收入是多少？
     company: 海底捞
-    keywords: ["分红", "dividend"]
+    keywords: ["营业收入", "收入"]
+    statement:
+      type: income
+      year: 2025
+      period_type: annual
+      line_contains: ["收入", "Revenue"]
+      expected_value: 43225355
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: 43225355
+      sources:
+        - file: "2025年报"
+          page: 152
+          table: "损益表"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2024年报"
+          page: 142
+  - id: exact-011
+    type: exact
+    question: 百胜中国 2025 年 Total revenues 是多少？
+    company: 百胜中国
+    keywords: ["Total revenues", "营业收入"]
+    statement:
+      type: income
+      year: 2025
+      period_type: annual
+      line_contains: ["Total revenues", "总收入"]
+      expected_value: 11797
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 11797
+      sources:
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 153
+          table: "Consolidated Statements of Income"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2024_HK_Annual_Report"
+          page: 151
+  - id: exact-012
+    type: exact
+    question: 百胜中国 2025 年 Net Income（Yum China Holdings, Inc.）是多少？
+    company: 百胜中国
+    keywords: ["Net Income", "净利润"]
+    statement:
+      type: income
+      year: 2025
+      period_type: annual
+      line_contains: ["Net Income", "净利润"]
+      expected_value: 929
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 929
+      sources:
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 153
+          table: "Consolidated Statements of Income"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2024_HK_Annual_Report"
+          page: 151
+  - id: exact-013
+    type: exact
+    question: 百胜中国 2024 年 Total revenues 是多少？
+    company: 百胜中国
+    keywords: ["Total revenues", "营业收入"]
+    statement:
+      type: income
+      year: 2024
+      period_type: annual
+      line_contains: ["Total revenues", "总收入"]
+      expected_value: 11303
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 11303
+      sources:
+        - file: "百胜中国_2024_HK_Annual_Report"
+          page: 151
+          table: "Consolidated Statements of Income"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 153
+  - id: exact-014
+    type: exact
+    question: 百胜中国 2024 年 Net Income（Yum China Holdings, Inc.）是多少？
+    company: 百胜中国
+    keywords: ["Net Income", "净利润"]
+    statement:
+      type: income
+      year: 2024
+      period_type: annual
+      line_contains: ["Net Income", "净利润"]
+      expected_value: 911
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 911
+      sources:
+        - file: "百胜中国_2024_HK_Annual_Report"
+          page: 151
+          table: "Consolidated Statements of Income"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 153
+  - id: exact-015
+    type: exact
+    question: 百胜中国 2023 年 Total revenues 是多少？
+    company: 百胜中国
+    keywords: ["Total revenues", "营业收入"]
+    statement:
+      type: income
+      year: 2023
+      period_type: annual
+      line_contains: ["Total revenues", "总收入"]
+      expected_value: 10978
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 10978
+      sources:
+        - file: "百胜中国_2024_HK_Annual_Report"
+          page: 151
+          table: "Consolidated Statements of Income"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2023_HK_Annual_Report"
+          page: 147
+  - id: exact-016
+    type: exact
+    question: 百胜中国 2023 年 Net Income（Yum China Holdings, Inc.）是多少？
+    company: 百胜中国
+    keywords: ["Net Income", "净利润"]
+    statement:
+      type: income
+      year: 2023
+      period_type: annual
+      line_contains: ["Net Income", "净利润"]
+      expected_value: 827
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 827
+      sources:
+        - file: "百胜中国_2024_HK_Annual_Report"
+          page: 151
+          table: "Consolidated Statements of Income"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2023_HK_Annual_Report"
+          page: 147
+  - id: exact-017
+    type: exact
+    question: 百胜中国 2020 年 Total revenues 是多少？
+    company: 百胜中国
+    keywords: ["Total revenues", "营业收入"]
+    statement:
+      type: income
+      year: 2020
+      period_type: annual
+      line_contains: ["Total revenues", "总收入"]
+      expected_value: 8263
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 8263
+      sources:
+        - file: "百胜中国_2020_Annual_Report"
+          page: 200
+          table: "Consolidated Statements of Income"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2021_Annual_Report"
+          page: 194
+  - id: exact-018
+    type: exact
+    question: 百胜中国 2024 年 Total Assets 是多少？
+    company: 百胜中国
+    keywords: ["Total Assets", "总资产"]
+    statement:
+      type: balance
+      year: 2024
+      period_type: annual
+      line_contains: ["Total Assets", "总资产"]
+      expected_value: 11121
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 11121
+      sources:
+        - file: "百胜中国_2024_HK_Annual_Report"
+          page: 154
+          table: "Consolidated Balance Sheets"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 156
+  - id: exact-019
+    type: exact
+    question: 百胜中国 2024 年经营活动现金流净额（Net Cash Provided by Operating Activities）是多少？
+    company: 百胜中国
+    keywords: ["Operating Activities", "经营现金流"]
     statement:
       type: cashflow
-      year: 2023
-      line_contains: ["分红", "dividend"]
-
-  - id: keyword-01
-    type: keyword
-    question: 翻台率
-    company: 海底捞
-  - id: keyword-02
-    type: keyword
-    question: 同店销售
-    company: 海底捞
-  - id: keyword-03
-    type: keyword
-    question: 门店净增
-    company: 海底捞
-  - id: keyword-04
-    type: keyword
-    question: 减值
-    company: 海底捞
-  - id: keyword-05
-    type: keyword
-    question: 外卖占比
+      year: 2024
+      period_type: annual
+      line_contains: ["Net Cash Provided by Operating Activities", "经营现金流"]
+      expected_value: 1419
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 1419
+      sources:
+        - file: "百胜中国_2024_HK_Annual_Report"
+          page: 153
+          table: "Consolidated Statements of Cash Flows"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 155
+  - id: exact-020
+    type: exact
+    question: 百胜中国 2022 年 Total revenues 是多少？
     company: 百胜中国
-  - id: keyword-06
-    type: keyword
-    question: 资本开支
-    company: 百胜中国
+    keywords: ["Total revenues", "营业收入"]
+    statement:
+      type: income
+      year: 2022
+      period_type: annual
+      line_contains: ["Total revenues", "总收入"]
+      expected_value: 9569
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 9569
+      sources:
+        - file: "百胜中国_2022_HK_Annual_Report"
+          page: 150
+          table: "Consolidated Statements of Income"
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2023_HK_Annual_Report"
+          page: 147
 
-  - id: semantic-01
+  # ---------------- keyword: 20 ----------------
+  - id: keyword-001
+    type: keyword
+    question: 海底捞 翻台率
+    company: 海底捞
+    expected:
+      sources:
+        - file: "海底捞研报-国信-202502"
+          page: 19
+          required: true
+          relevance: 2
+      negatives:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 23
+  - id: keyword-002
+    type: keyword
+    question: 海底捞 同店销售
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-国信证券HK-2021-餐饮业复苏中"
+          page: 4
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2019年报"
+          page: 21
+  - id: keyword-003
+    type: keyword
+    question: 海底捞 门店净增
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 22
+          required: true
+          relevance: 2
+      negatives:
+        - file: "研报-平安证券-2022-中报点评疫情关店承压"
+          page: 1
+  - id: keyword-004
+    type: keyword
+    question: 海底捞 减值
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2022年报"
+          page: 285
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2021年报"
+          page: 264
+  - id: keyword-005
+    type: keyword
+    question: 海底捞 客单价
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 24
+          required: true
+          relevance: 2
+      negatives:
+        - file: "研报-浙商证券-2023-从成长到坚韧餐饮王者"
+          page: 12
+  - id: keyword-006
+    type: keyword
+    question: 海底捞 股息
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2024年报"
+          page: 151
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2019年报"
+          page: 205
+  - id: keyword-007
+    type: keyword
+    question: 海底捞 开店
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2024中报"
+          page: 12
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2020年报"
+          page: 17
+  - id: keyword-008
+    type: keyword
+    question: 海底捞 员工激励
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 25
+          required: true
+          relevance: 2
+      negatives:
+        - file: "研报-东吴证券-2019-管理体系深度解析"
+          page: 15
+  - id: keyword-009
+    type: keyword
+    question: 海底捞 师徒制
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
+          page: 11
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2018年报"
+          page: 138
+  - id: keyword-010
+    type: keyword
+    question: 海底捞 阿米巴
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 27
+          required: true
+          relevance: 2
+      negatives:
+        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
+          page: 12
+  - id: keyword-011
+    type: keyword
+    question: 海底捞 现金流
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-国信证券-2025-收入利润再创新高"
+          page: 5
+          required: true
+          relevance: 2
+      negatives:
+        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
+          page: 2
+  - id: keyword-012
+    type: keyword
+    question: 海底捞 资本开支
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 39
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2024年报"
+          page: 239
+  - id: keyword-013
+    type: keyword
+    question: 百胜中国 同店销售
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "国信证券_百胜中国_同店销售增速重新转正"
+          page: 1
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_招股书_中文版"
+          page: 200
+  - id: keyword-014
+    type: keyword
+    question: 百胜中国 门店净增
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
+          page: 2
+          required: true
+          relevance: 2
+      negatives:
+        - file: "国信证券_百胜中国_2024Q3经营数据改善"
+          page: 3
+  - id: keyword-015
+    type: keyword
+    question: 百胜中国 资本开支
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "华源证券研报"
+          page: 1
+          required: true
+          relevance: 2
+      negatives:
+        - file: "国信证券_百胜中国_2023年报费用管控效果显著"
+          page: 6
+  - id: keyword-016
+    type: keyword
+    question: 百胜中国 股息
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
+          page: 4
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2025_Annual_Report"
+          page: 62
+  - id: keyword-017
+    type: keyword
+    question: 百胜中国 品牌布局
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 4
+          required: true
+          relevance: 2
+      negatives:
+        - file: "研报参考清单_可自行下载"
+          page: 1
+  - id: keyword-018
+    type: keyword
+    question: 百胜中国 数字化
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 10
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_招股书_中文版"
+          page: 161
+  - id: keyword-019
+    type: keyword
+    question: 百胜中国 KCOFFEE
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "百胜中国_2024_Annual_Report"
+          page: 3
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_招股书_中文版"
+          page: 54
+  - id: keyword-020
+    type: keyword
+    question: 百胜中国 外卖
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "百胜中国_招股书_中文版"
+          page: 166
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 45
+
+  # ---------------- semantic: 20 ----------------
+  - id: semantic-001
     type: semantic
     question: 海底捞的现金流质量怎么样？
     company: 海底捞
     expected:
-      - file: 研报-国信证券-2021-阿米巴模式师徒制.pdf
-        page: 41
-  - id: semantic-02
+      sources:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 41
+          required: true
+          relevance: 3
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 40
+          required: false
+          relevance: 2
+        - file: "研报-国信证券-2025-收入利润再创新高"
+          page: 5
+          required: false
+          relevance: 2
+  - id: semantic-002
     type: semantic
     question: 海底捞的扩张策略是什么？
     company: 海底捞
     expected:
-      - file: 研报-国信证券-2021-阿米巴模式师徒制.pdf
-        page: 20
-  - id: semantic-03
+      sources:
+        - file: "研报-国信证券-2023-降本增效静待新一轮增长"
+          page: 3
+          required: true
+          relevance: 3
+        - file: "研报-国信证券-2023-降本增效静待新一轮增长"
+          page: 5
+          required: false
+          relevance: 2
+        - file: "2021年报"
+          page: 17
+          required: false
+          relevance: 1
+  - id: semantic-003
     type: semantic
-    question: 百胜中国的成本管控措施
-    company: 百胜中国
-    expected:
-      - file: 海通国际_百胜中国_2025投资者日_创新与提效双轮驱动.pdf
-        page: 5
-  - id: semantic-04
-    type: semantic
-    question: 海底捞翻台率变化趋势
+    question: 海底捞的成本管控措施
     company: 海底捞
     expected:
-      - file: 研报-国信证券-2025-火锅主业热辣滚烫.pdf
-        page: 19
-  - id: semantic-05
-    type: semantic
-    question: 百胜中国的门店增长来自哪里
-    company: 百胜中国
-    expected:
-      - file: 百胜中国_2025_Annual_Report.pdf
-        page: 11
-      - file: 2024_百胜中国_快餐业龙头多品牌布局.pdf
-        page: 2
-      - file: 2024_百胜中国_快餐业龙头多品牌布局.pdf
-        page: 4
-      - file: 海通国际_百胜中国_2025投资者日_创新与提效双轮驱动.pdf
-        page: 2
-      - file: 海通国际_百胜中国_2025Q2经营利润创新高.pdf
-        page: 2
-  - id: semantic-06
+      sources:
+        - file: "研报-东方证券-2023-2022年报点评利润改善重启扩张"
+          page: 1
+          required: true
+          relevance: 3
+        - file: "研报-招银证券-2024-2024H1业绩点评"
+          page: 1
+          required: false
+          relevance: 2
+  - id: semantic-004
     type: semantic
     question: 海底捞的员工激励方式
     company: 海底捞
     expected:
-      - file: 研报-国信证券-2021-阿米巴模式师徒制.pdf
-        page: 29
-      - file: 研报-国信证券-2021-阿米巴模式师徒制.pdf
-        page: 25
-      - file: 研报-国信证券-2021-阿米巴模式师徒制.pdf
-        page: 26
+      sources:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 25
+          required: true
+          relevance: 3
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 39
+          required: false
+          relevance: 2
+        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
+          page: 11
+          required: false
+          relevance: 2
+  - id: semantic-005
+    type: semantic
+    question: 海底捞同店销售与翻台率趋势
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-浦银国际-2024-翻台率估值承压"
+          page: 5
+          required: true
+          relevance: 3
+        - file: "海底捞研报-国信-202502"
+          page: 19
+          required: false
+          relevance: 2
+        - file: "研报-国信证券HK-2021-餐饮业复苏中"
+          page: 4
+          required: false
+          relevance: 1
+  - id: semantic-006
+    type: semantic
+    question: 海底捞的师徒制与阿米巴管理模式
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 27
+          required: true
+          relevance: 3
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 20
+          required: false
+          relevance: 2
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 21
+          required: false
+          relevance: 2
+  - id: semantic-007
+    type: semantic
+    question: 海底捞翻台率变化趋势
+    company: 海底捞
+    expected:
+      sources:
+        - file: "研报-国信证券-2023-降本增效静待新一轮增长"
+          page: 4
+          required: true
+          relevance: 3
+        - file: "研报-东吴证券-2019-管理体系深度解析"
+          page: 22
+          required: false
+          relevance: 2
+        - file: "海底捞研报-国信-202502"
+          page: 20
+          required: false
+          relevance: 2
+  - id: semantic-008
+    type: semantic
+    question: 海底捞的啄木鸟计划与门店优化
+    company: 海底捞
+    expected:
+      sources:
+        - file: "海底捞研报-国信-202502"
+          page: 14
+          required: true
+          relevance: 3
+        - file: "研报-平安证券-2022-中报点评疫情关店承压"
+          page: 1
+          required: false
+          relevance: 2
+        - file: "研报-浙商证券-2023-从成长到坚韧餐饮王者"
+          page: 8
+          required: false
+          relevance: 2
+  - id: semantic-009
+    type: semantic
+    question: 海底捞利润率变化
+    company: 海底捞
+    expected:
+      sources:
+        - file: "海底捞研报-国信-202502"
+          page: 20
+          required: true
+          relevance: 3
+        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
+          page: 23
+          required: false
+          relevance: 2
+        - file: "研报-东吴证券-2019-管理体系深度解析"
+          page: 27
+          required: false
+          relevance: 1
+  - id: semantic-010
+    type: semantic
+    question: 海底捞客单价与翻台率的关系
+    company: 海底捞
+    expected:
+      sources:
+        - file: "海底捞研报-国信-202502"
+          page: 19
+          required: true
+          relevance: 3
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 24
+          required: false
+          relevance: 2
+        - file: "研报-东吴证券-2019-管理体系深度解析"
+          page: 32
+          required: false
+          relevance: 1
+  - id: semantic-011
+    type: semantic
+    question: 百胜中国同店销售趋势
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "国信证券_百胜中国_同店销售增速重新转正"
+          page: 1
+          required: true
+          relevance: 3
+        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
+          page: 2
+          required: false
+          relevance: 2
+        - file: "百胜中国_2023_HK_Annual_Report"
+          page: 76
+          required: false
+          relevance: 2
+  - id: semantic-012
+    type: semantic
+    question: 百胜中国的成本与费用管控
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "国信证券_百胜中国_2023年报费用管控效果显著"
+          page: 3
+          required: true
+          relevance: 3
+        - file: "海通国际_百胜中国_2025投资者日_创新与提效双轮驱动"
+          page: 1
+          required: false
+          relevance: 2
+  - id: semantic-013
+    type: semantic
+    question: 百胜中国的多品牌布局
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 4
+          required: true
+          relevance: 3
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 10
+          required: false
+          relevance: 2
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 11
+          required: false
+          relevance: 2
+  - id: semantic-014
+    type: semantic
+    question: 百胜中国的竞争格局
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "百胜中国_招股书_中文版"
+          page: 134
+          required: true
+          relevance: 3
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 4
+          required: false
+          relevance: 2
+  - id: semantic-015
+    type: semantic
+    question: 百胜中国的门店增长来自哪里
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
+          page: 2
+          required: true
+          relevance: 3
+        - file: "国信证券_百胜中国_2024Q3经营数据改善"
+          page: 3
+          required: false
+          relevance: 2
+        - file: "海通国际_百胜中国_2025投资者日_创新与提效双轮驱动"
+          page: 1
+          required: false
+          relevance: 2
+  - id: semantic-016
+    type: semantic
+    question: 百胜中国的咖啡业务布局
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "百胜中国_2024_Annual_Report"
+          page: 3
+          required: true
+          relevance: 3
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 7
+          required: false
+          relevance: 2
+        - file: "百胜中国_2022_Annual_Report"
+          page: 92
+          required: false
+          relevance: 1
+  - id: semantic-017
+    type: semantic
+    question: 百胜中国的数字化与外卖策略
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 10
+          required: true
+          relevance: 3
+        - file: "百胜中国_招股书_中文版"
+          page: 161
+          required: false
+          relevance: 2
+        - file: "百胜中国_招股书_中文版"
+          page: 166
+          required: false
+          relevance: 2
+  - id: semantic-018
+    type: semantic
+    question: 百胜中国利润率变化
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "海通国际_百胜中国_2025Q2经营利润创新高"
+          page: 1
+          required: true
+          relevance: 3
+        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
+          page: 3
+          required: false
+          relevance: 2
+        - file: "华源证券研报"
+          page: 1
+          required: false
+          relevance: 2
+  - id: semantic-019
+    type: semantic
+    question: 百胜中国的股息与股东回报
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
+          page: 4
+          required: true
+          relevance: 3
+        - file: "百胜中国_2025_Annual_Report"
+          page: 62
+          required: false
+          relevance: 1
+  - id: semantic-020
+    type: semantic
+    question: 百胜中国的外卖与配送能力
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "百胜中国_招股书_中文版"
+          page: 166
+          required: true
+          relevance: 3
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 45
+          required: false
+          relevance: 2
 
-  - id: cross-01
+  # ---------------- cross: 12 ----------------
+  - id: cross-001
     type: cross
-    question: 百胜中国 2023 年净利润是多少？
+    question: Yum China 2025 operating profit
+    company: 百胜中国
+    keywords: ["operating profit", "经营利润"]
+    statement:
+      type: income
+      year: 2025
+      period_type: annual
+      line_contains: ["Operating Profit", "经营利润"]
+      expected_value: 1290
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 1290
+      sources:
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 153
+          required: true
+          relevance: 2
+  - id: cross-002
+    type: cross
+    question: Yum China 2022 net income
     company: 百胜中国
     keywords: ["net income", "净利润"]
     statement:
       type: income
-      year: 2023
-      line_contains: ["net income", "净利润"]
+      year: 2022
+      period_type: annual
+      line_contains: ["Net Income", "净利润"]
+      expected_value: 442
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
     expected:
-      - file: 百胜中国_2023_Annual_Report.pdf
-        page: 109
-  - id: cross-02
+      answer: 442
+      sources:
+        - file: "百胜中国_2022_HK_Annual_Report"
+          page: 150
+          required: true
+          relevance: 2
+  - id: cross-003
+    type: cross
+    question: Yum China 2023 total assets
+    company: 百胜中国
+    keywords: ["total assets", "总资产"]
+    statement:
+      type: balance
+      year: 2023
+      period_type: annual
+      line_contains: ["Total Assets", "总资产"]
+      expected_value: 12031
+      tolerance_ratio: 0.02
+      expected_unit: 百万美元
+      expected_currency: USD
+    expected:
+      answer: 12031
+      sources:
+        - file: "百胜中国_2023_HK_Annual_Report"
+          page: 150
+          required: true
+          relevance: 2
+  - id: cross-004
+    type: cross
+    question: 海底捞 2019 年 net profit
+    company: 海底捞
+    keywords: ["net profit", "净利润"]
+    statement:
+      type: income
+      year: 2019
+      period_type: annual
+      line_contains: ["年内溢利", "Profit for the year"]
+      expected_value: 2346962
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: 2346962
+      sources:
+        - file: "2019年报"
+          page: 197
+          required: true
+          relevance: 2
+  - id: cross-005
+    type: cross
+    question: 海底捞 2022 年 net profit
+    company: 海底捞
+    keywords: ["net profit", "净利润"]
+    statement:
+      type: income
+      year: 2022
+      period_type: annual
+      line_contains: ["年内溢利", "Profit"]
+      expected_value: 1373216
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: 1373216
+      sources:
+        - file: "2022年报"
+          page: 243
+          required: true
+          relevance: 2
+  - id: cross-006
+    type: cross
+    question: 海底捞 2025 年 operating cash flow
+    company: 海底捞
+    keywords: ["operating cash flow", "经营现金流"]
+    statement:
+      type: cashflow
+      year: 2025
+      period_type: annual
+      line_contains: ["经营活动所得现金净额", "Net cash from operating activities"]
+      expected_value: 5664189
+      tolerance_ratio: 0.02
+      expected_unit: 千元
+      expected_currency: CNY
+    expected:
+      answer: 5664189
+      sources:
+        - file: "2025年报"
+          page: 159
+          required: true
+          relevance: 2
+  - id: cross-007
     type: cross
     question: Yum China same-store sales trend
     company: 百胜中国
     keywords: ["same-store sales"]
     expected:
-      - file: 百胜中国_2023_HK_Annual_Report.pdf
-        page: 76
-  - id: cross-03
+      sources:
+        - file: "百胜中国_2023_HK_Annual_Report"
+          page: 76
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_招股书_英文版"
+          page: 206
+  - id: cross-008
     type: cross
-    question: 海底捞 net profit 2024
+    question: Haidilao restaurant count 门店数量
     company: 海底捞
-    keywords: ["net profit", "净利润"]
-    statement:
-      type: income
-      year: 2024
-      line_contains: ["net profit", "净利润", "profit for the year"]
+    keywords: ["restaurant", "门店数量"]
     expected:
-      - file: 2024年报.pdf
-        page: 142
-  - id: cross-04
+      sources:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 22
+          required: true
+          relevance: 2
+      negatives:
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 4
+  - id: cross-009
     type: cross
-    question: 百胜中国股息分红情况
+    question: Yum China dividends and buyback 股息与回购
     company: 百胜中国
-    keywords: ["dividend", "股息", "分红"]
-    statement:
-      type: cashflow
-      year: 2025
-      line_contains: ["dividend", "股息", "分红"]
+    keywords: ["dividend", "股息", "buyback"]
     expected:
-      - file: 百胜中国_2025_Annual_Report.pdf
-        page: 114
-  - id: cross-05
+      sources:
+        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
+          page: 4
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2025_Annual_Report"
+          page: 62
+  - id: cross-010
     type: cross
-    question: Haidilao restaurant count by year
+    question: 海底捞 same-store sales 同店销售
     company: 海底捞
-    keywords: ["restaurant", "餐厅"]
+    keywords: ["same-store sales", "同店销售"]
     expected:
-      - file: 2018招股说明书（全球发售）.pdf
-        page: 164
-  - id: cross-06
+      sources:
+        - file: "2019年报"
+          page: 21
+          required: true
+          relevance: 2
+      negatives:
+        - file: "研报-国信证券HK-2021-餐饮业复苏中"
+          page: 4
+  - id: cross-011
     type: cross
-    question: 2025 Annual Report revenue
+    question: Yum China store count by year
     company: 百胜中国
-    keywords: ["revenue"]
-    statement:
-      type: income
-      year: 2025
-      line_contains: ["revenue", "收入"]
+    keywords: ["store count", "门店数量"]
     expected:
-      - file: 百胜中国_2025_Annual_Report.pdf
-        page: 112
+      sources:
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 4
+          required: true
+          relevance: 2
+      negatives:
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 122
+  - id: cross-012
+    type: cross
+    question: Haidilao table turnover rate 翻台率
+    company: 海底捞
+    keywords: ["table turnover", "翻台率"]
+    expected:
+      sources:
+        - file: "研报-东吴证券-2019-管理体系深度解析"
+          page: 22
+          required: true
+          relevance: 2
+      negatives:
+        - file: "海底捞研报-国信-202502"
+          page: 19
 
-  - id: end2end-01
+  # ---------------- end2end: 8 ----------------
+  - id: end2end-001
     type: end2end
-    question: 写海底捞笔记需要的三张表和经营数据
+    question: 写海底捞笔记需要哪些材料和假设？
     company: 海底捞
+    rubric:
+      - 必须覆盖三大报表和核心经营数据
+      - 关键数字必须带文件、页码或表名引用
+      - 研报预测与财报事实分离
     expected:
-      - file: 2025年报.pdf
-  - id: end2end-02
+      sources:
+        - file: "2025年报"
+          page: null
+          required: true
+  - id: end2end-002
     type: end2end
-    question: 写百胜中国笔记需要的中英文年报与研报
+    question: 写百胜中国笔记需要哪些材料？
     company: 百胜中国
+    rubric:
+      - 覆盖中英文年报与港股美股口径差异
+      - 关键财务数字需标注来源年报与页码
+      - 同店销售与门店数据需区分财报事实和研报预测
     expected:
-      - file: 百胜中国_2025_Annual_Report.pdf
-  - id: end2end-03
+      sources:
+        - file: "百胜中国_2025_Annual_Report"
+          page: null
+          required: true
+  - id: end2end-003
     type: end2end
-    question: 海底捞与百胜中国同行对比的关键指标
+    question: 海底捞与百胜中国同行对比需要哪些关键指标？
+    company: 海底捞
+    rubric:
+      - 列出可比指标：收入、利润率、翻台率/同店销售、门店数与资本开支
+      - 注明两家公司币种与单位差异
+      - 引用来源需落到具体年报或研报页
     expected:
-      - file: 2025年报.pdf
-      - file: 百胜中国_2025_Annual_Report.pdf
-  - id: end2end-04
+      sources:
+        - file: "2025年报"
+          page: null
+          required: true
+        - file: "百胜中国_2025_Annual_Report"
+          page: null
+          required: true
+  - id: end2end-004
     type: end2end
-    question: 估值推演需要哪些材料和假设
+    question: 海底捞估值推演需要哪些材料和假设？
+    company: 海底捞
+    rubric:
+      - 包含盈利预测、翻台率/客单价/门店数假设
+      - 区分中性、乐观与悲观情景
+      - 引用研报预测时标注来源页
+    expected:
+      sources:
+        - file: "研报-国信证券-2025-收入利润再创新高"
+          page: null
+          required: true
+  - id: end2end-005
+    type: end2end
+    question: 海底捞的风险与关键假设有哪些？
+    company: 海底捞
+    rubric:
+      - 覆盖翻台率恢复不及预期、食品安全、扩张质量等风险
+      - 假设需可追溯至财报或研报依据
+    expected:
+      sources:
+        - file: "研报-浦银国际-2024-翻台率估值承压"
+          page: null
+          required: true
+  - id: end2end-006
+    type: end2end
+    question: 百胜中国的风险与关键假设有哪些？
+    company: 百胜中国
+    rubric:
+      - 覆盖同店销售、加盟扩张、汇率与竞争等风险
+      - 材料需区分港股与美股披露口径
+    expected:
+      sources:
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: null
+          required: true
+  - id: end2end-007
+    type: end2end
+    question: 海底捞笔记材料完整性如何核对？
+    company: 海底捞
+    rubric:
+      - 核对损益表、现金流量表与财务状况表三表齐全
+      - 关键数字与数据库 statements/pages 可交叉验证
+    expected:
+      sources:
+        - file: "2024年报"
+          page: null
+          required: true
+  - id: end2end-008
+    type: end2end
+    question: 百胜中国中英文年报材料一致性如何核对？
+    company: 百胜中国
+    rubric:
+      - 核对港股与美股年报同一科目数值一致
+      - 关键数字需同时给出中英文来源
+    expected:
+      sources:
+        - file: "百胜中国_2024_HK_Annual_Report"
+          page: null
+          required: true
+        - file: "百胜中国_2024_Annual_Report"
+          page: null
+          required: true

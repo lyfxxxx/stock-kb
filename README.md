@@ -74,9 +74,13 @@ python -m stock_kb index --model BAAI/bge-small-zh-v1.5
 # 指定后端与设备（默认 sentence-transformers + cuda）
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild
 
-# 检索评测（FTS 基线；指定 --model 时为混合检索）
+# 检索评测（默认 FTS；指定 --engine 可测 vector/hybrid）
 python -m stock_kb eval
-python -m stock_kb eval --model BAAI/bge-small-zh-v1.5
+python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5
+python -m stock_kb eval --engine vector --model BAAI/bge-small-zh-v1.5
+
+# 评测优化计划与执行记录
+# 见 eval/OPTIMIZATION_PLAN.md
 
 # 计算常用指标（营收/净利/ROE/现金流等）
 python -m stock_kb indicators
