@@ -56,7 +56,10 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         year: int | None = None,
     ) -> list[dict[str, Any]]:
         """列出某公司报告；可按类型（annual/interim/q3/prospectus/research/other）和年份过滤。"""
-        sql = "SELECT id, company, report_type, language, year, period_type, title, path FROM reports WHERE company=?"
+        sql = (
+            "SELECT id, company, report_type, language, year, period_type, title, path, "
+            "is_duplicate, duplicate_of FROM reports WHERE company=?"
+        )
         params: list[Any] = [company]
         if report_type:
             sql += " AND report_type=?"
@@ -76,11 +79,57 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         query: str,
         company: str | None = None,
         top_k: int = 5,
+        engine: str = "fts",
+        model: str | None = None,
+        year: int | None = None,
+        report_type: str | None = None,
+        language: str | None = None,
     ) -> list[dict[str, Any]]:
-        """全文检索报告内容，返回命中的页与摘要。"""
+        """检索报告页。engine: fts/vector/hybrid；vector/hybrid 需要已建向量索引。"""
         conn = _conn()
         try:
-            return search.fts_search(conn, query, company=company, top_k=top_k)
+            if engine == "fts":
+                return search.fts_search(
+                    conn,
+                    query,
+                    company=company,
+                    top_k=top_k,
+                    year=year,
+                    report_type=report_type,
+                    language=language,
+                )
+            from stock_kb import vector
+
+            model = model or cfg.get("embedding", {}).get(
+                "model", "BAAI/bge-small-zh-v1.5"
+            )
+            if engine == "vector":
+                return vector.vector_search(
+                    conn,
+                    model,
+                    query,
+                    top_k=top_k,
+                    company=company,
+                    cache_dir=cfg.get("models_dir"),
+                    backend=cfg.get("embedding", {}).get("backend", "auto"),
+                    year=year,
+                    report_type=report_type,
+                    language=language,
+                )
+            if engine == "hybrid":
+                return vector.hybrid_search(
+                    conn,
+                    query,
+                    model=model,
+                    top_k=top_k,
+                    company=company,
+                    cache_dir=cfg.get("models_dir"),
+                    backend=cfg.get("embedding", {}).get("backend", "auto"),
+                    year=year,
+                    report_type=report_type,
+                    language=language,
+                )
+            raise ValueError(f"不支持的检索引擎: {engine}")
         finally:
             conn.close()
 
@@ -94,26 +143,30 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
     ) -> list[dict[str, Any]]:
         """获取三大报表行项目。statement_type: income/balance/cashflow/equity。"""
         sql = """
-            SELECT s.statement_type, s.line_name_orig, s.line_name_norm, s.value,
+            SELECT s.id AS statement_id, r.id AS report_id, s.statement_type,
+                   s.line_name_orig, s.line_name_norm, s.value,
                    s.unit, s.currency, s.year, s.page_no, r.title, r.path
             FROM statements s JOIN reports r ON r.id = s.report_id
             WHERE r.company=?
         """
         params: list[Any] = [company]
-        if statement_type:
+        if statement_type is not None:
             sql += " AND s.statement_type=?"
             params.append(statement_type)
-        if year:
+        if year is not None:
             sql += " AND s.year=?"
             params.append(year)
-        if period_type:
+        if period_type is not None:
             sql += " AND r.period_type=?"
             params.append(period_type)
         sql += " ORDER BY r.year DESC, s.page_no, s.line_name_norm LIMIT ?"
         params.append(limit)
         conn = _conn()
         try:
-            return [dict(r) for r in conn.execute(sql, params).fetchall()]
+            rows = [dict(r) for r in conn.execute(sql, params).fetchall()]
+            for row in rows:
+                row["locator"] = f"{row['title']} 第{row['page_no']}页"
+            return rows
         finally:
             conn.close()
 
@@ -148,17 +201,18 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         page: int | None = None,
         limit: int = 20,
     ) -> list[dict[str, Any]]:
-        """获取报告某页/某几页的文本。"""
+        """获取报告某页/某几页的文本；content 为简体索引文本，content_orig 为原文。"""
         sql = """
-            SELECT p.page_no, p.char_count, p.is_ocr, p.content, r.title, r.path
+            SELECT r.id AS report_id, p.page_no, p.char_count, p.is_ocr,
+                   p.content, p.content_orig, r.title, r.path
             FROM pages p JOIN reports r ON r.id = p.report_id
             WHERE r.company=?
         """
         params: list[Any] = [company]
-        if title:
+        if title is not None:
             sql += " AND r.title LIKE ?"
             params.append(f"%{title}%")
-        if page:
+        if page is not None:
             sql += " AND p.page_no=?"
             params.append(page)
         sql += " ORDER BY r.title, p.page_no LIMIT ?"
@@ -174,20 +228,33 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         company: str,
         title: str | None = None,
         page: int | None = None,
+        keyword: str | None = None,
         context_chars: int = 200,
     ) -> list[dict[str, Any]]:
-        """取带来源定位的原文片段，供笔记引用。"""
+        """取带来源定位的原文片段，供笔记引用；有 keyword 时围绕命中位置截取。"""
         rows = get_report_text(company, title, page, limit=5)
         out = []
+        half = max(int(context_chars) // 2, 20)
         for r in rows:
-            content = r.get("content") or ""
+            content = r.get("content_orig") or r.get("content") or ""
+            simplified = r.get("content") or content
+            needle = (keyword or "").strip()
+            start = 0
+            if needle:
+                pos = simplified.find(needle)
+                if pos < 0:
+                    pos = content.find(needle)
+                if pos >= 0:
+                    start = max(0, pos - half)
             out.append(
                 {
                     "company": company,
+                    "report_id": r["report_id"],
                     "title": r["title"],
                     "page": r["page_no"],
+                    "is_ocr": r["is_ocr"],
                     "locator": f"{r['title']} 第{r['page_no']}页",
-                    "excerpt": content[:context_chars],
+                    "excerpt": content[start : start + context_chars],
                 }
             )
         return out

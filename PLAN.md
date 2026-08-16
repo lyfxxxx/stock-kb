@@ -451,12 +451,13 @@ SQLite 主要表：
 5. 制作 `stock-note` skill 并生成两篇试点笔记；
 6. 你审核笔记后，再迁移 Docker 并接入 Hermes Agent。
 
-## 15. 当前实施状态（2026-08-15）
+## 15. 当前实施状态（2026-08-16 更新）
 
 ### 已完成（本机试点）
 
 - 项目骨架与 CLI：`scan / search / stats / eval / index / indicators / reclassify / reparse-statements / mcp / models download`
-- 全量入库：60 份报告（海底捞 34 + 百胜中国 26）、8,128 页、8,718 条三表行项目、133 条指标
+- 全量入库：60 份报告（海底捞 34 + 百胜中国 26）、8,128 页、5,570 条三表行项目、117 条指标、118 条 sources；
+  `statements.unit/currency` 已回填（2026-08-16 解析器修复后重新 reparse）
 - 检索：FTS5（trigram + 繁简归一化）+ 向量索引（bge-small-zh、多语言 MiniLM、BGE-M3；已从整页嵌入升级为约 800 字/块的段落分块嵌入，使用 sentence-transformers + CUDA）
 - 评测：`eval/questions.yaml`（80 题，v2，含 exact/keyword/semantic/cross/end2end）+ 三层自动评分与报告
 - MCP：7 个只读工具，stdio + Streamable HTTP 双传输，HTTP 支持 Bearer token 鉴权；stdio 与 HTTP 均已端到端验证
@@ -468,6 +469,12 @@ SQLite 主要表：
 - 笔记审计：`python tools/audit_notes.py` 已通过（两篇笔记关键数字与数据库交叉验证一致）
 - 版本管理：2026-08-15 初始化 Git 仓库并完成首次提交；`data/`、`models/`、日志与 pid 由 `.gitignore` 排除，不入库
 - GitHub 远端：`https://github.com/lyfxxxx/stock-kb`（私有仓库，2026-08-15 创建并完成首次推送，默认分支 master）
+
+### 2026-08-16 自动修复记录（详见 docs/fix-record-20260816.md）
+
+- 修复页面重建级联删除、三表误提取、单位币种解析、indicators 取错科目、向量模型表隔离、RRF 混合检索、MCP hybrid/原文引用、分类语言误判、扫描失败状态与锁。
+- 新基线（top_k=5）：FTS keyword 0.750 / semantic 0.500；hybrid keyword 0.750 / semantic 0.500 / cross 0.167；结构化 26/26（含 unit/currency 26/26）。
+- 新增 `tests/test_core.py` 与 `tools/run_eval_regression.py`，两者均已通过。
 
 > 以下为旧版单层评分结果，仅作历史记录；新的三层评测与结论见第 16 节。
 

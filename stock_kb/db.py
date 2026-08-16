@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -28,7 +29,9 @@ CREATE TABLE IF NOT EXISTS reports (
     size INTEGER,
     mtime REAL,
     status TEXT DEFAULT 'pending',
-    parsed_at TEXT
+    parsed_at TEXT,
+    is_duplicate INTEGER DEFAULT 0,
+    duplicate_of INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS pages (
@@ -65,6 +68,10 @@ CREATE TABLE IF NOT EXISTS indicators (
     name TEXT NOT NULL,
     value REAL,
     unit TEXT,
+    currency TEXT,
+    report_id INTEGER,
+    page_no INTEGER,
+    line_name TEXT,
     source_id INTEGER,
     UNIQUE(company, year, period_type, name)
 );
@@ -96,6 +103,7 @@ CREATE TABLE IF NOT EXISTS embedding_index (
     model TEXT NOT NULL,
     chunk_id INTEGER NOT NULL,
     dim INTEGER NOT NULL,
+    vec_table TEXT,
     indexed_at TEXT,
     PRIMARY KEY(model, chunk_id)
 );
@@ -132,6 +140,24 @@ def _migrate(conn: sqlite3.Connection) -> None:
     cols = [row[1] for row in conn.execute("PRAGMA table_info(pages)").fetchall()]
     if "content_orig" not in cols:
         conn.execute("ALTER TABLE pages ADD COLUMN content_orig TEXT")
+
+    report_cols = [row[1] for row in conn.execute("PRAGMA table_info(reports)").fetchall()]
+    if "is_duplicate" not in report_cols:
+        conn.execute("ALTER TABLE reports ADD COLUMN is_duplicate INTEGER DEFAULT 0")
+    if "duplicate_of" not in report_cols:
+        conn.execute("ALTER TABLE reports ADD COLUMN duplicate_of INTEGER")
+
+    indicator_cols = [row[1] for row in conn.execute("PRAGMA table_info(indicators)").fetchall()]
+    for col in ("currency", "report_id", "page_no", "line_name"):
+        if col not in indicator_cols:
+            conn.execute(f"ALTER TABLE indicators ADD COLUMN {col}")
+
+    index_cols = [row[1] for row in conn.execute("PRAGMA table_info(embedding_index)").fetchall()]
+    if "vec_table" not in index_cols:
+        conn.execute("ALTER TABLE embedding_index ADD COLUMN vec_table TEXT")
+    conn.execute(
+        "UPDATE embedding_index SET vec_table = 'chunks_vec_' || dim WHERE vec_table IS NULL"
+    )
     conn.commit()
 
 
@@ -145,6 +171,29 @@ def load_vector_extension(conn: sqlite3.Connection) -> None:
     conn.enable_load_extension(False)
 
 
+def vector_table_names(conn: sqlite3.Connection) -> list[str]:
+    """返回当前库中所有 sqlite-vec 主表名（排除 *_chunks/_info/_rowids 等影子表）。"""
+    names = [
+        row[0]
+        for row in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'chunks_vec_%'"
+        )
+    ]
+    shadow_suffixes = ("_chunks", "_info", "_rowids")
+    return [
+        n for n in names
+        if not n.endswith(shadow_suffixes) and "_vector_chunks" not in n
+    ]
+
+
+def cjk_bigrams(text: str) -> str:
+    """生成中文二元组（空格分隔），供两字查询使用。"""
+    out: list[str] = []
+    for run in re.findall(r"[\u4e00-\u9fff]+", text or ""):
+        out.extend(run[i : i + 2] for i in range(len(run) - 1))
+    return " ".join(out)
+
+
 def _init_fts(conn: sqlite3.Connection) -> None:
     try:
         conn.execute(
@@ -156,7 +205,35 @@ def _init_fts(conn: sqlite3.Connection) -> None:
             "CREATE VIRTUAL TABLE IF NOT EXISTS pages_fts USING fts5("
             "page_id UNINDEXED, company UNINDEXED, report_id UNINDEXED, content)"
         )
+    try:
+        conn.execute(
+            "CREATE VIRTUAL TABLE IF NOT EXISTS pages_bigram_fts USING fts5("
+            "page_id UNINDEXED, company UNINDEXED, report_id UNINDEXED, bigrams)"
+        )
+    except sqlite3.OperationalError:
+        pass
+    if _table_exists(conn, "pages_bigram_fts"):
+        count = conn.execute("SELECT COUNT(*) FROM pages_bigram_fts").fetchone()[0]
+        page_count = conn.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
+        if count < page_count:
+            for row in conn.execute(
+                "SELECT p.id, p.report_id, p.content FROM pages p ORDER BY p.id"
+            ).fetchall():
+                conn.execute(
+                    "INSERT OR IGNORE INTO pages_bigram_fts(page_id, report_id, bigrams) "
+                    "VALUES(?,?,?)",
+                    (row["id"], row["report_id"], cjk_bigrams(row["content"])),
+                )
     conn.commit()
+
+
+def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
+    return (
+        conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (name,)
+        ).fetchone()
+        is not None
+    )
 
 
 def upsert_company(conn: sqlite3.Connection, name: str, code: str | None = None) -> int:
@@ -198,9 +275,84 @@ def upsert_report(conn: sqlite3.Connection, meta: dict[str, Any]) -> int:
     return int(row["id"])
 
 
+def mark_duplicate_reports(conn: sqlite3.Connection) -> int:
+    """按 SHA-256 标记完全重复的报告，保留每组 id 最小者作为 canonical。"""
+    conn.execute("UPDATE reports SET is_duplicate=0, duplicate_of=NULL")
+    groups = conn.execute(
+        "SELECT sha256 FROM reports WHERE sha256 IS NOT NULL "
+        "GROUP BY sha256 HAVING COUNT(*) > 1"
+    ).fetchall()
+    marked = 0
+    for group in groups:
+        ids = [
+            row["id"]
+            for row in conn.execute(
+                "SELECT id FROM reports WHERE sha256=? ORDER BY id", (group["sha256"],)
+            ).fetchall()
+        ]
+        canonical = ids[0]
+        for dup_id in ids[1:]:
+            conn.execute(
+                "UPDATE reports SET is_duplicate=1, duplicate_of=? WHERE id=?",
+                (canonical, dup_id),
+            )
+            marked += 1
+    conn.commit()
+    return marked
+
+
 def replace_pages(conn: sqlite3.Connection, report_id: int, pages: list[dict[str, Any]]) -> None:
+    """原子替换报告的全部页面，并级联清理 chunks / embedding_index / 向量表。
+
+    页面被删除后 page_id 会变化，旧的 chunk 与向量必须先行清理，否则外键会报错，
+    且旧向量会静默指向不存在的页面。
+    """
+    old_page_ids = [
+        row[0]
+        for row in conn.execute(
+            "SELECT id FROM pages WHERE report_id=? ORDER BY id", (report_id,)
+        )
+    ]
+    chunk_ids: list[int] = []
+    if old_page_ids:
+        for start in range(0, len(old_page_ids), 500):
+            marks = ",".join("?" * len(old_page_ids[start : start + 500]))
+            chunk_ids.extend(
+                row[0]
+                for row in conn.execute(
+                    f"SELECT id FROM chunks WHERE page_id IN ({marks}) ORDER BY id",
+                    old_page_ids[start : start + 500],
+                )
+            )
+
+    if chunk_ids:
+        for start in range(0, len(chunk_ids), 500):
+            marks = ",".join("?" * len(chunk_ids[start : start + 500]))
+            conn.execute(
+                f"DELETE FROM embedding_index WHERE chunk_id IN ({marks})",
+                chunk_ids[start : start + 500],
+            )
+        vec_tables = vector_table_names(conn)
+        if vec_tables:
+            load_vector_extension(conn)
+            for table in vec_tables:
+                for start in range(0, len(chunk_ids), 500):
+                    marks = ",".join("?" * len(chunk_ids[start : start + 500]))
+                    conn.execute(
+                        f"DELETE FROM {table} WHERE chunk_id IN ({marks})",
+                        chunk_ids[start : start + 500],
+                    )
+        for start in range(0, len(chunk_ids), 500):
+            marks = ",".join("?" * len(chunk_ids[start : start + 500]))
+            conn.execute(
+                f"DELETE FROM chunks WHERE id IN ({marks})",
+                chunk_ids[start : start + 500],
+            )
+
     conn.execute("DELETE FROM pages WHERE report_id=?", (report_id,))
     conn.execute("DELETE FROM pages_fts WHERE report_id=?", (report_id,))
+    if _table_exists(conn, "pages_bigram_fts"):
+        conn.execute("DELETE FROM pages_bigram_fts WHERE report_id=?", (report_id,))
     for p in pages:
         cur = conn.execute(
             "INSERT INTO pages(report_id, page_no, content, content_orig, char_count, is_ocr) "
@@ -219,6 +371,12 @@ def replace_pages(conn: sqlite3.Connection, report_id: int, pages: list[dict[str
             "INSERT INTO pages_fts(page_id, company, report_id, content) VALUES(?,?,?,?)",
             (page_id, p.get("company", ""), report_id, p["content"]),
         )
+        if _table_exists(conn, "pages_bigram_fts"):
+            conn.execute(
+                "INSERT INTO pages_bigram_fts(page_id, company, report_id, bigrams) "
+                "VALUES(?,?,?,?)",
+                (page_id, p.get("company", ""), report_id, cjk_bigrams(p["content"])),
+            )
     conn.commit()
 
 
@@ -245,7 +403,37 @@ def replace_statements(conn: sqlite3.Connection, report_id: int, rows: list[dict
                 r.get("source_id"),
             ),
         )
+    _refresh_sources_for_report(conn, report_id)
     conn.commit()
+
+
+def _refresh_sources_for_report(conn: sqlite3.Connection, report_id: int) -> None:
+    """为三表涉及的页面/表填充统一 sources 记录，并回填 statements.source_id。"""
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO sources(
+            report_id, company, report_title, page_no, table_index, locator, snippet
+        )
+        SELECT s.report_id, r.company, r.title, s.page_no, s.table_index,
+               r.title || ' 第' || s.page_no || '页', NULL
+        FROM statements s JOIN reports r ON r.id = s.report_id
+        WHERE s.report_id=?
+        """,
+        (report_id,),
+    )
+    conn.execute(
+        """
+        UPDATE statements
+        SET source_id = (
+            SELECT src.id FROM sources src
+            WHERE src.report_id = statements.report_id
+              AND src.page_no = statements.page_no
+              AND src.table_index = statements.table_index
+        )
+        WHERE report_id=?
+        """,
+        (report_id,),
+    )
 
 
 def get_report(conn: sqlite3.Connection, report_id: int) -> dict[str, Any] | None:

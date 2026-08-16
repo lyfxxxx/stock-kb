@@ -23,6 +23,31 @@ def scan(
     rebuild: bool = False,
     use_ocr: bool = True,
 ) -> dict[str, int]:
+    lock_path = Path(cfg.get("data_dir", "data")) / "scan.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        os.write(fd, f"pid={os.getpid()} time={time.strftime('%Y-%m-%dT%H:%M:%S')}".encode())
+        os.close(fd)
+    except FileExistsError:
+        raise RuntimeError(f"已有扫描任务在运行（{lock_path}），请勿并发执行 scan")
+
+    try:
+        return _scan_locked(cfg, companies=companies, limit=limit, rebuild=rebuild, use_ocr=use_ocr)
+    finally:
+        try:
+            lock_path.unlink()
+        except FileNotFoundError:
+            pass
+
+
+def _scan_locked(
+    cfg: dict[str, Any],
+    companies: list[str] | None = None,
+    limit: int | None = None,
+    rebuild: bool = False,
+    use_ocr: bool = True,
+) -> dict[str, int]:
     nas = cfg["nas"]
     root = Path(nas["root"])
     companies = companies or nas.get("companies", [])
@@ -51,6 +76,7 @@ def scan(
                 stats["failed"] += 1
                 print(f"[error] {p}: {exc}")
 
+    stats["duplicates_marked"] = db.mark_duplicate_reports(conn)
     row = conn.execute(
         "SELECT COUNT(*) AS n FROM pages"
     ).fetchone()
@@ -79,13 +105,18 @@ def _process_file(
     use_ocr: bool,
 ) -> bool:
     st = path.stat()
-    sha = _sha256(path)
-
     existing = conn.execute(
-        "SELECT status, sha256 FROM manifest WHERE path=?", (str(path),)
+        "SELECT status, sha256, size, mtime FROM manifest WHERE path=?", (str(path),)
     ).fetchone()
-    if existing and existing["sha256"] == sha and existing["status"] == "ok" and not rebuild:
+    if (
+        existing
+        and existing["status"] == "ok"
+        and existing["size"] == st.st_size
+        and existing["mtime"] == st.st_mtime
+        and not rebuild
+    ):
         return False
+    sha = _sha256(path)
 
     meta = classify_report(path)
     meta.setdefault("currency", None)
@@ -102,39 +133,51 @@ def _process_file(
     )
     report_id = db.upsert_report(conn, meta)
 
-    if path.suffix.lower() == ".pdf":
-        ocr_cfg = cfg.get("ocr", {})
-        pages = extract_pdf(
-            path,
-            ocr_langs=ocr_cfg.get("langs", "chi_sim+eng"),
-            ocr_min_chars=ocr_cfg.get("min_chars", 80),
-            use_ocr=use_ocr and ocr_cfg.get("enabled", True),
-        )
-        for p in pages:
-            p["company"] = company
-            p["content_orig"] = p["content"]
-            p["content"] = to_simplified(p["content"])
-        db.replace_pages(conn, report_id, pages)
-        stmt_rows = extract_statements_from_pages(pages, company, meta["title"])
-        db.replace_statements(conn, report_id, stmt_rows)
-    elif path.suffix.lower() == ".xls":
-        rows = read_xls_matrix(path)
-        _store_xls(conn, report_id, company, meta, rows)
-    else:
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        db.replace_pages(
-            conn,
-            report_id,
-            [
-                {
-                    "page_no": 1,
-                    "content": to_simplified(text),
-                    "content_orig": text,
-                    "char_count": len(text),
-                    "is_ocr": 0,
-                }
-            ],
-        )
+    try:
+        if path.suffix.lower() == ".pdf":
+            ocr_cfg = cfg.get("ocr", {})
+            pages = extract_pdf(
+                path,
+                ocr_langs=ocr_cfg.get("langs", "chi_sim+eng"),
+                ocr_min_chars=ocr_cfg.get("min_chars", 80),
+                use_ocr=use_ocr and ocr_cfg.get("enabled", True),
+            )
+            for p in pages:
+                p["company"] = company
+                p["content_orig"] = p["content"]
+                p["content"] = to_simplified(p["content"])
+            db.replace_pages(conn, report_id, pages)
+            stmt_rows = extract_statements_from_pages(
+                pages, company, meta["title"], report_year=meta.get("year")
+            )
+            db.replace_statements(conn, report_id, stmt_rows)
+            content_lang = _detect_content_language(pages)
+            if content_lang:
+                conn.execute(
+                    "UPDATE reports SET language=? WHERE id=?",
+                    (content_lang, report_id),
+                )
+        elif path.suffix.lower() == ".xls":
+            rows = read_xls_matrix(path)
+            _store_xls(conn, report_id, company, meta, rows)
+        else:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+            db.replace_pages(
+                conn,
+                report_id,
+                [
+                    {
+                        "page_no": 1,
+                        "content": to_simplified(text),
+                        "content_orig": text,
+                        "char_count": len(text),
+                        "is_ocr": 0,
+                    }
+                ],
+            )
+    except Exception as exc:
+        _mark_failed(conn, path, report_id, exc)
+        raise
 
     conn.execute(
         "UPDATE reports SET status='ok', parsed_at=? WHERE id=?",
@@ -164,6 +207,21 @@ def _process_file(
 def _store_xls(conn, report_id: int, company: str, meta: dict, rows: list[list[Any]]) -> None:
     if not rows:
         return
+    text = "\n".join(" | ".join(str(c or "").strip() for c in r) for r in rows)
+    db.replace_pages(
+        conn,
+        report_id,
+        [
+            {
+                "page_no": 1,
+                "content": to_simplified(text),
+                "content_orig": text,
+                "char_count": len(text),
+                "is_ocr": 0,
+                "company": company,
+            }
+        ],
+    )
     name = meta["title"].lower()
     if "benefit" in name or "profit" in name:
         stmt = "income"
@@ -208,6 +266,37 @@ def _store_xls(conn, report_id: int, company: str, meta: dict, rows: list[list[A
                 }
             )
     db.replace_statements(conn, report_id, stmt_rows)
+
+
+def _detect_content_language(pages: list[dict[str, Any]]) -> str | None:
+    cjk = 0
+    total = 0
+    for p in pages:
+        text = p.get("content") or ""
+        cjk += sum("\u4e00" <= ch <= "\u9fff" for ch in text)
+        total += max(len(text), 1)
+    if total == 0:
+        return None
+    # 中文页 CJK 占比通常明显高于 2%；英文报告中偶有少量中文字符。
+    return "zh" if cjk / total >= 0.02 else "en"
+
+
+def _mark_failed(conn, path: Path, report_id: int, exc: Exception) -> None:
+    now = time.strftime("%Y-%m-%dT%H:%M:%S")
+    conn.execute(
+        "UPDATE reports SET status='failed', parsed_at=? WHERE id=?",
+        (now, report_id),
+    )
+    conn.execute(
+        """
+        INSERT INTO manifest(path, company, size, mtime, sha256, status, last_seen, parsed_at)
+        SELECT path, company, size, mtime, sha256, 'failed', ?, ? FROM reports WHERE id=?
+        ON CONFLICT(path) DO UPDATE SET status='failed', last_seen=excluded.last_seen,
+            parsed_at=excluded.parsed_at
+        """,
+        (now, now, report_id),
+    )
+    conn.commit()
 
 
 def _sha256(path: Path) -> str:

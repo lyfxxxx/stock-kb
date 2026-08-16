@@ -6,10 +6,10 @@ from stock_kb.config import load_config
 cfg = load_config()
 conn = db.connect(cfg["db_path"])
 db.load_vector_extension(conn)
-print("models:", [dict(r) for r in conn.execute("SELECT model, COUNT(*) n, dim FROM embedding_index GROUP BY model, dim").fetchall()])
+print("models:", [dict(r) for r in conn.execute("SELECT model, vec_table, COUNT(*) n, dim FROM embedding_index GROUP BY model, vec_table, dim").fetchall()])
 print("chunks:", conn.execute("SELECT COUNT(*) n FROM chunks").fetchone()["n"])
-print("vec512:", conn.execute("SELECT COUNT(*) n FROM chunks_vec_512").fetchone()["n"])
-print("vec384:", conn.execute("SELECT COUNT(*) n FROM chunks_vec_384").fetchone()["n"])
+for name in db.vector_table_names(conn):
+    print(f"{name}:", conn.execute(f"SELECT COUNT(*) n FROM {name}").fetchone()["n"])
 try:
     hits = vector.vector_search(
         conn,

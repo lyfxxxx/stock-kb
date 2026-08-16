@@ -33,6 +33,9 @@ def main(argv: list[str] | None = None) -> int:
     p_search.add_argument("--json", action="store_true")
     p_search.add_argument("--hybrid", action="store_true", help="混合检索（需要已建向量索引）")
     p_search.add_argument("--model", default="BAAI/bge-small-zh-v1.5")
+    p_search.add_argument("--year", type=int, default=None)
+    p_search.add_argument("--report-type", default=None)
+    p_search.add_argument("--language", default=None)
 
     p_stats = sub.add_parser("stats", help="统计入库情况")
     p_stats.add_argument("--json", action="store_true")
@@ -57,6 +60,7 @@ def main(argv: list[str] | None = None) -> int:
     p_index.add_argument("--rebuild", action="store_true")
 
     p_reclassify = sub.add_parser("reclassify", help="按文件名/目录重新分类已有报告")
+    p_dedupe = sub.add_parser("dedupe", help="按 SHA-256 标记重复报告并保留 canonical 版本")
 
     p_indicators = sub.add_parser("indicators", help="从三表计算常用财务指标")
 
@@ -84,14 +88,17 @@ def main(argv: list[str] | None = None) -> int:
             import time
 
             while True:
-                result = ingest.scan(
-                    cfg,
-                    companies=args.company,
-                    limit=args.limit,
-                    rebuild=args.rebuild,
-                    use_ocr=not args.no_ocr,
-                )
-                print(json.dumps(result, ensure_ascii=False, indent=2))
+                try:
+                    result = ingest.scan(
+                        cfg,
+                        companies=args.company,
+                        limit=args.limit,
+                        rebuild=args.rebuild,
+                        use_ocr=not args.no_ocr,
+                    )
+                    print(json.dumps(result, ensure_ascii=False, indent=2))
+                except Exception as exc:
+                    print(json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2))
                 time.sleep(args.watch_interval)
         else:
             result = ingest.scan(
@@ -117,10 +124,16 @@ def main(argv: list[str] | None = None) -> int:
                 company=args.company,
                 cache_dir=cfg["models_dir"],
                 backend=cfg.get("embedding", {}).get("backend", "auto"),
+                year=args.year,
+                report_type=args.report_type,
+                language=args.language,
             )
         else:
             hits = search.fts_search(
-                conn, args.query, company=args.company, top_k=args.top_k
+                conn, args.query, company=args.company, top_k=args.top_k,
+                year=args.year,
+                report_type=args.report_type,
+                language=args.language,
             )
         if args.json:
             print(json.dumps(hits, ensure_ascii=False, indent=2))
@@ -170,11 +183,23 @@ def main(argv: list[str] | None = None) -> int:
         updated = 0
         for r in rows:
             meta = classify_report(r["path"])
+            cjk = 0
+            total_chars = 0
+            for page in conn.execute(
+                "SELECT content, char_count FROM pages WHERE report_id=?", (r["id"],)
+            ):
+                text = page["content"] or ""
+                cjk += sum("一" <= ch <= "鿿" for ch in text)
+                total_chars += max(page["char_count"] or 0, len(text))
+            if total_chars:
+                language = "zh" if cjk / total_chars >= 0.02 else "en"
+            else:
+                language = meta["language"]
             conn.execute(
                 "UPDATE reports SET report_type=?, language=?, year=?, period_type=? WHERE id=?",
                 (
                     meta["report_type"],
-                    meta["language"],
+                    language,
                     meta["year"],
                     meta["period_type"],
                     r["id"],
@@ -184,6 +209,12 @@ def main(argv: list[str] | None = None) -> int:
         conn.commit()
         conn.close()
         print(json.dumps({"updated": updated}, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.cmd == "dedupe":
+        marked = db.mark_duplicate_reports(conn)
+        conn.close()
+        print(json.dumps({"duplicates_marked": marked}, ensure_ascii=False, indent=2))
         return 0
 
     if args.cmd == "indicators":

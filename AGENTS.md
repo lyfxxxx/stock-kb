@@ -198,9 +198,11 @@ python tools/test_mcp_http.py                       # 端到端测试
 
 ## 12. 当前已知局限 / 待办
 
-- `sources` 表未填充；引用由 MCP 现场计算，够用但不可直接审计。
-- 评测集已扩到 80 题，但 cross 纯检索仅 6 题、ground truth 仍部分自标注；end2end 8 题待人工审核（`eval/manual_review.md`）；单位/币种尚不能自动验证。
+> 2026-08-16 自动修复后的最新状态见 `docs/fix-record-20260816.md`；以下只列仍未完成或需要人工的事项。
+
+- 评测集已扩到 80 题，但 cross 纯检索仅 6 题、ground truth 仍部分自标注；end2end 8 题待人工审核（`eval/manual_review.md`）；结构化 golden 仍需从 PDF 独立复核。
+- 两字查询已建 `pages_bigram_fts`，但 bigram 排序暂未启用（避免牺牲 keyword 基线），需独立评测集调权。
 - reranker / jina 对比未完成（可选）。
+- US/HK 年报等“内容不同但语义重复”的 canonical 标记未实现；SHA 完全重复已自动标记并排除。
 - Docker 迁移到 DXP-4800、Hermes Agent 接入尚未开始。
 - `scan --watch-interval` 自动扫描开关已实现但未在真实新增文件上验证。
-- `pyproject.toml` 的 `[tool.setuptools] packages` 只显式列了 `stock_kb` 与 `stock_kb.parsers`；新增子包（如现有 `stock_kb.serve`）要补进该列表，否则 wheel 安装会缺包。

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import json
+import hashlib
 import os
 import re
 import sysconfig
@@ -133,6 +133,29 @@ def _add_nvidia_dll_dirs() -> None:
         os.environ["PATH"] = str(d) + os.pathsep + os.environ.get("PATH", "")
 
 
+def _serialize_vector(vec: Any) -> bytes:
+    import numpy as np
+
+    arr = np.asarray(vec, dtype=np.float32)
+    return arr.tobytes()
+
+
+def _vec_table_name(model: str) -> str:
+    slug = re.sub(r"[^0-9a-zA-Z]+", "_", model).strip("_")[:48] or "model"
+    digest = hashlib.sha1(model.encode("utf-8")).hexdigest()[:8]
+    return f"chunks_vec_{slug}_{digest}"
+
+
+def _model_vec_table(conn, model: str, dim: int) -> str:
+    row = conn.execute(
+        "SELECT vec_table FROM embedding_index WHERE model=? AND vec_table IS NOT NULL LIMIT 1",
+        (model,),
+    ).fetchone()
+    if row:
+        return str(row["vec_table"])
+    return _vec_table_name(model)
+
+
 def _split_chunks(text: str, size: int = CHUNK_SIZE) -> list[str]:
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     if not lines:
@@ -187,20 +210,24 @@ def build_index(
     dim = MODEL_DIMS.get(model)
     if not dim:
         raise ValueError(f"不支持的模型维度映射: {model}")
-    table = f"chunks_vec_{dim}"
+
+    old_table = None
+    if rebuild:
+        row = conn.execute(
+            "SELECT vec_table FROM embedding_index WHERE model=? AND vec_table IS NOT NULL LIMIT 1",
+            (model,),
+        ).fetchone()
+        old_table = str(row["vec_table"]) if row else None
+        conn.execute("DELETE FROM embedding_index WHERE model=?", (model,))
+        if old_table:
+            conn.execute(f"DROP TABLE IF EXISTS {old_table}")
+        conn.commit()
+
+    table = _model_vec_table(conn, model, dim)
     conn.execute(
         f"CREATE VIRTUAL TABLE IF NOT EXISTS {table} USING vec0("
         f"chunk_id INTEGER PRIMARY KEY, embedding FLOAT[{dim}])"
     )
-
-    if rebuild:
-        conn.execute("DELETE FROM embedding_index WHERE model=?", (model,))
-        conn.execute(f"DROP TABLE IF EXISTS {table}")
-        conn.execute(
-            f"CREATE VIRTUAL TABLE IF NOT EXISTS {table} USING vec0("
-            f"chunk_id INTEGER PRIMARY KEY, embedding FLOAT[{dim}])"
-        )
-        conn.commit()
 
     _ensure_chunks(conn)
 
@@ -232,12 +259,12 @@ def build_index(
         for row, vec in zip(chunk, vectors):
             conn.execute(
                 f"INSERT OR REPLACE INTO {table}(chunk_id, embedding) VALUES(?, ?)",
-                (row["chunk_id"], json.dumps(vec.tolist())),
+                (row["chunk_id"], _serialize_vector(vec)),
             )
             conn.execute(
-                "INSERT OR REPLACE INTO embedding_index(model, chunk_id, dim, indexed_at) "
-                "VALUES(?,?,?,?)",
-                (model, row["chunk_id"], dim, now),
+                "INSERT OR REPLACE INTO embedding_index(model, chunk_id, dim, vec_table, indexed_at) "
+                "VALUES(?,?,?,?,?)",
+                (model, row["chunk_id"], dim, table, now),
             )
             indexed += 1
         conn.commit()
@@ -254,39 +281,56 @@ def vector_search(
     company: str | None = None,
     cache_dir: str | None = None,
     backend: str = "auto",
+    year: int | None = None,
+    report_type: str | None = None,
+    language: str | None = None,
+    candidate_k: int | None = None,
 ) -> list[dict[str, Any]]:
+    query = search.normalize_query(query)
+    if not query:
+        return []
     row = conn.execute(
-        "SELECT dim FROM embedding_index WHERE model=? LIMIT 1", (model,)
+        "SELECT dim, vec_table FROM embedding_index WHERE model=? LIMIT 1", (model,)
     ).fetchone()
     if not row:
         return []
     db.load_vector_extension(conn)
     dim = int(row["dim"])
-    table = f"chunks_vec_{dim}"
+    table = row["vec_table"] or f"chunks_vec_{dim}"
     if not cache_dir:
         return []
     embedder = get_embedder(model, cache_dir, backend=backend)
-    vec = next(embedder.embed([query])).tolist()
+    vec = next(embedder.embed([query]))
+    has_filters = any(
+        v is not None for v in (company, year, report_type, language)
+    )
+    chunk_limit = candidate_k or (top_k * 10 if has_filters else top_k * 5)
     hits = conn.execute(
         f"SELECT chunk_id, distance FROM {table} "
         "WHERE embedding MATCH ? AND k = ? ORDER BY distance",
-        (json.dumps(vec), top_k * 5),
+        (_serialize_vector(vec), chunk_limit),
     ).fetchall()
     best: dict[int, dict[str, Any]] = {}
     for h in hits:
         r = conn.execute(
             """
             SELECT p.id AS page_id, p.page_no, p.report_id, r.company, r.title, r.path,
-                   c.content
+                   r.year, r.report_type, r.language, c.content
             FROM chunks c JOIN pages p ON p.id = c.page_id
             JOIN reports r ON r.id = p.report_id
-            WHERE c.id=?
+            WHERE c.id=? AND COALESCE(r.is_duplicate, 0) = 0
             """,
             (h["chunk_id"],),
         ).fetchone()
         if not r:
             continue
-        if company and r["company"] != company:
+        if company is not None and r["company"] != company:
+            continue
+        if year is not None and r["year"] != year:
+            continue
+        if report_type is not None and r["report_type"] != report_type:
+            continue
+        if language is not None and r["language"] != language:
             continue
         cur = best.get(r["page_id"])
         if cur is None or h["distance"] < cur["score"]:
@@ -313,36 +357,78 @@ def hybrid_search(
     company: str | None = None,
     cache_dir: str | None = None,
     backend: str = "auto",
+    year: int | None = None,
+    report_type: str | None = None,
+    language: str | None = None,
+    fts_weight: float = 1.0,
+    vec_weight: float = 1.0,
+    rrf_k: int = 60,
 ) -> list[dict[str, Any]]:
-    db.load_vector_extension(conn)
-    fts = search.fts_search(conn, query, company=company, top_k=top_k)
-    for h in fts:
-        h["source"] = "fts"
+    query = search.normalize_query(query)
+    if not query:
+        return []
+    # 短术语（<6 个字符）以关键词命中为准，向量容易引入同义噪音。
+    # 长句/语义问题再走 RRF 融合。
+    if len(query) < 6:
+        hits = search.fts_search(
+            conn,
+            query,
+            company=company,
+            top_k=top_k,
+            year=year,
+            report_type=report_type,
+            language=language,
+        )
+        for h in hits:
+            h["source"] = "hybrid"
+        return hits
+
+    candidate_k = max(top_k * 4, 20)
+    fts = search.fts_search(
+        conn,
+        query,
+        company=company,
+        top_k=candidate_k,
+        year=year,
+        report_type=report_type,
+        language=language,
+    )
     vec = vector_search(
         conn,
         model,
         query,
-        top_k=top_k,
+        top_k=candidate_k,
         company=company,
         cache_dir=cache_dir,
         backend=backend,
+        year=year,
+        report_type=report_type,
+        language=language,
     )
-    seen = {h["page_id"] for h in fts}
-    merged = list(fts)
-    vec_seen = set()
-    for h in vec:
-        if h["page_id"] not in seen:
-            vec_seen.add(h["page_id"])
-    out: list[dict[str, Any]] = []
-    fts_iter = iter(fts)
-    vec_iter = iter([h for h in vec if h["page_id"] in vec_seen])
-    fts_next = next(fts_iter, None)
-    vec_next = next(vec_iter, None)
-    while len(out) < top_k and (fts_next is not None or vec_next is not None):
-        if fts_next is not None:
-            out.append(fts_next)
-            fts_next = next(fts_iter, None)
-        if len(out) < top_k and vec_next is not None:
-            out.append(vec_next)
-            vec_next = next(vec_iter, None)
+
+    fused: dict[int, dict[str, Any]] = {}
+    for pos, h in enumerate(fts, start=1):
+        page_id = h["page_id"]
+        item = fused.setdefault(
+            page_id,
+            {k: v for k, v in h.items() if k != "rank"},
+        )
+        item["_rrf"] = item.get("_rrf", 0.0) + fts_weight / (pos + rrf_k)
+        item["fts_rank"] = pos
+        item["snippet"] = h.get("snippet") or item.get("snippet")
+        item["source"] = "hybrid"
+    for pos, h in enumerate(vec, start=1):
+        page_id = h["page_id"]
+        item = fused.setdefault(page_id, dict(h))
+        item["_rrf"] = item.get("_rrf", 0.0) + vec_weight / (pos + rrf_k)
+        item["vec_rank"] = pos
+        item["source"] = "hybrid"
+
+    out = sorted(
+        fused.values(),
+        key=lambda x: (-x.get("_rrf", 0.0), x.get("score", 1e9)),
+    )[:top_k]
+    for item in out:
+        item["fusion_score"] = round(item.get("_rrf", 0.0), 6)
+        item.pop("_rrf", None)
     return out

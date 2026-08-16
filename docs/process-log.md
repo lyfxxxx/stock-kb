@@ -199,14 +199,17 @@
 
 ## 七、当前已知局限与下一步
 
+> 2026-08-16 自动修复后已更新；详细修复记录见 `docs/fix-record-20260816.md`。
+
 - 题库已扩到 80 题，但 cross 纯检索仅 6 题、semantic 无负样本；ground truth 仍部分自标注，独立 PDF golden 未完成。
 - end2end 8 题待人工审核（见 `eval/manual_review.md`）。
-- `statements.unit/currency` 当前全为空，单位/币种自动验证不可用。
-- MCP `search_reports` 仍只暴露 FTS，评测中的 hybrid 收益尚未对线上生效。
+- `statements.unit/currency` 已回填，结构化 unit/currency 26/26；研报等单位未知项仍可能为空。
+- MCP `search_reports` 已支持 fts/vector/hybrid 与年份/类型/语言过滤。
+- 两字查询已建 `pages_bigram_fts`，但 bigram 排序在当前 80 题上会牺牲 keyword 基线，暂仅作空结果兜底；后续需要独立评测集调权。
 - reranker / jina 对比未完成（reranker 下载曾被打断，可选）。
+- US/HK 年报等“内容不同但语义重复”的 canonical 标记未实现；SHA 完全重复已自动标记并排除。
 - Docker 迁移到 DXP-4800 与 Hermes Agent 接入未开始（NAS 阶段）。
 - 自动扫描开关已实现（`scan --watch-interval`），但未在真实新增文件上验证。
-- `sources` 表未填充：MCP 现场计算引用，功能可用，但审计/回溯不够直接，可后续补。
 
 ## 八、可复用经验清单
 

@@ -8,7 +8,7 @@ from stock_kb.parsers.pdf_parser import extract_statements_from_pages
 
 def reparse_statements(cfg: dict[str, Any], company: str | None = None) -> dict[str, int]:
     conn = db.connect(cfg["db_path"])
-    sql = "SELECT id, company, title FROM reports"
+    sql = "SELECT id, company, title, year FROM reports"
     params: list[Any] = []
     if company:
         sql += " WHERE company=?"
@@ -31,7 +31,9 @@ def reparse_statements(cfg: dict[str, Any], company: str | None = None) -> dict[
             }
             for p in page_rows
         ]
-        stmt_rows = extract_statements_from_pages(pages, r["company"], r["title"])
+        stmt_rows = extract_statements_from_pages(
+            pages, r["company"], r["title"], report_year=r["year"]
+        )
         db.replace_statements(conn, r["id"], stmt_rows)
         updated += 1
     conn.close()

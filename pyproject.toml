@@ -27,4 +27,4 @@ gpu = ["torch>=2.6", "sentence-transformers>=3.0"]
 stock-kb = "stock_kb.cli:main"
 
 [tool.setuptools]
-packages = ["stock_kb", "stock_kb.parsers"]
+packages = ["stock_kb", "stock_kb.parsers", "stock_kb.serve"]

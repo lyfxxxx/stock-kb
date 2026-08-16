@@ -8,7 +8,21 @@ ANNUAL_KEYS = ("年报", "年度报告", "年報", "annual report", "10-k")
 INTERIM_KEYS = ("中报", "中期报告", "中期報告", "interim report")
 Q3_KEYS = ("三季报", "第三季度")
 PROSPECTUS_KEYS = ("招股", "prospectus", "ipo", "全球发售")
-RESEARCH_KEYS = ("研报", "证券", "研究", "点评")
+RESEARCH_KEYS = (
+    "研报",
+    "证券",
+    "研究",
+    "点评",
+    "评级",
+    "首次覆盖",
+    "投资价值",
+    "公司深度",
+    "公司快评",
+    "跟踪报告",
+    "investor day",
+    "company update",
+)
+CATALOG_KEYS = ("参考清单", "清單", "清单")
 
 
 def classify_report(path: str | Path) -> dict:
@@ -18,7 +32,21 @@ def classify_report(path: str | Path) -> dict:
     name_norm = name.replace("_", " ").replace("-", " ")
     parent_norm = parent.replace("_", " ").replace("-", " ")
 
-    if any(k in name_norm for k in PROSPECTUS_KEYS) or any(k in parent_norm for k in PROSPECTUS_KEYS):
+    research = any(k in name_norm for k in RESEARCH_KEYS) or any(
+        k in parent_norm for k in RESEARCH_KEYS
+    )
+    prospectus = any(k in name_norm for k in PROSPECTUS_KEYS) or any(
+        k in parent_norm for k in PROSPECTUS_KEYS
+    )
+    catalog = any(k in name_norm for k in CATALOG_KEYS)
+
+    # 研报特征优先于“年报/中报”等报告期词，避免
+    # 《2023年报费用管控效果显著》被误判为年报。
+    if catalog:
+        report_type = "other"
+    elif research:
+        report_type = "research"
+    elif prospectus:
         report_type = "prospectus"
     elif any(k in name_norm for k in ANNUAL_KEYS) or any(k in parent_norm for k in ANNUAL_KEYS):
         report_type = "annual"
@@ -26,8 +54,6 @@ def classify_report(path: str | Path) -> dict:
         report_type = "interim"
     elif any(k in name_norm for k in Q3_KEYS):
         report_type = "q3"
-    elif any(k in name_norm for k in RESEARCH_KEYS) or any(k in parent_norm for k in RESEARCH_KEYS):
-        report_type = "research"
     else:
         report_type = "other"
 
