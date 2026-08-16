@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "较复杂问题的混合检索流程",
+    "quality_profile": "showcase",
+    "viewBox": [1000, 260]
+  },
+  "lanes": [
+    { "id": "retrieval", "label": "混合检索链路" }
+  ],
+  "phases": [
+    { "id": "understand", "label": "理解问题", "fromCol": 0, "toCol": 1 },
+    { "id": "recall", "label": "并行召回", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "rank", "label": "融合输出", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["question", "normalize", "fts", "merge", "topk"],
+  "nodes": [
+    {
+      "id": "question",
+      "lane": "retrieval",
+      "col": 0,
+      "type": "frontend",
+      "label": "复杂问题",
+      "sublabel": "公司 + 年份 + 语义",
+      "width": 76
+    },
+    {
+      "id": "normalize",
+      "lane": "retrieval",
+      "col": 1,
+      "type": "backend",
+      "label": "规范化",
+      "sublabel": "统一语言",
+      "width": 70
+    },
+    {
+      "id": "fts",
+      "lane": "retrieval",
+      "col": 2,
+      "type": "backend",
+      "label": "FTS5",
+      "sublabel": "trigram",
+      "width": 70
+    },
+    {
+      "id": "vec",
+      "lane": "retrieval",
+      "col": 3,
+      "type": "database",
+      "label": "向量检索",
+      "sublabel": "向量库",
+      "width": 60
+    },
+    {
+      "id": "merge",
+      "lane": "retrieval",
+      "col": 4,
+      "type": "backend",
+      "label": "混合排序",
+      "sublabel": "FTS 优先",
+      "width": 60
+    },
+    {
+      "id": "topk",
+      "lane": "retrieval",
+      "col": 5,
+      "type": "frontend",
+      "label": "top_k",
+      "sublabel": "来源页",
+      "width": 70
+    }
+  ],
+  "edges": [
+    { "from": "question", "to": "normalize", "role": "main", "variant": "emphasis", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "normalize", "to": "fts", "role": "branch", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "normalize", "to": "vec", "role": "branch", "route": "up-channel", "fromSide": "top", "toSide": "top", "channelY": 48 },
+    { "from": "fts", "to": "merge", "role": "branch", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom", "channelY": 215 },
+    { "from": "vec", "to": "merge", "role": "branch", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "from": "merge", "to": "topk", "role": "main", "variant": "emphasis", "route": "drop", "fromSide": "bottom", "toSide": "top" }
+  ]
+}

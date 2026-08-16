@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>较复杂问题的混合检索流程详解</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.7;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 20px 64px;
+    color: #1f2328;
+    background: #fff;
+  }
+  h1 { font-size: 28px; margin-bottom: 8px; }
+  h2 { font-size: 22px; margin-top: 36px; padding-bottom: 6px; border-bottom: 1px solid #e6e6e6; }
+  h3 { font-size: 18px; margin-top: 24px; }
+  p { margin: 12px 0; }
+  ul, ol { margin: 10px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background: #f6f8fa;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: #f6f8fa;
+    border: 1px solid #e6e6e6;
+    border-radius: 6px;
+    padding: 12px 14px;
+    overflow-x: auto;
+  }
+  pre code { background: none; padding: 0; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 14px 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    border: 1px solid #d8dee4;
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #f6f8fa; }
+  .flow-wrap { margin: 16px 0 8px; }
+  .note { color: #57606a; font-size: 0.92em; }
+</style>
+</head>
+<body>
+
+  <h1>较复杂问题的混合检索流程详解</h1>
+  <p>本文逐步说明「较复杂问题」在 stock-kb 中的混合检索过程。配套流程图见下方嵌入，也可直接打开 <a href="hybrid-retrieval-complex.html">hybrid-retrieval-complex.html</a> 查看。</p>
+
+  <div class="flow-wrap">
+    <iframe src="hybrid-retrieval-complex.html" style="width:100%;height:680px;border:0;" title="混合检索流程图"></iframe>
+  </div>
+
+  <h2>1. 复杂问题</h2>
+  <p>示例问题：</p>
+  <pre><code>百胜中国 2024 年经营现金流能否覆盖资本开支？</code></pre>
+  <p>这类问题同时包含：</p>
+  <ul>
+    <li><strong>公司</strong>：百胜中国；</li>
+    <li><strong>年份</strong>：2024 年；</li>
+    <li><strong>关键词</strong>：经营现金流、资本开支；</li>
+    <li><strong>语义判断</strong>：能否覆盖，是一个比较/判断关系，不是单纯的字面命中。</li>
+  </ul>
+  <p>当前 <code>hybrid_search</code> 不会自动把问题拆成子问题，而是把整句作为一次查询；<code>company</code> 作为参数传入，用于限定公司范围。</p>
+
+  <h2>2. 查询规范化</h2>
+  <p>索引侧已经做过繁体转简体（opencc t2s），所以入库的 <code>pages.content</code> 是简体文本。查询侧目前主要是 <code>strip</code> 去掉首尾空白后直接做 embedding，尚未做同义改写或子问题拆分；这两项属于理想步骤，后续再补。</p>
+
+  <h2>3. FTS5 关键词检索</h2>
+  <p>关键词路由规则：</p>
+  <ul>
+    <li>查询长度 <code>&gt;= 3</code>：使用 <code>pages_fts MATCH</code>，走 trigram 分词，查询词被包成短语（双引号转义后按短语匹配）；</li>
+    <li>查询长度 <code>&lt; 3</code>：使用 <code>LIKE</code>，带 <code>ESCAPE</code> 兜底；</li>
+    <li>两种路径都支持 <code>company</code> 过滤。</li>
+  </ul>
+  <p>以公司为「百胜中国」、关键词为「资本开支」为例，FTS 命中的候选页包括：</p>
+  <ul>
+    <li>华源证券研报 第 1 页；</li>
+    <li>百胜中国_招股书_中文版 第 332 页；</li>
+    <li>百胜中国_招股书_中文版 第 302 页。</li>
+  </ul>
+  <p>这些页面内容分别涉及资本开支。</p>
+
+  <h2>4. 向量语义检索</h2>
+  <p>向量侧默认模型为 <code>BAAI/bge-small-zh-v1.5</code>，维度为 512。sqlite-vec 先取 <code>top_k * 5</code> 个候选块（chunks），再按 <code>page_id</code> 去重（同一页保留距离最近的块），同时支持 <code>company</code> 过滤。</p>
+  <p>示例：vector 命中百胜中国_招股书_中文版 第 219 页、第 220 页，内容涉及现金流量和流动资金与资本资源。</p>
+
+  <h2>5. 混合排序与去重</h2>
+  <p>当前实现是：先取 FTS 的 <code>top_k</code>，再取向量的 <code>top_k</code>；按 <code>page_id</code> 去重后，FTS 优先、向量补位，交替填充到 <code>top_k</code>。这里不是 RRF 加权融合。</p>
+  <p>实际效果：复杂自然语言问题下 FTS 可能为空，最终以向量结果为主；若问题里带有精确词（如「资本开支」），则 FTS 命中会排在前，向量再补位。</p>
+
+  <h2>6. 返回 top_k</h2>
+  <p>返回结果包含以下字段：</p>
+  <table>
+    <thead>
+      <tr><th>字段</th><th>含义</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>page_id</code></td><td>页面唯一 ID</td></tr>
+      <tr><td><code>page_no</code></td><td>页码</td></tr>
+      <tr><td><code>report_id</code></td><td>报告 ID</td></tr>
+      <tr><td><code>company</code></td><td>公司名</td></tr>
+      <tr><td><code>title</code></td><td>报告标题</td></tr>
+      <tr><td><code>path</code></td><td>报告文件路径</td></tr>
+      <tr><td><code>score</code></td><td>排序分数（向量命中为距离，越小越近）</td></tr>
+      <tr><td><code>source</code></td><td>来源：<code>fts</code> 或 <code>vector</code></td></tr>
+      <tr><td><code>snippet</code></td><td>命中片段，用于取原文和生成引用</td></tr>
+    </tbody>
+  </table>
+  <p class="note"><code>source</code> 表示命中来自 FTS 还是向量；<code>snippet</code> 提供命中位置附近的文本，供后续 agent 取原文并生成可追溯引用。</p>
+
+  <h2>7. 一个完整例子串联</h2>
+  <p>仍以「百胜中国 2024 年经营现金流能否覆盖资本开支？」为例：</p>
+  <ol>
+    <li>FTS 对整句做 trigram 短语匹配，可能返回空（整句没有精确词面命中）；</li>
+    <li>向量检索做语义召回，补充「现金流量」「流动资金与资本资源」等相关候选页；</li>
+    <li>混合排序按 FTS 优先、向量补位，返回候选 <code>top_k</code>；</li>
+    <li>后续 agent 读取这些页面的原文，定位经营现金流与资本开支的具体数字，并生成引用。</li>
+  </ol>
+
+  <h2>8. 当前流程与理想流程差异</h2>
+  <table>
+    <thead>
+      <tr><th>维度</th><th>现状</th><th>后续优化</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>子查询拆分</td><td>整句作为一次查询，不拆子问题</td><td>按公司/年份/指标拆成子问题再合并</td></tr>
+      <tr><td>融合排序</td><td>FTS 优先 + 向量补位</td><td>RRF 加权融合或 reranker 精排</td></tr>
+      <tr><td>结构化数据</td><td>未直接查三表</td><td>结构化三表直查（statements/indicators）</td></tr>
+      <tr><td>硬约束</td><td>仅支持 <code>company</code> 过滤</td><td>公司/年份/报表类型硬约束</td></tr>
+    </tbody>
+  </table>
+
+</body>
+</html>
