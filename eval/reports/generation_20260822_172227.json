@@ -1,0 +1,38 @@
+{
+  "notes": {
+    "海底捞": {
+      "path": "D:\\workspace\\analysis-notes\\海底捞\\2026-08-09-海底捞-笔记.md",
+      "n_numbers": 46,
+      "number_matched": 46,
+      "number_accuracy": 1.0,
+      "orphan_number_rate": 0.0,
+      "n_citations": 15,
+      "citation_matched": 15,
+      "citation_precision": 1.0
+    },
+    "百胜中国": {
+      "path": "D:\\workspace\\analysis-notes\\百胜中国\\2026-08-09-百胜中国-笔记.md",
+      "n_numbers": 28,
+      "number_matched": 26,
+      "number_accuracy": 0.929,
+      "orphan_number_rate": 0.071,
+      "n_citations": 4,
+      "citation_matched": 4,
+      "citation_precision": 1.0
+    },
+    "海底捞-抽查": {
+      "path": "D:\\workspace\\analysis-notes\\海底捞\\2026-08-22-海底捞-抽查笔记.md",
+      "n_numbers": 15,
+      "number_matched": 15,
+      "number_accuracy": 1.0,
+      "orphan_number_rate": 0.0,
+      "n_citations": 23,
+      "citation_matched": 20,
+      "citation_precision": 0.87
+    }
+  },
+  "summary": {
+    "number_accuracy_mean": 0.976,
+    "hardcoded_failed": 0
+  }
+}

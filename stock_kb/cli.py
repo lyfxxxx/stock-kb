@@ -31,7 +31,13 @@ def main(argv: list[str] | None = None) -> int:
     p_search.add_argument("--company")
     p_search.add_argument("--top-k", type=int, default=5)
     p_search.add_argument("--json", action="store_true")
-    p_search.add_argument("--hybrid", action="store_true", help="混合检索（需要已建向量索引）")
+    p_search.add_argument("--hybrid", action="store_true", help="混合检索（需要已建向量索引；等同 --engine hybrid）")
+    p_search.add_argument(
+        "--engine",
+        choices=["fts", "vector", "hybrid"],
+        default=None,
+        help="检索方式；默认 fts，指定 --hybrid 时为 hybrid",
+    )
     p_search.add_argument("--model", default="BAAI/bge-small-zh-v1.5")
     p_search.add_argument("--year", type=int, default=None)
     p_search.add_argument("--report-type", default=None)
@@ -52,6 +58,17 @@ def main(argv: list[str] | None = None) -> int:
         "--model",
         default=None,
         help="向量/混合检索使用的嵌入模型；未指定时读取 config 的 embedding.model",
+    )
+    p_eval.add_argument(
+        "--search-path",
+        choices=["mcp_compat", "eval_rrf_keywords"],
+        default="mcp_compat",
+        help="mcp_compat：单 query，与 MCP search_reports 一致；eval_rrf_keywords：旧多关键词 RRF",
+    )
+    p_eval.add_argument(
+        "--split",
+        default=None,
+        help="只评 questions.yaml 中 split 字段匹配的题；缺省 split 视为 freeze",
     )
 
     p_index = sub.add_parser("index", help="构建向量索引")
@@ -113,28 +130,43 @@ def main(argv: list[str] | None = None) -> int:
 
     conn = db.connect(cfg["db_path"])
     if args.cmd == "search":
-        if args.hybrid:
-            from stock_kb import vector
-
-            hits = vector.hybrid_search(
-                conn,
-                args.query,
-                model=args.model,
-                top_k=args.top_k,
-                company=args.company,
-                cache_dir=cfg["models_dir"],
-                backend=cfg.get("embedding", {}).get("backend", "auto"),
-                year=args.year,
-                report_type=args.report_type,
-                language=args.language,
-            )
-        else:
+        engine = args.engine or ("hybrid" if args.hybrid else "fts")
+        if engine == "fts":
             hits = search.fts_search(
                 conn, args.query, company=args.company, top_k=args.top_k,
                 year=args.year,
                 report_type=args.report_type,
                 language=args.language,
             )
+        else:
+            from stock_kb import vector
+
+            if engine == "vector":
+                hits = vector.vector_search(
+                    conn,
+                    args.model,
+                    args.query,
+                    top_k=args.top_k,
+                    company=args.company,
+                    cache_dir=cfg["models_dir"],
+                    backend=cfg.get("embedding", {}).get("backend", "auto"),
+                    year=args.year,
+                    report_type=args.report_type,
+                    language=args.language,
+                )
+            else:
+                hits = vector.hybrid_search(
+                    conn,
+                    args.query,
+                    model=args.model,
+                    top_k=args.top_k,
+                    company=args.company,
+                    cache_dir=cfg["models_dir"],
+                    backend=cfg.get("embedding", {}).get("backend", "auto"),
+                    year=args.year,
+                    report_type=args.report_type,
+                    language=args.language,
+                )
         if args.json:
             print(json.dumps(hits, ensure_ascii=False, indent=2))
         else:
@@ -160,7 +192,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "eval":
         data = eval_runner.run_eval(
-            cfg, top_k=args.top_k, model=args.model, engine=args.engine
+            cfg,
+            top_k=args.top_k,
+            model=args.model,
+            engine=args.engine,
+            search_path=args.search_path,
+            split=args.split,
         )
         report = eval_runner.save_report(cfg, data)
         print(json.dumps(data["summary"], ensure_ascii=False, indent=2))

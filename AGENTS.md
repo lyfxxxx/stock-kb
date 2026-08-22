@@ -12,7 +12,7 @@ NAS 财报/研报 → 解析（pdfplumber/xlrd/OCR 兜底）→ SQLite（页文�
 ```
 
 - 试点公司：海底捞（06862.HK）、百胜中国（YUMC/09987.HK），已在 `config.yaml` 配置。
-- 当前规模：60 份报告、8,128 页、8,718 条三表行项目、133 条指标。
+- 当前规模：60 份报告、8,128 页、5,570 条三表行项目、117 条指标（2026-08-16 解析器收紧后；评测执行方案见 `eval/EVAL_PLAN.md`）。
 - 核心目标：笔记中的关键数字必须能追溯到「文件 + 页码/表名」，不允许凭记忆编数。
 
 ## 2. 环境与安装
@@ -28,7 +28,7 @@ NAS 财报/研报 → 解析（pdfplumber/xlrd/OCR 兜底）→ SQLite（页文�
 ```powershell
 python -m stock_kb stats --json                  # 入库统计，不访问 NAS，改前改后都跑
 python -m stock_kb search "翻台率" --top-k 5 --json           # FTS5 检索
-python -m stock_kb search "现金流质量" --hybrid --json        # 混合检索（需先建向量索引）
+python -m stock_kb search "现金流质量" --engine hybrid --json  # 混合检索（需先建向量索引）
 python -m stock_kb eval                              # FTS5 基线评测
 python -m stock_kb eval --engine vector --model BAAI/bge-small-zh-v1.5   # 向量评测
 python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5   # 混合检索评测
@@ -169,7 +169,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 
 ### 新增评测题
 
-在 `eval/questions.yaml` 追加，字段约定：`type` 取 exact/keyword/semantic/cross/end2end；`expected[].file` 写**不含扩展名**的库内 title 片段，`page` 为页号；exact/cross 可带 `statement` 块走结构化判定；检索类带 `keywords`；负样本写 `expected.negatives`（会进入 Neg@k 统计）。加题后分别跑 `eval`（FTS）、`eval --engine vector --model <默认模型>`、`eval --engine hybrid --model <默认模型>` 并人工核对判定。结构化 golden 必须来自 PDF 独立核对，不能直接抄 DB 值。人工复核前先运行 `python tools/make_human_review_worksheet.py` 生成底稿，填写后回写题目。完整计划见 `eval/OPTIMIZATION_PLAN.md`。
+在 `eval/questions.yaml` 追加。`type`：exact / keyword / semantic / cross / end2end / indicator / no_answer。`split` 缺省为 freeze（进回归）；诊断题写 `split: diag`。`expected[].file` 为不含扩展名的 `reports.title` 片段。结构化题必须 `golden_source: pdf`，禁止从 DB 抄 `expected_value`。回归：`python tools/run_eval_regression.py`（只评 freeze）。说明见 `eval/EVAL_PLAN.md`。
 
 ### 更新文档
 
@@ -179,7 +179,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 
 - [ ] `python -m stock_kb stats --json` 正常，数字与改动前一致（除非本意就是改数据）；
 - [ ] `python -m stock_kb search "翻台率" --top-k 5 --json` 返回非空且命中正确；
-- [ ] `python -m stock_kb eval` 与 `python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5` 跑通，核心指标不低于当前基线（FTS keyword Recall=0.750、hybrid semantic Recall=0.300、结构化 26/26，见 `PLAN.md` 第 16 节与 `eval/OPTIMIZATION_PLAN.md`），同时新增的 Neg@k 不得劣化；
+- [ ] `python -m stock_kb eval` 与 `python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5` 跑通，核心指标不低于当前基线（freeze：FTS keyword Recall≥0.75、Neg@k≤0.65；hybrid semantic Recall≥0.10、结构化 26/26，见 `eval/EVAL_PLAN.md`），同时新增的 Neg@k 不得劣化；
 - [ ] 涉及三表/笔记时 `python tools/audit_notes.py` 通过；
 - [ ] 涉及 MCP 时 `tools/test_mcp_http.py` 通过（stdio 与 HTTP 至少各验证一次）；
 - [ ] 输出路径、环境变量、新增命令已写进文档。
@@ -200,7 +200,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 
 > 2026-08-16 自动修复后的最新状态见 `docs/fix-record-20260816.md`；以下只列仍未完成或需要人工的事项。
 
-- 评测集已扩到 80 题，但 cross 纯检索仅 6 题、ground truth 仍部分自标注；end2end 8 题待人工审核（`eval/manual_review.md`）；结构化 golden 仍需从 PDF 独立复核。
+- 评测现状见 `eval/EVAL_PLAN.md`。结构化 26 题已 PDF golden；freeze 语义已去词面泄漏（hybrid semantic 门槛 ≥0.10）。仍未改产品：海底捞 `indicators.net_profit` 是合计不是归母；无答案查询 empty_rate=0。hybrid 对短于 6 字的查询短路回 FTS。
 - 两字查询已建 `pages_bigram_fts`，但 bigram 排序暂未启用（避免牺牲 keyword 基线），需独立评测集调权。
 - reranker / jina 对比未完成（可选）。
 - US/HK 年报等“内容不同但语义重复”的 canonical 标记未实现；SHA 完全重复已自动标记并排除。

@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,11 +12,18 @@ from typing import Any
 import yaml
 
 from stock_kb import db, search
+from stock_kb.eval_stats import wilson_ci
 
 
 RETRIEVAL_TYPES = {"exact", "keyword", "semantic", "cross"}
+NO_ANSWER_TYPE = "no_answer"
+INDICATOR_TYPE = "indicator"
 SEARCH_ENGINES = {"fts", "vector", "hybrid"}
+SEARCH_PATHS = {"mcp_compat", "eval_rrf_keywords"}
 _DASHES = (" ", "\t", "\n", "\r", "\u2014", "\u2013", "-", "\uff0d")
+_YEAR_RE = re.compile(r"(?:19|20)\d{2}")
+_CJK_RE = re.compile(r"[\u4e00-\u9fff]")
+_LATIN_RE = re.compile(r"[A-Za-z]{4,}")
 
 
 def run_eval(
@@ -23,11 +31,17 @@ def run_eval(
     top_k: int | None = None,
     model: str | None = None,
     engine: str | None = None,
+    search_path: str = "mcp_compat",
+    split: str | None = None,
 ) -> dict[str, Any]:
     top_k = top_k if top_k is not None else int(cfg.get("eval", {}).get("top_k", 5))
     engine = engine or ("hybrid" if model else "fts")
     if engine not in SEARCH_ENGINES:
         raise ValueError(f"不支持的检索引擎: {engine}，可选 {sorted(SEARCH_ENGINES)}")
+    if search_path not in SEARCH_PATHS:
+        raise ValueError(
+            f"不支持的 search_path: {search_path}，可选 {sorted(SEARCH_PATHS)}"
+        )
     if engine != "fts" and not model:
         model = cfg.get("embedding", {}).get("model", "BAAI/bge-small-zh-v1.5")
     started = time.time()
@@ -35,28 +49,42 @@ def run_eval(
     q_text = q_path.read_text(encoding="utf-8")
     data = yaml.safe_load(q_text)
     questions = data["questions"]
+    if split:
+        questions = [q for q in questions if (q.get("split") or "freeze") == split]
     conn = db.connect(cfg["db_path"])
     db_path = Path(cfg["db_path"])
 
     results: list[dict[str, Any]] = []
     for q in questions:
-        hits = _search_hits(cfg, conn, q, top_k, model, engine)
+        hits, query, hybrid_fused = _search_hits(
+            cfg, conn, q, top_k, model, engine, search_path
+        )
         norm = _normalize_expected(q.get("expected"))
+        retrieval = _retrieval_result(hits, norm, top_k)
+        retrieval["query"] = query
+        retrieval["hybrid_fused"] = hybrid_fused
+        retrieval["error_tags"] = classify_retrieval_errors(
+            query=query,
+            qtype=q.get("type") or "",
+            hits=hits,
+            norm=norm,
+        )
         item: dict[str, Any] = {
             "id": q["id"],
             "type": q["type"],
             "question": q["question"],
             "company": q.get("company"),
-            "retrieval": _retrieval_result(hits, norm, top_k),
+            "split": q.get("split") or "freeze",
+            "retrieval": retrieval,
         }
         structured = _statement_match(conn, q, norm)
         if structured is not None:
             item["structured"] = structured
+        indicator = _indicator_match(conn, q)
+        if indicator is not None:
+            item["indicator"] = indicator
         if q.get("type") == "end2end" or q.get("rubric") is not None:
-            generation: dict[str, Any] = {"auto_scored": False, "pending_manual": True}
-            if q.get("rubric") is not None:
-                generation["rubric"] = q["rubric"]
-            item["generation"] = generation
+            item["generation"] = _material_coverage(conn, q, norm)
         results.append(item)
 
     summary = _summarize(results)
@@ -65,6 +93,8 @@ def run_eval(
         "engine": engine,
         "top_k": top_k,
         "model": model if engine != "fts" else None,
+        "search_path": search_path,
+        "split": split,
         "questions_sha256": hashlib.sha256(q_text.encode("utf-8")).hexdigest(),
         "questions_count": len(questions),
         "db_size_bytes": db_path.stat().st_size if db_path.exists() else None,
@@ -83,6 +113,40 @@ def run_eval(
         "results": results,
     }
 
+def primary_query(q: dict[str, Any]) -> str:
+    """Single query aligned with MCP search_reports (one string + company filter)."""
+    if q.get("type") == "keyword":
+        company = q.get("company") or ""
+        term = q.get("question") or ""
+        if company and term.startswith(company):
+            term = term[len(company) :].strip()
+        keywords = q.get("keywords")
+        if keywords:
+            return str(keywords[0])
+        return term or q["question"]
+    return q["question"]
+
+
+def _search_queries(q: dict[str, Any], search_path: str) -> list[str]:
+    if search_path == "mcp_compat":
+        return [primary_query(q)]
+    keywords = q.get("keywords")
+    if not keywords and q.get("type") == "keyword":
+        company = q.get("company") or ""
+        term = q.get("question") or ""
+        if company and term.startswith(company):
+            term = term[len(company) :].strip()
+        keywords = [term or q["question"]]
+    return list(keywords) if keywords else [q["question"]]
+
+
+def _would_hybrid_fuse(engine: str, query: str) -> bool:
+    if engine != "hybrid":
+        return False
+    normalized = search.normalize_query(query)
+    return bool(normalized) and len(normalized) >= 6
+
+
 def _search_hits(
     cfg: dict[str, Any],
     conn,
@@ -90,18 +154,24 @@ def _search_hits(
     top_k: int,
     model: str | None,
     engine: str,
-) -> list[dict[str, Any]]:
-    keywords = q.get("keywords")
-    if not keywords and q.get("type") == "keyword":
-        company = q.get("company") or ""
-        term = q.get("question") or ""
-        if company and term.startswith(company):
-            term = term[len(company):].strip()
-        keywords = [term or q["question"]]
-    queries = keywords or [q["question"]]
+    search_path: str,
+) -> tuple[list[dict[str, Any]], str, bool]:
+    queries = _search_queries(q, search_path)
     fused: dict[int, dict[str, Any]] = {}
+    hybrid_fused = any(_would_hybrid_fuse(engine, query) for query in queries)
     for query in queries:
-        hs = _run_search(cfg, conn, query, q.get("company"), top_k, model, engine)
+        hs = _run_search(
+            cfg,
+            conn,
+            query,
+            q.get("company"),
+            top_k,
+            model,
+            engine,
+            year=q.get("year"),
+            report_type=q.get("report_type"),
+            language=q.get("language"),
+        )
         for pos, h in enumerate(hs, start=1):
             page_id = h["page_id"]
             entry = fused.get(page_id)
@@ -119,7 +189,7 @@ def _search_hits(
     for h in out:
         h.pop("_rrf", None)
         h.pop("_min_rank", None)
-    return out
+    return out, queries[0] if queries else "", hybrid_fused
 
 
 def _run_search(
@@ -130,9 +200,20 @@ def _run_search(
     top_k: int,
     model: str | None,
     engine: str,
+    year: int | None = None,
+    report_type: str | None = None,
+    language: str | None = None,
 ) -> list[dict[str, Any]]:
     if engine == "fts":
-        return search.fts_search(conn, query, company=company, top_k=top_k)
+        return search.fts_search(
+            conn,
+            query,
+            company=company,
+            top_k=top_k,
+            year=year,
+            report_type=report_type,
+            language=language,
+        )
     from stock_kb import vector
 
     if engine == "vector":
@@ -144,6 +225,9 @@ def _run_search(
             company=company,
             cache_dir=cfg["models_dir"],
             backend=cfg.get("embedding", {}).get("backend", "auto"),
+            year=year,
+            report_type=report_type,
+            language=language,
         )
     return vector.hybrid_search(
         conn,
@@ -153,6 +237,9 @@ def _run_search(
         company=company,
         cache_dir=cfg["models_dir"],
         backend=cfg.get("embedding", {}).get("backend", "auto"),
+        year=year,
+        report_type=report_type,
+        language=language,
     )
 
 
@@ -219,6 +306,92 @@ def _source_matches(hit: dict[str, Any], source: dict[str, Any]) -> bool:
     return file_ok and page_ok and has_criterion
 
 
+def _years_in(text: Any) -> set[int]:
+    return {int(m) for m in _YEAR_RE.findall(str(text or ""))}
+
+
+def _cjk_bigrams(text: str) -> set[str]:
+    chars = _CJK_RE.findall(text or "")
+    return {"".join(chars[i : i + 2]) for i in range(len(chars) - 1)}
+
+
+def classify_retrieval_errors(
+    *,
+    query: str,
+    qtype: str,
+    hits: list[dict[str, Any]],
+    norm: dict[str, Any],
+) -> list[str]:
+    """Rule-based tags for retrieval misses and pollution. Order is stable."""
+    tags: list[str] = []
+    sources = norm.get("sources") or []
+    required = [s for s in sources if s.get("required")] or sources
+    negatives = norm.get("negatives") or []
+
+    if hits and any(_source_matches(hits[0], s) for s in negatives):
+        tags.append("negative_at_1")
+
+    expected_years: set[int] = set()
+    for s in required:
+        expected_years |= _years_in(s.get("file"))
+
+    near_miss = False
+    year_mismatch = False
+    for h in hits:
+        if any(_source_matches(h, s) for s in required):
+            continue
+        title = h.get("title") or ""
+        page = h.get("page_no")
+        for s in required:
+            if not _file_matches(title, s.get("file") or ""):
+                continue
+            src_page = s.get("page")
+            if src_page is not None and page is not None:
+                try:
+                    if abs(int(page) - int(src_page)) <= 5:
+                        near_miss = True
+                except (TypeError, ValueError):
+                    pass
+        hit_years = _years_in(title)
+        if h.get("year") is not None:
+            try:
+                hit_years.add(int(h["year"]))
+            except (TypeError, ValueError):
+                pass
+        if expected_years and hit_years and hit_years.isdisjoint(expected_years):
+            year_mismatch = True
+    if near_miss:
+        tags.append("page_near_miss")
+    if year_mismatch:
+        tags.append("year_mismatch")
+
+    q_cjk = bool(_CJK_RE.search(query or ""))
+    q_latin = bool(_LATIN_RE.search(query or ""))
+    langs = [h.get("language") for h in hits if h.get("language")]
+    if langs:
+        if q_cjk and not q_latin and all(lang == "en" for lang in langs):
+            tags.append("lang_mismatch")
+        elif q_latin and not q_cjk and all(lang == "zh" for lang in langs):
+            tags.append("lang_mismatch")
+
+    if qtype == "semantic":
+        qgrams = _cjk_bigrams(query)
+        hit_text = "".join(str(h.get("snippet") or "") for h in hits)
+        hgrams = _cjk_bigrams(hit_text)
+        if qgrams and hgrams and len(qgrams & hgrams) / len(qgrams) >= 0.3:
+            tags.append("lexical_overlap")
+
+    return tags
+
+
+def _merge_tag_counts(tag_maps) -> dict[str, int]:
+    out: dict[str, int] = {}
+    for tags in tag_maps:
+        for tag, count in (tags or {}).items():
+            out[tag] = out.get(tag, 0) + count
+    return out
+
+
 def _retrieval_result(
     hits: list[dict[str, Any]], norm: dict[str, Any], top_k: int
 ) -> dict[str, Any]:
@@ -253,6 +426,8 @@ def _retrieval_result(
                 "company": h.get("company"),
                 "title": h.get("title"),
                 "page": h.get("page_no"),
+                "year": h.get("year"),
+                "language": h.get("language"),
             }
             for h in hits
         ],
@@ -359,6 +534,14 @@ def _statement_match(conn, q: dict[str, Any], norm: dict[str, Any]) -> dict[str,
     if expected_value is not None:
         value_match = any(r["value_ok"] for r in field_rows)
     hit = any(r["row_pass"] for r in field_rows)
+    parse_hit = _parse_hit(
+        conn,
+        company=q.get("company"),
+        year=year,
+        expected_value=expected_value,
+        tolerance=tolerance,
+        allowed_sources=allowed_sources,
+    )
 
     unit_checks = [r["unit_ok"] for r in field_rows if r["unit_ok"] is not None]
     currency_checks = [
@@ -369,6 +552,7 @@ def _statement_match(conn, q: dict[str, Any], norm: dict[str, Any]) -> dict[str,
 
     return {
         "hit": hit,
+        "parse_hit": parse_hit,
         "field_match": field_match,
         "source_match": source_match,
         "page_match": page_match,
@@ -453,6 +637,87 @@ def _normalize_token(value: Any) -> str:
     return text
 
 
+def _parse_hit(
+    conn,
+    *,
+    company: Any,
+    year: Any,
+    expected_value: Any,
+    tolerance: float,
+    allowed_sources: list[dict[str, Any]] | None,
+) -> bool | None:
+    """L1: golden value exists on the cited page, ignoring line_contains."""
+    if expected_value is None or not allowed_sources:
+        return None
+    rows = conn.execute(
+        "SELECT s.value, s.page_no, r.title FROM statements s "
+        "JOIN reports r ON r.id = s.report_id "
+        "WHERE r.company=? AND s.year=? AND s.value IS NOT NULL",
+        (company, year),
+    ).fetchall()
+    for r in rows:
+        if not _value_within(r["value"], expected_value, tolerance):
+            continue
+        for source in allowed_sources:
+            file_ok, page_ok = _statement_source_matches(
+                title=r["title"] or "",
+                stmt_page=r["page_no"],
+                source=source,
+            )
+            if file_ok and page_ok:
+                return True
+    return False
+
+
+def _indicator_match(conn, q: dict[str, Any]) -> dict[str, Any] | None:
+    spec = q.get("indicator")
+    if not spec:
+        return None
+    name = spec.get("name")
+    year = spec.get("year")
+    period_type = spec.get("period_type") or "annual"
+    expected = spec.get("expected_value")
+    tolerance = float(spec.get("tolerance_ratio", 0.02))
+    sql = (
+        "SELECT name, value, unit, currency, year, period_type, page_no "
+        "FROM indicators WHERE company=? AND name=? AND year=?"
+    )
+    params: list[Any] = [q.get("company"), name, year]
+    if period_type is not None:
+        sql += " AND period_type=?"
+        params.append(period_type)
+    rows = conn.execute(sql, params).fetchall()
+    value_ok = False
+    unit_ok = None
+    matched = []
+    for r in rows:
+        vok = expected is None or _value_within(r["value"], expected, tolerance)
+        uok = _expected_text_matches(r["unit"], spec.get("expected_unit"))
+        if vok:
+            value_ok = True
+        if uok is not None:
+            unit_ok = bool(unit_ok) or uok
+        matched.append(
+            {
+                "name": r["name"],
+                "value": r["value"],
+                "unit": r["unit"],
+                "year": r["year"],
+                "page_no": r["page_no"],
+                "value_ok": vok,
+            }
+        )
+    return {
+        "hit": value_ok and bool(rows),
+        "value_match": value_ok if expected is not None else None,
+        "unit_match": unit_ok,
+        "n_rows": len(rows),
+        "matched_rows": matched[:10],
+        "expected_value": expected,
+        "expected_unit": spec.get("expected_unit"),
+    }
+
+
 def _value_within(value: Any, expected: Any, tolerance_ratio: float) -> bool:
     if value is None or expected is None:
         return False
@@ -466,28 +731,73 @@ def _value_within(value: Any, expected: Any, tolerance_ratio: float) -> bool:
     return abs(v - e) <= tolerance_ratio * abs(e)
 
 
+def _material_coverage(conn, q: dict[str, Any], norm: dict[str, Any]) -> dict[str, Any]:
+    sources = [s for s in norm["sources"] if s.get("required")] or norm["sources"]
+    found = 0
+    missing: list[str] = []
+    for s in sources:
+        file_frag = s.get("file") or ""
+        if not file_frag:
+            continue
+        row = conn.execute(
+            "SELECT 1 FROM reports WHERE instr(title, ?) > 0 LIMIT 1",
+            (file_frag,),
+        ).fetchone()
+        if row:
+            found += 1
+        else:
+            missing.append(file_frag)
+    n = len([s for s in sources if s.get("file")])
+    complete = n > 0 and found == n
+    out: dict[str, Any] = {
+        "auto_scored": True,
+        "pending_manual": not complete,
+        "material_hit": found,
+        "material_n": n,
+        "missing": missing,
+    }
+    if q.get("rubric") is not None:
+        out["rubric"] = q["rubric"]
+    return out
+
+
+def _blank_ret_bucket() -> dict[str, Any]:
+    return {
+        "n": 0,
+        "hit": 0,
+        "hit1": 0,
+        "rr_sum": 0.0,
+        "ndcg_sum": 0.0,
+        "prec_sum": 0.0,
+        "neg_hit": 0,
+        "neg_at_1": 0,
+        "fused_n": 0,
+        "error_tags": {},
+    }
+
+
 def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
     ret_stats: dict[str, dict[str, Any]] = {}
+    ret_diag: dict[str, dict[str, Any]] = {}
+    no_answer = {"n": 0, "empty": 0, "nonempty": 0}
     for item in results:
+        split = item.get("split") or "freeze"
+        if item["type"] == NO_ANSWER_TYPE:
+            no_answer["n"] += 1
+            n_hits = len((item.get("retrieval") or {}).get("top_hits") or [])
+            if n_hits == 0:
+                no_answer["empty"] += 1
+            else:
+                no_answer["nonempty"] += 1
+            continue
         if item["type"] not in RETRIEVAL_TYPES:
             continue
         if item["type"] in {"exact", "cross"} and item.get("structured") is not None:
             continue
         if not item["retrieval"]["expected_sources"]:
             continue
-        s = ret_stats.setdefault(
-            item["type"],
-            {
-                "n": 0,
-                "hit": 0,
-                "hit1": 0,
-                "rr_sum": 0.0,
-                "ndcg_sum": 0.0,
-                "prec_sum": 0.0,
-                "neg_hit": 0,
-                "neg_at_1": 0,
-            },
-        )
+        target = ret_diag if split == "diag" else ret_stats
+        s = target.setdefault(item["type"], _blank_ret_bucket())
         s["n"] += 1
         r = item["retrieval"]
         if r["hit"]:
@@ -502,50 +812,18 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
             s["neg_hit"] += 1
         if r.get("negative_hit_at_1"):
             s["neg_at_1"] += 1
+        if r.get("hybrid_fused"):
+            s["fused_n"] += 1
+        for tag in r.get("error_tags") or []:
+            s["error_tags"][tag] = s["error_tags"].get(tag, 0) + 1
 
-    retrieval: dict[str, Any] = {}
-    for typ, s in ret_stats.items():
-        n = s["n"]
-        retrieval[typ] = {
-            "n": n,
-            "recall_at_k": round(s["hit"] / n, 3) if n else 0.0,
-            "hit_at_1": round(s["hit1"] / n, 3) if n else 0.0,
-            "mrr": round(s["rr_sum"] / n, 3) if n else 0.0,
-            "ndcg": round(s["ndcg_sum"] / n, 3) if n else 0.0,
-            "precision_at_k": round(s["prec_sum"] / n, 3) if n else 0.0,
-            "negative_hit_rate": round(s["neg_hit"] / n, 3) if n else 0.0,
-            "negative_at_1_rate": round(s["neg_at_1"] / n, 3) if n else 0.0,
-        }
-    if ret_stats:
-        n = sum(s["n"] for s in ret_stats.values())
-        retrieval["total"] = {
-            "n": n,
-            "recall_at_k": round(
-                sum(s["hit"] for s in ret_stats.values()) / n, 3
-            ),
-            "hit_at_1": round(
-                sum(s["hit1"] for s in ret_stats.values()) / n, 3
-            ),
-            "mrr": round(
-                sum(s["rr_sum"] for s in ret_stats.values()) / n, 3
-            ),
-            "ndcg": round(
-                sum(s["ndcg_sum"] for s in ret_stats.values()) / n, 3
-            ),
-            "precision_at_k": round(
-                sum(s["prec_sum"] for s in ret_stats.values()) / n, 3
-            ),
-            "negative_hit_rate": round(
-                sum(s["neg_hit"] for s in ret_stats.values()) / n, 3
-            ),
-            "negative_at_1_rate": round(
-                sum(s["neg_at_1"] for s in ret_stats.values()) / n, 3
-            ),
-        }
+    retrieval = _finalize_retrieval(ret_stats)
+    retrieval_diag = _finalize_retrieval(ret_diag)
 
     structured = {
         "n": 0,
         "hit": 0,
+        "parse_hit": 0,
         "field_match": 0,
         "value_match": 0,
         "source_match": 0,
@@ -557,6 +835,7 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
         "page_total": 0,
         "unit_total": 0,
         "currency_total": 0,
+        "parse_total": 0,
     }
     for item in results:
         st = item.get("structured")
@@ -587,6 +866,26 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
             structured["unit_total"] += 1
         if st.get("currency_match") is not None:
             structured["currency_total"] += 1
+        if st.get("parse_hit") is True:
+            structured["parse_hit"] += 1
+        if st.get("parse_hit") is not None:
+            structured["parse_total"] += 1
+
+    indicator = {"n": 0, "hit": 0, "value_match": 0, "value_total": 0}
+    for item in results:
+        ind = item.get("indicator")
+        if ind is None:
+            continue
+        indicator["n"] += 1
+        if ind.get("hit"):
+            indicator["hit"] += 1
+        if ind.get("value_match") is True:
+            indicator["value_match"] += 1
+        if ind.get("value_match") is not None:
+            indicator["value_total"] += 1
+
+    if no_answer["n"]:
+        no_answer["empty_rate"] = round(no_answer["empty"] / no_answer["n"], 3)
 
     generation = {"n": 0, "auto_scored": 0, "pending_manual": 0}
     for item in results:
@@ -598,8 +897,76 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
             generation["auto_scored"] += 1
         if gen.get("pending_manual"):
             generation["pending_manual"] += 1
+    generation["material_complete"] = sum(
+        1
+        for item in results
+        if item.get("generation")
+        and item["generation"].get("material_n")
+        and item["generation"].get("material_hit")
+        == item["generation"].get("material_n")
+    )
 
-    return {"retrieval": retrieval, "structured": structured, "generation": generation}
+    return {
+        "retrieval": retrieval,
+        "retrieval_diag": retrieval_diag,
+        "structured": structured,
+        "indicator": indicator,
+        "no_answer": no_answer,
+        "generation": generation,
+    }
+
+
+def _finalize_retrieval(ret_stats: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    retrieval: dict[str, Any] = {}
+    for typ, s in ret_stats.items():
+        n = s["n"]
+        retrieval[typ] = {
+            "n": n,
+            "recall_at_k": round(s["hit"] / n, 3) if n else 0.0,
+            "recall_at_k_ci": wilson_ci(s["hit"], n),
+            "hit_at_1": round(s["hit1"] / n, 3) if n else 0.0,
+            "mrr": round(s["rr_sum"] / n, 3) if n else 0.0,
+            "ndcg": round(s["ndcg_sum"] / n, 3) if n else 0.0,
+            "precision_at_k": round(s["prec_sum"] / n, 3) if n else 0.0,
+            "negative_hit_rate": round(s["neg_hit"] / n, 3) if n else 0.0,
+            "negative_at_1_rate": round(s["neg_at_1"] / n, 3) if n else 0.0,
+            "hybrid_fused_n": s["fused_n"],
+            "error_tags": s["error_tags"],
+        }
+    if ret_stats:
+        n = sum(s["n"] for s in ret_stats.values())
+        retrieval["total"] = {
+            "n": n,
+            "recall_at_k": round(
+                sum(s["hit"] for s in ret_stats.values()) / n, 3
+            ),
+            "hit_at_1": round(
+                sum(s["hit1"] for s in ret_stats.values()) / n, 3
+            ),
+            "mrr": round(
+                sum(s["rr_sum"] for s in ret_stats.values()) / n, 3
+            ),
+            "ndcg": round(
+                sum(s["ndcg_sum"] for s in ret_stats.values()) / n, 3
+            ),
+            "precision_at_k": round(
+                sum(s["prec_sum"] for s in ret_stats.values()) / n, 3
+            ),
+            "negative_hit_rate": round(
+                sum(s["neg_hit"] for s in ret_stats.values()) / n, 3
+            ),
+            "negative_at_1_rate": round(
+                sum(s["neg_at_1"] for s in ret_stats.values()) / n, 3
+            ),
+            "recall_at_k_ci": wilson_ci(
+                sum(s["hit"] for s in ret_stats.values()), n
+            ),
+            "hybrid_fused_n": sum(s["fused_n"] for s in ret_stats.values()),
+            "error_tags": _merge_tag_counts(
+                s["error_tags"] for s in ret_stats.values()
+            ),
+        }
+    return retrieval
 
 
 def save_report(cfg: dict[str, Any], data: dict[str, Any]) -> Path:
@@ -621,6 +988,9 @@ def save_report(cfg: dict[str, Any], data: dict[str, Any]) -> Path:
     lines.append(f"- top_k：{data['top_k']}")
     lines.append(f"- 题目数：{meta.get('questions_count', len(data.get('results', [])))}")
     lines.append(f"- 题目集 SHA-256：{meta.get('questions_sha256', '-')}")
+    lines.append(f"- search_path：{meta.get('search_path', '-')}")
+    if meta.get("split"):
+        lines.append(f"- split：{meta['split']}")
     lines.append(f"- 耗时：{meta.get('duration_seconds', '-')} 秒")
     if meta.get("db_size_bytes"):
         lines.append(f"- DB 大小：{meta['db_size_bytes']} bytes")
@@ -629,21 +999,39 @@ def save_report(cfg: dict[str, Any], data: dict[str, Any]) -> Path:
     lines.append("")
     lines.append("## 检索（Retrieval）")
     lines.append("")
-    lines.append("| 类型 | 数量 | Recall@k | Hit@1 | MRR | nDCG | Precision@k | Neg@k | Neg@1 |")
-    lines.append("|---|---|---|---|---|---|---|---|---|")
+    lines.append(
+        "| 类型 | 数量 | Recall@k | Recall CI | Hit@1 | MRR | nDCG | Precision@k | Neg@k | Neg@1 | fused |"
+    )
+    lines.append("|---|---|---|---|---|---|---|---|---|---|---|")
     for typ, s in data["summary"].get("retrieval", {}).items():
+        ci = s.get("recall_at_k_ci") or ["-", "-"]
+        ci_cell = f"{ci[0]}–{ci[1]}" if isinstance(ci, (list, tuple)) and len(ci) == 2 else "-"
         lines.append(
-            f"| {typ} | {s['n']} | {s['recall_at_k']} | {s['hit_at_1']} | "
+            f"| {typ} | {s['n']} | {s['recall_at_k']} | {ci_cell} | {s['hit_at_1']} | "
             f"{s['mrr']} | {s['ndcg']} | {s['precision_at_k']} | "
-            f"{s['negative_hit_rate']} | {s['negative_at_1_rate']} |"
+            f"{s['negative_hit_rate']} | {s['negative_at_1_rate']} | "
+            f"{s.get('hybrid_fused_n', 0)} |"
         )
     lines.append("")
-    lines.append("> Neg@k：前 k 条中出现任一负样本的题目比例；Neg@1：第 1 条命中负样本的题目比例。")
+    lines.append(
+        "> Neg@k：前 k 条中出现任一负样本的题目比例；Neg@1：第 1 条命中负样本的题目比例。"
+        "fused：该题 hybrid 实际走了向量融合的题数（短术语会短路回 FTS）。"
+        "Recall CI 为 Wilson 95% 区间，仅展示，不当门禁。"
+    )
+    error_rows = []
+    for typ, s in data["summary"].get("retrieval", {}).items():
+        tags = s.get("error_tags") or {}
+        if tags and typ != "total":
+            error_rows.append(f"- {typ}：" + "，".join(f"{k}={v}" for k, v in sorted(tags.items())))
+    if error_rows:
+        lines.append("")
+        lines.append("错误分类计数（一题可多标签）：")
+        lines.extend(error_rows)
     lines.append("")
     lines.append("## 结构化三表（Structured）")
     lines.append("")
-    lines.append("| 数量 | Hit | Field | Value | Source | Page | Unit | Currency |")
-    lines.append("|---|---|---|---|---|---|---|---|")
+    lines.append("| 数量 | Hit | Parse | Field | Value | Source | Page | Unit | Currency |")
+    lines.append("|---|---|---|---|---|---|---|---|---|")
     st = data["summary"].get("structured", {})
     unit_cell = (
         f"{st.get('unit_match', 0)}/{st.get('unit_total', 0)}"
@@ -655,14 +1043,51 @@ def save_report(cfg: dict[str, Any], data: dict[str, Any]) -> Path:
         if st.get("currency_total")
         else "0/0"
     )
+    parse_cell = (
+        f"{st.get('parse_hit', 0)}/{st.get('parse_total', 0)}"
+        if st.get("parse_total")
+        else "0/0"
+    )
     lines.append(
-        f"| {st.get('n', 0)} | {st.get('hit', 0)} | {st.get('field_match', 0)} | "
+        f"| {st.get('n', 0)} | {st.get('hit', 0)} | {parse_cell} | "
+        f"{st.get('field_match', 0)} | "
         f"{st.get('value_match', 0)} | {st.get('source_match', 0)} | "
         f"{st.get('page_match', 0)} | {unit_cell} | {currency_cell} |"
     )
     lines.append("")
-    lines.append("> Unit/Currency 为 0/0 表示 DB 未存单位/币种，尚不可自动验证。")
+    lines.append(
+        "> Parse 为 L1（golden 值出现在指定页的 statements）；Hit 为 L3（科目词+值+来源查询命中）。"
+    )
     lines.append("")
+    ind = data["summary"].get("indicator") or {}
+    if ind.get("n"):
+        lines.append("## 指标（Indicators）")
+        lines.append("")
+        lines.append(
+            f"- n={ind.get('n')} hit={ind.get('hit')} "
+            f"value={ind.get('value_match')}/{ind.get('value_total')}"
+        )
+        lines.append("")
+    na = data["summary"].get("no_answer") or {}
+    if na.get("n"):
+        lines.append("## 无答案（no_answer）")
+        lines.append("")
+        lines.append(
+            f"- n={na.get('n')} empty={na.get('empty')} nonempty={na.get('nonempty')} "
+            f"empty_rate={na.get('empty_rate')}"
+        )
+        lines.append("")
+    diag = data["summary"].get("retrieval_diag") or {}
+    if diag:
+        lines.append("## 诊断集检索（split=diag）")
+        lines.append("")
+        lines.append("| 类型 | 数量 | Recall@k | Neg@k |")
+        lines.append("|---|---|---|---|")
+        for typ, s in diag.items():
+            lines.append(
+                f"| {typ} | {s['n']} | {s['recall_at_k']} | {s['negative_hit_rate']} |"
+            )
+        lines.append("")
     lines.append("## 生成题（Generation）")
     lines.append("")
     lines.append("| 数量 | Auto scored | Pending manual |")
@@ -693,9 +1118,12 @@ def save_report(cfg: dict[str, Any], data: dict[str, Any]) -> Path:
                 f"#{i} {h.get('title')} p{h.get('page')}"
                 for i, h in enumerate(r.get("top_hits", []), start=1)
             )
+            tags = ",".join(r.get("error_tags") or []) or "-"
+            fused = r.get("hybrid_fused")
             lines.append(
                 f"- **{item['id']}** {item.get('question')}（命中={r.get('hit')}，"
-                f"负样本命中={r.get('negative_hit_at_k')}，负样本位次={r.get('negative_ranks')}）"
+                f"负样本命中={r.get('negative_hit_at_k')}，负样本位次={r.get('negative_ranks')}，"
+                f"fused={fused}，tags={tags}）"
             )
             lines.append(f"  - 期望：{expected or '-'}")
             lines.append(f"  - 实际：{top or '-'}")

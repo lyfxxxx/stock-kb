@@ -155,6 +155,40 @@ def test_indicator_rules_do_not_take_company_sales_as_revenue():
     assert _candidate_score("Total revenues", rule) is not None
 
 
+def test_like_search_orders_by_term_frequency(conn):
+    conn.execute("INSERT INTO companies(name) VALUES('测试')")
+    conn.execute(
+        "INSERT INTO reports(company, report_type, language, year, title, path, status) "
+        "VALUES('测试','annual','zh',2024,'2024年报','/a.pdf','ok')"
+    )
+    report_id = conn.execute("SELECT id FROM reports").fetchone()["id"]
+    db.replace_pages(
+        conn,
+        report_id,
+        [
+            {
+                "page_no": 1,
+                "content": "股息 " * 40,
+                "content_orig": "股息",
+                "char_count": 80,
+                "is_ocr": 0,
+                "company": "测试",
+            },
+            {
+                "page_no": 2,
+                "content": ("长文本填充" * 80) + " 股息",
+                "content_orig": "股息",
+                "char_count": 400,
+                "is_ocr": 0,
+                "company": "测试",
+            },
+        ],
+    )
+    hits = search.fts_search(conn, "股息", company="测试")
+    assert hits
+    assert hits[0]["page_no"] == 1
+
+
 def test_fts_two_char_query_snippet_and_filter(conn):
     conn.execute("INSERT INTO companies(name) VALUES('测试')")
     conn.execute(

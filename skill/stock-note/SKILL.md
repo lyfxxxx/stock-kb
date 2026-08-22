@@ -18,8 +18,8 @@ description: 使用 stock-kb 财报知识库生成可发布的中文股票分析
   - CLI：直接调用 `python -m stock_kb search / get_financial_statements`。
 - 输出目录：环境变量 `STOCK_KB_NOTES_DIR`，默认当前目录下的 `analysis-notes`。
 
-本 skill 目录自包含，可整体复制到其他机器的 `~/.codex/skills/stock-note` 使用，
-不依赖任何硬编码绝对路径。
+本 skill 目录自包含，可整体复制到其他机器的 `~/.grok/skills/stock-note`
+（或 `~/.codex/skills/stock-note`）使用，不依赖任何硬编码绝对路径。
 
 ## 工作流
 

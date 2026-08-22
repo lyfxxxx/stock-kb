@@ -459,7 +459,7 @@ SQLite 主要表：
 - 全量入库：60 份报告（海底捞 34 + 百胜中国 26）、8,128 页、5,570 条三表行项目、117 条指标、118 条 sources；
   `statements.unit/currency` 已回填（2026-08-16 解析器修复后重新 reparse）
 - 检索：FTS5（trigram + 繁简归一化）+ 向量索引（bge-small-zh、多语言 MiniLM、BGE-M3；已从整页嵌入升级为约 800 字/块的段落分块嵌入，使用 sentence-transformers + CUDA）
-- 评测：`eval/questions.yaml`（80 题，v2，含 exact/keyword/semantic/cross/end2end）+ 三层自动评分与报告
+- 评测：`eval/questions.yaml` + `eval/EVAL_PLAN.md`。结构化 26 题 PDF golden；freeze/diag 分集；回归见 `tools/run_eval_regression.py`。
 - MCP：7 个只读工具，stdio + Streamable HTTP 双传输，HTTP 支持 Bearer token 鉴权；stdio 与 HTTP 均已端到端验证
 - 增量扫描：`scan --watch-interval 秒数` 开关，默认关闭
 - 模型下载：`models download` 支持 hf-mirror 镜像 + hf_transfer 多线程 + snapshot_download 断点续传；缓存完整后离线加载可用
@@ -495,9 +495,8 @@ SQLite 主要表：
 
 ### 待办（下一阶段）
 
-- 补充 end2end 类题目的人工判定与更多 ground truth；
-- 可选继续对比 jina-zh / reranker（BGE-M3 已完成对比；reranker 下载曾被打断，待你确认后再继续）；
-- 用 `stock-note` skill 端到端复跑两篇笔记并人工审核；
+- 评测基建已完成，说明见 `eval/EVAL_PLAN.md`。产品侧未改：海底捞 `indicators.net_profit` 归母口径；无答案查询不要硬填 top-k。
+- 可选：在 diag 集上做分块 / RRF / reranker 对比。
 - 迁移 Docker 到 DXP-4800、接入 Hermes Agent；
 
 ## 16. RAG 评测系统优化记录（2026-08-15）
@@ -546,10 +545,7 @@ SQLite 主要表：
 
 #### 备份
 
-- 旧文件备份在 `eval/backups/`：
-  - `eval_runner_20260815_185339.py`
-  - `questions_20260815_185339.yaml`
-  - `PLAN_20260815_185339.md`
+- 2026-08-15 的旧 `eval_runner` / 题库副本已从 `eval/backups/` 删除，需要时从 git 历史取。
 
 ### 16.3 新评测基线（top_k=5）
 
@@ -610,7 +606,7 @@ SQLite 主要表：
 - 负样本正式入分：新增 Precision@k、Neg@k、Neg@1；Markdown 报告增加失败题与负样本命中明细。
 - 结构化判定改为行级对齐：同一条 `statements` 记录必须同时满足 field/source/page/value 才算 hit；unit/currency 暂透出可验证状态（当前 DB 未存，显示 0/0）。
 - 报告增加题目集 SHA-256、DB size/mtime、耗时、检索引擎等可复现信息。
-- `eval/manual_review.md` 同步为 8 道 end2end；新增 `eval/OPTIMIZATION_PLAN.md` 记录完整计划、执行记录和新基线。
+- `eval/manual_review.md` 同步为 8 道 end2end。
 
 新基线（top_k=5，核心指标与 16.3 一致）：
 
@@ -621,3 +617,13 @@ SQLite 主要表：
 | bge-small-zh vector | 0.150 | 0.150 | 0.300 | 0.000 | 26/26 |
 
 结论：原有分数未变，但负样本指标显示 FTS 的 top-k 污染严重（keyword 65%、cross Neg@1 50%）；单纯 Recall 会高估检索质量。下一步仍按 16.6 执行。
+
+### 16.8–16.9 评测口径与去泄漏（2026-08-22）
+
+完整问题清单见 `eval/EVAL_PLAN.md`。结论只有三条：
+
+1. 结构化 26/26 原先是 DB 自洽；PDF 核对后净利润改为归母，比较数字改回当年年报正文。
+2. freeze 语义问句去掉答案页关键词后，hybrid semantic Recall 从 0.50 降到 0.15，门禁改为 ≥0.10。
+3. hybrid keyword 对短术语短路回 FTS；评测默认与 MCP 一样走单 query。
+
+freeze 门槛：FTS keyword ≥0.75 且 Neg@5≤0.65；hybrid semantic ≥0.10 且 Neg@5≤0.20；结构化 26/26。

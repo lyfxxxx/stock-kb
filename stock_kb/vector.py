@@ -341,6 +341,9 @@ def vector_search(
                 "company": r["company"],
                 "title": r["title"],
                 "path": r["path"],
+                "year": r["year"],
+                "report_type": r["report_type"],
+                "language": r["language"],
                 "score": float(h["distance"]),
                 "source": "vector",
                 "snippet": (r["content"] or "")[:160],
@@ -369,7 +372,8 @@ def hybrid_search(
         return []
     # 短术语（<6 个字符）以关键词命中为准，向量容易引入同义噪音。
     # 长句/语义问题再走 RRF 融合。
-    if len(query) < 6:
+    did_fuse = len(query) >= 6
+    if not did_fuse:
         hits = search.fts_search(
             conn,
             query,
@@ -381,6 +385,7 @@ def hybrid_search(
         )
         for h in hits:
             h["source"] = "hybrid"
+            h["hybrid_fused"] = False
         return hits
 
     candidate_k = max(top_k * 4, 20)
@@ -430,5 +435,6 @@ def hybrid_search(
     )[:top_k]
     for item in out:
         item["fusion_score"] = round(item.get("_rrf", 0.0), 6)
+        item["hybrid_fused"] = True
         item.pop("_rrf", None)
     return out

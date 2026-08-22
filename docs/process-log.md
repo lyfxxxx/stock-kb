@@ -193,23 +193,48 @@
   - `eval_runner.py` 增加 `precision_at_k`、`negative_hit_at_k`、`negative_hit_at_1`、`negative_ranks`，并写入 Markdown 失败明细。
   - 结构化改为同一行必须同时满足 field/source/page/value，单位与币种先透出可验证状态（DB 当前为空，显示 0/0）。
   - `run_eval` 增加 `engine`（fts/vector/hybrid），CLI 增加 `--engine`；报告记录题目集 SHA-256、DB size/mtime、耗时。
-  - `eval/manual_review.md` 同步为 8 道 end2end；新增 `eval/OPTIMIZATION_PLAN.md` 记录完整优化计划与本轮结果。
+  - `eval/manual_review.md` 同步为 8 道 end2end。
 - 新基线暴露的问题：FTS keyword Neg@5=0.65、cross Neg@1=0.50，说明只拿 Recall 会高估检索质量；hybrid 降低了 keyword Recall 但负样本污染也下降。
 - 教训：先补度量，再调模型；ground truth 仍不独立，单位/币种校验仍需解析器回填后才能硬化。
 
+### 28. 评测口径与 MCP 对齐；LIKE 按词频排序
+
+- 现象：`eval_runner` 对多 `keywords` 做 RRF，MCP `search_reports` 只收单 query；hybrid 对 `<6` 字短路回 FTS，但报告仍标 hybrid；两字 LIKE 按 `char_count DESC` 排序。文档基线混用 8-16 上午（semantic 0.30）和夜班（0.50）两套数。
+- 解决：
+  - 默认 `search_path=mcp_compat`（可用 `--search-path eval_rrf_keywords` 对比旧路径）。
+  - 报告增加 `hybrid_fused`、Wilson CI、错误分类（year_mismatch / page_near_miss / negative_at_1 / lexical_overlap / lang_mismatch）。
+  - `_like_search` 已算出 score，但按词频排序会使 keyword-007「开店」跌出 top-5（keyword Recall 0.75→0.70），冻结集复核前仍按 `char_count DESC`。
+  - CLI `search --engine fts|vector|hybrid`。
+  - 评测记录写入 `eval/EVAL_PLAN.md`。
+- 教训：hybrid/semantic 标签要以实际检索路径为准；分数变化要先排除口径差再谈模型。
+
+### 29. 结构化 golden 试点：归母口径与当年年报正文页
+
+- 现象：自洽 yaml 把海底捞「年内溢利」合计当成净利润（2023 为 4,495,399），PDF 归母是 4,499,080，在损益表续页。2023 经营现金流、百胜 2023 收入取自次年报比较列，负样本写成了当年年报正文页。
+- 解决：26 道结构化题全部按 NAS PDF 回写（`golden_source: pdf`）。净利润用「本公司拥有人应占」；比较数字优先当年年报正文页。归母与合计不一致的题：exact-002/004/005、cross-004/005；来源从次年比较列改回当年正文：exact-008/015/016。解析器把部分归母行名截断，但数值在库中，FTS 结构化仍 26/26。
+- 教训：独立 golden 会改数，不是只贴标签。港股损益「年内溢利」合计 ≠ 归母。
+
+### 30. 检索诊断集 + 指标/无答案 + 笔记自动核对
+
+- 现象：freeze semantic Neg@k 恒为 0；指标工具无评测；无答案行为未知；生成层全 pending。
+- 解决：semantic 20 题补负样本（Neg@k=0.10）；新增 diag：真语义 8、跨语言 10、no_answer 8、indicator 12。回归强制 `--split freeze`。L1 parse_hit 与 L3 hit 分列。`audit_notes.py` 输出 number_accuracy / citation_precision / orphan_number_rate。end2end 改为材料覆盖自动评分。
+- 发现：`indicators.net_profit` 海底捞仍是年内溢利合计，归母题 10/12；FTS 对 8 道无答案题 empty_rate=0（长句 trigram OR 总会返回结果）；真语义 FTS Recall@5=0.125。
+- 教训：诊断集必须与 freeze 分列，否则会冲掉回归门槛。
+
+### 31. freeze 语义去泄漏 + LIKE 按词频 + 抽查笔记
+
+- 现象：freeze 语义问句含「现金流/翻台率」等词，FTS/hybrid semantic 0.50 被词面泄漏抬高；两字 LIKE 按页面长度排序。
+- 解决：改写 18 道 freeze 语义问句；keyword-007/010/020 等补高词频正样本页后启用 `ORDER BY score DESC`。hybrid semantic Recall 降至 0.15（FTS 0.10），门禁改为 ≥0.10，并加 keyword Neg@k≤0.65。抽查笔记 `2026-08-22-海底捞-抽查笔记.md`。
+- 教训：语义门槛必须在去泄漏之后重钉，不能沿用 0.50。
+
 ## 七、当前已知局限与下一步
 
-> 2026-08-16 自动修复后已更新；详细修复记录见 `docs/fix-record-20260816.md`。
+> 评测现状见 `eval/EVAL_PLAN.md`；8-16 数据修复见 `docs/fix-record-20260816.md`。
 
-- 题库已扩到 80 题，但 cross 纯检索仅 6 题、semantic 无负样本；ground truth 仍部分自标注，独立 PDF golden 未完成。
-- end2end 8 题待人工审核（见 `eval/manual_review.md`）。
-- `statements.unit/currency` 已回填，结构化 unit/currency 26/26；研报等单位未知项仍可能为空。
-- MCP `search_reports` 已支持 fts/vector/hybrid 与年份/类型/语言过滤。
-- 两字查询已建 `pages_bigram_fts`，但 bigram 排序在当前 80 题上会牺牲 keyword 基线，暂仅作空结果兜底；后续需要独立评测集调权。
-- reranker / jina 对比未完成（reranker 下载曾被打断，可选）。
-- US/HK 年报等“内容不同但语义重复”的 canonical 标记未实现；SHA 完全重复已自动标记并排除。
-- Docker 迁移到 DXP-4800 与 Hermes Agent 接入未开始（NAS 阶段）。
-- 自动扫描开关已实现（`scan --watch-interval`），但未在真实新增文件上验证。
+- 评测基建已完成。产品未改：海底捞 `indicators.net_profit` 仍是年内溢利合计；无答案查询 empty_rate=0。
+- `statements.unit/currency` 已回填；研报等单位未知项仍可能为空。
+- 两字查询 `pages_bigram_fts` 仍只作空结果兜底；LIKE 已改按词频排序。
+- reranker / jina、US/HK 语义重复 canonical、Docker / Hermes、watch 真实新增文件：未做。
 
 ## 八、可复用经验清单
 

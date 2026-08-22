@@ -65,8 +65,9 @@ python tools/test_mcp_http.py
 # 关键词/全文检索
 python -m stock_kb search "翻台率" --top-k 5
 
-# 混合检索（需先建向量索引）
-python -m stock_kb search "现金流质量" --hybrid
+# 混合 / 纯向量检索（需先建向量索引；--hybrid 仍可用）
+python -m stock_kb search "现金流质量" --engine hybrid
+python -m stock_kb search "现金流质量" --engine vector
 
 # 构建向量索引（首次会自动下载模型）
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5
@@ -74,13 +75,13 @@ python -m stock_kb index --model BAAI/bge-small-zh-v1.5
 # 指定后端与设备（默认 sentence-transformers + cuda）
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild
 
-# 检索评测（默认 FTS；指定 --engine 可测 vector/hybrid）
-python -m stock_kb eval
-python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5
-python -m stock_kb eval --engine vector --model BAAI/bge-small-zh-v1.5
+# 检索评测（回归只评 freeze；diag 不进门禁）
+python tools/run_eval_regression.py
+python -m stock_kb eval --split freeze
+python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5 --split freeze
 
-# 评测优化计划与执行记录
-# 见 eval/OPTIMIZATION_PLAN.md
+# 评测记录（过程中改掉的问题）
+# 见 eval/EVAL_PLAN.md
 
 # 计算常用指标（营收/净利/ROE/现金流等）
 python -m stock_kb indicators
@@ -98,6 +99,7 @@ stock-kb/
 ├── stock_kb/            # 核心代码（ingest/parse/index/serve）
 ├── eval/
 │   ├── questions.yaml   # 评测问题集
+│   ├── EVAL_PLAN.md     # 评测记录（过程中改掉的问题）
 │   └── reports/         # 评测报告
 ├── data/                # SQLite 与日志
 ├── models/              # 嵌入模型缓存

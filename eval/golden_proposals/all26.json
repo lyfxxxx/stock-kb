@@ -1,0 +1,70 @@
+{
+  "reviewed_at": "2026-08-22",
+  "annotator": "user",
+  "policy": [
+    "净利润/亏损用归母（本公司拥有人应占 / Net Income — Yum China Holdings, Inc.）",
+    "比较数字优先当年年报正文页，不用次年报比较列"
+  ],
+  "value_or_source_changed": [
+    {
+      "id": "exact-002",
+      "from": "4700278 p142 合计年内溢利",
+      "to": "4708084 p143 归母"
+    },
+    {
+      "id": "exact-004",
+      "from": "4495399 p278 合计年内溢利",
+      "to": "4499080 p279 归母"
+    },
+    {
+      "id": "exact-005",
+      "from": "-4161206 合计年内亏损",
+      "to": "-4163175 归母"
+    },
+    {
+      "id": "exact-008",
+      "from": "9000350 2024年报 p149 比较列",
+      "to": "9000350 2023年报 p285 正文"
+    },
+    {
+      "id": "exact-015",
+      "from": "10978 2024 HK p151 比较列",
+      "to": "10978 2023 HK p147 正文"
+    },
+    {
+      "id": "exact-016",
+      "from": "827 2024 HK p151 比较列",
+      "to": "827 2023 HK p147 正文"
+    },
+    {
+      "id": "cross-004",
+      "from": "2346962 合计年内溢利",
+      "to": "2344711 归母"
+    },
+    {
+      "id": "cross-005",
+      "from": "1373216 p243 合计",
+      "to": "1374477 p244 归母"
+    }
+  ],
+  "value_unchanged_pdf_confirmed": [
+    "exact-001",
+    "exact-003",
+    "exact-006",
+    "exact-007",
+    "exact-009",
+    "exact-010",
+    "exact-011",
+    "exact-012",
+    "exact-013",
+    "exact-014",
+    "exact-017",
+    "exact-018",
+    "exact-019",
+    "exact-020",
+    "cross-001",
+    "cross-002",
+    "cross-003",
+    "cross-006"
+  ]
+}

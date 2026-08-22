@@ -3,6 +3,7 @@
 > 检查对象：`stock-kb` 当前实施状态（2026-08-16，commit `2a668cd` 附近）。
 > 检查范围：`stock_kb/` 全部核心模块（db / ingest / classify / parsers / search / vector / indicators / eval_runner / serve）、`eval/`、`tools/`、`config.yaml`、`pyproject.toml`，并对 `data/stock_kb.db` 做了只读数据体检与一次临时副本上的破坏性实验。
 > 本文只提建议，不改动生产库；涉及 `data/stock_kb.db` 的操作均已先在临时副本上验证。
+> **历史稿（2026-08-16）。** 文中 B-1~B-6 多数已在当日自动修复中落地。评测现状与过程中改掉的问题见 `eval/EVAL_PLAN.md`，不要再按下文「扩题到 150+」执行。
 
 ## 0. 结论先行
 
@@ -35,7 +36,7 @@
 | 数据库大小 | 约 542 MB |
 | sources 表 | 0 行（未填充） |
 
-### 1.2 当前评测基线（top_k=5，摘自 `eval/OPTIMIZATION_PLAN.md`）
+### 1.2 当时的评测基线（top_k=5，2026-08-16 上午；现行门槛见 `eval/EVAL_PLAN.md`）
 
 | 方案 | keyword Recall@5 | keyword Neg@5 | semantic Recall@5 | cross Recall@5 | 结构化 |
 |---|---:|---:|---:|---:|---:|
@@ -401,7 +402,7 @@ search "現金流量表"    -> []
 
 ## 5. 评测系统：最需要补的 5 件事
 
-`eval/OPTIMIZATION_PLAN.md` 已经列了完整的 P0/P1/P2 计划，这里不重复，只强调本次检查新增的证据与优先级调整。
+评测体系的后续执行以 `eval/EVAL_PLAN.md` 为准；这里只保留本次检查当时的证据与优先级。
 
 ### 5.1 结构化 golden 必须独立化（原 P0-1，优先级上调）
 
@@ -423,7 +424,7 @@ search "現金流量表"    -> []
 
 ### 5.3 先修系统，再扩题
 
-建议顺序：修复 B-1~B-6 → 跑现有 80 题确认不劣化 → 再按 `OPTIMIZATION_PLAN.md` 扩题到 150+。否则题库扩得越多，越是在为错误基线标注。
+建议顺序（当时）：修复 B-1~B-6 → 跑现有 80 题确认不劣化。不要在 golden 未独立之前扩题。现行评测见 `eval/EVAL_PLAN.md`。
 
 ### 5.4 增加 CI 回归门禁（原 P0-8）
 
@@ -552,5 +553,5 @@ PY
 ## 9. 建议文档后续维护
 
 - 每完成一个阶段，把实际改动、评测前后对比、踩坑记录写入 `docs/process-log.md`；
-- 本文与 `eval/OPTIMIZATION_PLAN.md` 互补：本文偏“构建与查询系统”，后者偏“评测体系”；
+- 本文偏「构建与查询系统」当时的体检；评测记录见 `eval/EVAL_PLAN.md`。
 - 建议在 `AGENTS.md` 第 12 节“当前已知局限/待办”中链接本文，作为下一轮开发的优先级依据。

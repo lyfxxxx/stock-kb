@@ -66,7 +66,8 @@ def _match_search(
 ) -> list[dict[str, Any]]:
     sql = (
         "SELECT p.id AS page_id, p.report_id, p.page_no, p.char_count, r.company, "
-        "r.title, r.path, snippet(pages_fts, 3, '[', ']', '...', 24) AS snippet, rank "
+        "r.title, r.path, r.year, r.report_type, r.language, "
+        "snippet(pages_fts, 3, '[', ']', '...', 24) AS snippet, rank "
         "FROM pages_fts JOIN pages p ON p.id = pages_fts.page_id "
         "JOIN reports r ON r.id = p.report_id "
         "WHERE pages_fts MATCH ? "
@@ -92,7 +93,7 @@ def _bigram_search(
 ) -> list[dict[str, Any]]:
     sql = (
         "SELECT p.id AS page_id, p.report_id, p.page_no, p.char_count, r.company, "
-        "r.title, r.path, "
+        "r.title, r.path, r.year, r.report_type, r.language, "
         "CASE WHEN instr(lower(p.content), lower(?)) > 0 THEN "
         "substr(p.content, max(1, instr(lower(p.content), lower(?)) - 40), 160) "
         "ELSE substr(p.content, 1, 160) END AS snippet, rank "
@@ -122,7 +123,7 @@ def _like_search(
     like = f"%{_escape_like(q)}%"
     sql = (
         "SELECT p.id AS page_id, p.report_id, p.page_no, p.char_count, r.company, "
-        "r.title, r.path, "
+        "r.title, r.path, r.year, r.report_type, r.language, "
         "CASE WHEN instr(lower(p.content), lower(?)) > 0 THEN "
         "substr(p.content, max(1, instr(lower(p.content), lower(?)) - 40), 160) "
         "ELSE substr(p.content, 1, 160) END AS snippet, "
@@ -132,7 +133,7 @@ def _like_search(
     )
     params: list[Any] = [q, q, q, q, like]
     sql, params = _append_filters(sql, params, company, year, report_type, language)
-    sql += " ORDER BY p.char_count DESC LIMIT ?"
+    sql += " ORDER BY score DESC, p.page_no ASC LIMIT ?"
     params.append(top_k)
     try:
         return [dict(r) for r in conn.execute(sql, params).fetchall()]
