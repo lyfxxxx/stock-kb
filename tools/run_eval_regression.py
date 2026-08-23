@@ -31,6 +31,14 @@ HYBRID_MIN = {
 HYBRID_MAX = {
     "semantic.negative_hit_rate": 0.20,
 }
+DIAG_FTS_MIN = {
+    "indicator.hit": 12,
+    "indicator.n": 12,
+    "no_answer.empty_rate": 0.75,
+}
+DIAG_HYBRID_MIN = {
+    "no_answer.empty_rate": 0.75,
+}
 
 
 def main() -> int:
@@ -41,10 +49,16 @@ def main() -> int:
         "hybrid": run_eval(
             cfg, top_k=5, model=model, engine="hybrid", split="freeze"
         ),
+        "fts_diag": run_eval(cfg, top_k=5, model=None, engine="fts", split="diag"),
+        "hybrid_diag": run_eval(
+            cfg, top_k=5, model=model, engine="hybrid", split="diag"
+        ),
     }
     failed = []
 
     for engine, data in results.items():
+        if engine in {"fts_diag", "hybrid_diag"}:
+            continue
         summary = data["summary"]
         retrieval = summary.get("retrieval", {})
         structured = summary.get("structured", {})
@@ -76,6 +90,31 @@ def main() -> int:
                 print(f"  {key}: {value} (max {maximum}) {'OK' if ok else 'FAIL'}")
                 if not ok:
                     failed.append(f"{engine}.{key}.max")
+
+    diag = results["fts_diag"]["summary"]
+    diag_checks = {
+        "indicator.hit": (diag.get("indicator") or {}).get("hit"),
+        "indicator.n": (diag.get("indicator") or {}).get("n"),
+        "no_answer.empty_rate": (diag.get("no_answer") or {}).get("empty_rate"),
+    }
+    print("[fts_diag]")
+    for key, value in diag_checks.items():
+        minimum = DIAG_FTS_MIN[key]
+        ok = value is not None and value >= minimum
+        print(f"  {key}: {value} (min {minimum}) {'OK' if ok else 'FAIL'}")
+        if not ok:
+            failed.append(f"fts_diag.{key}")
+
+    hybrid_diag = results["hybrid_diag"]["summary"]
+    hyb_empty = (hybrid_diag.get("no_answer") or {}).get("empty_rate")
+    print("[hybrid_diag]")
+    ok = hyb_empty is not None and hyb_empty >= DIAG_HYBRID_MIN["no_answer.empty_rate"]
+    print(
+        f"  no_answer.empty_rate: {hyb_empty} "
+        f"(min {DIAG_HYBRID_MIN['no_answer.empty_rate']}) {'OK' if ok else 'FAIL'}"
+    )
+    if not ok:
+        failed.append("hybrid_diag.no_answer.empty_rate")
 
     print("RESULT:", "PASS" if not failed else "FAIL")
     print(json.dumps(

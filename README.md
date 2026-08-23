@@ -72,16 +72,23 @@ python -m stock_kb search "现金流质量" --engine vector
 # 构建向量索引（首次会自动下载模型）
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5
 
-# 指定后端与设备（默认 sentence-transformers + cuda）
+# 只重建当前模型的向量，不重切 chunks
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild
+
+# 按 config embedding.chunk_size 重切全部页面（会清空所有模型的向量）
+python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild-chunks
 
 # 检索评测（回归只评 freeze；diag 不进门禁）
 python tools/run_eval_regression.py
 python -m stock_kb eval --split freeze
 python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5 --split freeze
 
-# 评测记录（过程中改掉的问题）
-# 见 eval/EVAL_PLAN.md
+# 评测体系与过程记录
+# eval/EVAL_SYSTEM.md （现行分层、GT、门禁）
+# eval/EVAL_PLAN.md   （过程中改掉的问题）
+
+# 三表行项目（科目数字；不要先全文搜）
+python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json
 
 # 计算常用指标（营收/净利/ROE/现金流等）
 python -m stock_kb indicators

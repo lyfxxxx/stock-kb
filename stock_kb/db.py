@@ -247,6 +247,64 @@ def upsert_company(conn: sqlite3.Connection, name: str, code: str | None = None)
     return int(row["id"])
 
 
+# 笔记/MCP 常用说法 → 三表行名片段（简体或原文）
+_STATEMENT_ALIASES = {
+    "资本开支": ["购买物业", "購買物業", "purchase of property"],
+    "资本支出": ["购买物业", "購買物業", "purchase of property"],
+    "capex": ["purchase of property", "购买物业"],
+    "已付股息": ["dividends paid", "已付股息"],
+    "股息": ["dividends paid", "已付股息"],
+}
+
+
+def query_statements(
+    conn: sqlite3.Connection,
+    company: str,
+    statement_type: str | None = None,
+    year: int | None = None,
+    period_type: str | None = None,
+    keyword: str | None = None,
+    limit: int | None = 100,
+) -> list[dict[str, Any]]:
+    """按公司查三表行项目。keyword 匹配 line_name_norm / line_name_orig。"""
+    sql = """
+        SELECT s.id AS statement_id, r.id AS report_id, s.statement_type,
+               s.line_name_orig, s.line_name_norm, s.value,
+               s.unit, s.currency, s.year, s.page_no, r.title, r.path
+        FROM statements s JOIN reports r ON r.id = s.report_id
+        WHERE r.company=?
+    """
+    params: list[Any] = [company]
+    if statement_type is not None:
+        sql += " AND s.statement_type=?"
+        params.append(statement_type)
+    if year is not None:
+        sql += " AND s.year=?"
+        params.append(year)
+    if period_type is not None:
+        sql += " AND r.period_type=?"
+        params.append(period_type)
+    if keyword is not None and str(keyword).strip():
+        kw = str(keyword).strip()
+        needles = [kw]
+        for extra in _STATEMENT_ALIASES.get(kw, []) + _STATEMENT_ALIASES.get(kw.lower(), []):
+            if extra not in needles:
+                needles.append(extra)
+        clauses = []
+        for n in needles:
+            clauses.append(
+                "(instr(s.line_name_norm, ?) > 0 "
+                "OR instr(lower(COALESCE(s.line_name_orig, '')), lower(?)) > 0)"
+            )
+            params.extend([n, n])
+        sql += " AND (" + " OR ".join(clauses) + ")"
+    sql += " ORDER BY r.year DESC, s.page_no, s.line_name_norm"
+    if limit is not None:
+        sql += " LIMIT ?"
+        params.append(limit)
+    return [dict(r) for r in conn.execute(sql, params).fetchall()]
+
+
 def upsert_report(conn: sqlite3.Connection, meta: dict[str, Any]) -> int:
     cur = conn.execute(
         """

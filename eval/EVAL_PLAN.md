@@ -1,11 +1,11 @@
-# stock-kb 评测记录（2026-08-22）
+# stock-kb 评测记录（2026-08-22 起）
 
-评测基建 A–D 已落地。本文记录**过程中改掉的问题**和当前门槛，不再当施工清单。
+现行体系（分层、GT、打分、门禁、命令）见 **`eval/EVAL_SYSTEM.md`**。本文只记**过程中改掉的问题**和对照实验，不当施工清单。
 
 日常回归：
 
 ```powershell
-python tools/run_eval_regression.py          # 只评 freeze
+python tools/run_eval_regression.py          # freeze + FTS/hybrid diag（指标/无答案）
 python -m stock_kb eval --split freeze
 python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5 --split freeze
 python tools/audit_notes.py
@@ -13,7 +13,7 @@ python tools/audit_notes.py
 
 ---
 
-## 1. 当前门槛（freeze，top_k=5）
+## 1. 当前门槛（top_k=5）
 
 | 检查 | 门槛 | 最近实测 |
 |---|---|---|
@@ -22,8 +22,11 @@ python tools/audit_notes.py
 | hybrid semantic Recall@5 | ≥ 0.10 | 0.15 |
 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 |
 | 结构化 hit / parse_hit | 26/26 | 26/26 |
+| FTS diag `indicators` | 12/12 | 12/12 |
+| FTS diag no_answer empty_rate | ≥ 0.75 | 1.00 |
+| hybrid diag no_answer empty_rate | ≥ 0.75 | 1.00 |
 
-题集：`eval/questions.yaml`。结构化 26 题已 `golden_source: pdf`。另有 `split: diag`（真语义 8、跨语言 10、无答案 8、指标 12），**不进回归**。
+题集：`eval/questions.yaml`。结构化 26 题已 `golden_source: pdf`。`split: diag` 的真语义 / 跨语言仍不进 freeze 检索门槛。
 
 ---
 
@@ -81,20 +84,93 @@ freeze 语义 20 题补了难负样本后，Neg@5 从 0 变成 0.10。去泄漏�
 
 笔记侧：`audit_notes.py` 抽出数字和「《文件》第 N 页」，与库对照。试点两篇 + 2026-08-22 抽查稿均已跑过。
 
+### 2.8 净利润口径与无答案空结果（产品，2026-08-22 夜）
+
+`indicators.net_profit` 原先吃「年内溢利」合计。损益表续页常有两行都叫 `Owners of the Company`：一行是归母净利，一行是归母综合收益，数值差约 1%。只把 `ownersofthecompany` 提前仍可能抽到综合收益行。
+
+现行规则：归母词优先于合计；有多行归母时，取与「年内溢利」合计最接近的那一行；同年年报正文页加分。海底捞 2023=4,499,080、2024=4,708,084。百胜中国仍走 `Net income — Yum China Holdings`。派生净利率 / ROE 随之用归母。指标题容差 0.01%（`0.0001`），2% 会把合计和归母当成同一个数。
+
+FTS 长句曾用 trigram OR 硬填 top-k，无答案 empty_rate=0。已去掉这条兜底；多词改为 AND（丢掉「是多少」等虚词）。MCP 默认 engine 是 FTS，8 道 no_answer 全部空。hybrid / 向量在 FTS 为空时不再无条件填满：年份超出该公司入库年报区间，或问句里的非常见实体未出现在命中页，则返回空。8 道 no_answer 的 hybrid empty_rate=1.0。
+
+去掉 trigram OR 后 freeze FTS semantic 从 0.10 到 0.00；hybrid semantic 从 0.15 到 0.10，卡在门禁线上。
+
 ---
 
 ## 3. 评测已经看见、产品还没改的
 
-1. **海底捞 `indicators.net_profit` 仍是年内溢利合计**，不是归母。指标题 12 道里 10 道过、2 道不过（2023/2024 归母）。容差必须收到约 0.01%，2% 会把两种口径当成同一个数。
-2. **无答案查询 empty_rate = 0**。长句走 trigram OR 之后总会填满 top-k，系统不会返回空。
-3. **真语义 / 跨语言 diag** FTS Recall 约 0.10–0.13。要靠改检索，不是再加泄漏题。
-4. 46 道检索 GT 没有逐页通读，只改了失败明细里能量化的页码。
+1. **真语义 / 跨语言**：证据清单之后仍有约 11 道页不在向量 top-50。英文问中文页、附注减值。不要用整句语言 ID 分流。见 `EVAL_SYSTEM.md` §8。
+2. 46 道 freeze 检索 GT 没有逐页通读。
+3. 三表 `--year` 会同时返回当年正文和次年比较列。
+4. hybrid 无答案已按年份/实体约束清空（8/8），见 §2.8。
 
 ---
 
 ## 4. 不在本次范围
 
-- 分块 400/800/1200、RRF 权重、reranker：等明确要做模型/检索对比再用 diag 集。
+- RRF 权重、reranker、1200 字块：仍未做。400 字块已试过，见 §5.1，未采用。
 - 扩到 170 题、dev/test/hold-out、LLM judge：不采用。小样本上切集会把点估计切得更不可读。
 
 结构化 golden 变更清单：`eval/golden_proposals/all26.json`。
+
+---
+
+## 5. diag 18 题对照（2026-08-22 夜）
+
+方法：FTS@5、vector@50、hybrid@5，对照 GT 页文本。脚本：`python tools/diag_retrieval.py`。
+
+先发现 7 道 GT 页不对题，已按库内正文改掉（不进 freeze）：
+
+| 题 | 原 GT | 问题 | 改成 |
+|---|---|---|---|
+| semantic-022 / cross-018 | 阿米巴 p25 | 服务 IP 总述，不是师徒开店 | p28 店长考核/开店资格 |
+| semantic-025 | 国信 2024Q4 p4 | 必胜客利润率，不是股东回报 | 同文件 p1 |
+| semantic-028 | 2024 Annual p3 | 回购/利润，没有咖啡 | 海通 2025Q2 p1 肯悦咖啡 |
+| cross-015 | 招股书 p166 | 套餐价格，不是外卖 | p183 数字点餐/外卖 |
+| cross-020 | 阿米巴 p39 | 净利率，不是资本开支 | 浦银 2024 p2 |
+| cross-021 | 2024 Annual p3 | 同上，没有 K-Coffee | 2022 Annual p120 |
+
+改完后再测（vector@50）：
+
+| 桶 | 题数 | 含义 |
+|---|---:|---|
+| top5 | 1 | semantic-022：向量本来就排第 1，是 GT 错了 |
+| 排不上（6–50） | 4 | 027@7、028@9、025@18、017@22 |
+| 召不回（不在 50） | 13 | 真语义改写 + 英文问中文页 |
+| hybrid 乱填 | 8/8 no_answer | FTS 空，向量 k 近邻仍返回 5 条 |
+
+召不回里，不少是**对了文件、错了页**（如 024 翻台率、013 减值、014 已付股息）：800 字块把关键行淹没。英文问句打到年报封面/目录，打不到附注表。
+
+结论：**不要先上 reranker**。18 题里只有 4 题进了向量 50 名，只有 027/028 靠近 top-5。
+
+### 5.1 400 字分块（2026-08-23，已回滚）
+
+只改 `embedding.chunk_size` 800→400，`--rebuild-chunks` 后 36,039 → 68,196 块，只重嵌当前模型。对照 `eval/reports/diag_retrieval_chunk800.json` vs `diag_retrieval_chunk400.json`。
+
+| 桶 | 800 | 400 |
+|---|---:|---:|
+| top5 | 1（022@1） | 2（022@1，027 从 @7 升到 @1） |
+| 排不上（6–50） | 4（027@7、028@9、025@18、017@22） | 3（028@10、017@17、025@30） |
+| 召不回 | 13 | 13 |
+| hybrid 无答案填满 | 8/8 | 8/8 |
+
+同文件、错页：024 的文件排到向量第 1，但 GT 页仍不在 50 名；026 同文件 40→7；013 同文件命中消失。freeze hybrid semantic **0.10 → 0.05**（20 题里只剩 semantic-008「啄木鸟」@3），keyword 仍 0.80、结构化仍 26/26。按回归门禁回滚到 800。
+
+更小块能把个别已进候选的题推上 top-5，**捞不起那 13 道召不回**，还会丢掉 freeze 上那 1 道语义命中。下一步不要再切块；hybrid 无答案做距离门槛，跨语言另处理问句，两者都不要和分块绑在一起。
+
+### 5.2 diag 分析题改为证据清单（2026-08-23）
+
+事实题（结构化 / 指标 / keyword / no_answer）仍用单页或空结果，freeze 门禁不变。
+
+diag 的 semantic / cross 从「唯一文件+唯一页」改成证据清单：`sources` 里每条都 `required: true`，top-5 命中任一即算；`authority` 标明 `annual` / `interim` / `research` / `prospectus`。报告多一列 **年报/中报证据@5**（仅当清单里有年报或中报）。027 利润与 028 咖啡不再共用海通 Q2 封面。Coverage / Diversity 不做成指标。
+
+对照脚本：`python tools/diag_retrieval.py`（`vector_rank` 已按清单任一源）。回归脚本不读这些列。
+
+重测（vector@50 / hybrid@5 / FTS@5，任一证据）：
+
+| 桶 | 原唯一页 | 证据清单后 |
+|---|---:|---:|
+| top5 | 1 | 5（022 师徒；028 咖啡；017 开店；020 资本开支 FTS；022 翻台率中报） |
+| 排不上 | 4 | 2（027@7、025@18） |
+| 召不回 | 13 | 11 |
+
+年报/中报进 top-5 的只有 cross-022（2025 中报 p11 翻台率）和 cross-020（年报资本开支，FTS）。024「座位转得快」清单里已有同一页中报，向量仍召不回——那是问句，不是 GT。021 / 023 / 013 等仍是检索问题。

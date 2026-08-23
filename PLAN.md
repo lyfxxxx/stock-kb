@@ -261,7 +261,7 @@ SQLite 主要表：
 | `list_companies` | 列出知识库中的公司 | — |
 | `list_reports` | 列出某公司报告 | company, type, year |
 | `search_reports` | 全文+语义混合搜索 | query, company, top_k |
-| `get_financial_statements` | 获取三大报表 | company, period, statement |
+| `get_financial_statements` | 获取三大报表行项目 | company, statement_type, year, keyword |
 | `get_indicators` | 获取指标序列 | company, years, metrics |
 | `get_report_text` | 获取报告某页/区间文本 | company, report, pages |
 | `get_source_excerpt` | 取带引用的原文片段 | source_id, context_chars |
@@ -455,11 +455,11 @@ SQLite 主要表：
 
 ### 已完成（本机试点）
 
-- 项目骨架与 CLI：`scan / search / stats / eval / index / indicators / reclassify / reparse-statements / mcp / models download`
+- 项目骨架与 CLI：`scan / search / stats / eval / index / statements / indicators / reclassify / reparse-statements / mcp / models download`
 - 全量入库：60 份报告（海底捞 34 + 百胜中国 26）、8,128 页、5,570 条三表行项目、117 条指标、118 条 sources；
   `statements.unit/currency` 已回填（2026-08-16 解析器修复后重新 reparse）
 - 检索：FTS5（trigram + 繁简归一化）+ 向量索引（bge-small-zh、多语言 MiniLM、BGE-M3；已从整页嵌入升级为约 800 字/块的段落分块嵌入，使用 sentence-transformers + CUDA）
-- 评测：`eval/questions.yaml` + `eval/EVAL_PLAN.md`。结构化 26 题 PDF golden；freeze/diag 分集；回归见 `tools/run_eval_regression.py`。
+- 评测：`eval/questions.yaml` + `eval/EVAL_SYSTEM.md`（现行体系）+ `eval/EVAL_PLAN.md`（过程）。结构化 26 题 PDF golden；freeze/diag 分集；回归见 `tools/run_eval_regression.py`。
 - MCP：7 个只读工具，stdio + Streamable HTTP 双传输，HTTP 支持 Bearer token 鉴权；stdio 与 HTTP 均已端到端验证
 - 增量扫描：`scan --watch-interval 秒数` 开关，默认关闭
 - 模型下载：`models download` 支持 hf-mirror 镜像 + hf_transfer 多线程 + snapshot_download 断点续传；缓存完整后离线加载可用
@@ -495,8 +495,9 @@ SQLite 主要表：
 
 ### 待办（下一阶段）
 
-- 评测基建已完成，说明见 `eval/EVAL_PLAN.md`。产品侧未改：海底捞 `indicators.net_profit` 归母口径；无答案查询不要硬填 top-k。
-- 可选：在 diag 集上做分块 / RRF / reranker 对比。
+- `indicators.net_profit` 已改为归母；FTS 无答案不再 trigram OR 硬填。说明见 `eval/EVAL_PLAN.md`。
+- 400 字分块已在 diag 试过：027 进 top-5，但 freeze hybrid semantic 0.10→0.05，已回滚 800。不要再切块当下一刀。
+- 可选：hybrid 无答案距离门槛；跨语言问句。reranker 仍排在「页已进候选」之后。
 - 迁移 Docker 到 DXP-4800、接入 Hermes Agent；
 
 ## 16. RAG 评测系统优化记录（2026-08-15）
@@ -627,3 +628,23 @@ SQLite 主要表：
 3. hybrid keyword 对短术语短路回 FTS；评测默认与 MCP 一样走单 query。
 
 freeze 门槛：FTS keyword ≥0.75 且 Neg@5≤0.65；hybrid semantic ≥0.10 且 Neg@5≤0.20；结构化 26/26。
+
+### 16.10 归母口径与 FTS 空结果（2026-08-22 夜）
+
+`indicators.net_profit` 改为归母（多行 `Owners of the Company` 取与合计最接近者）。FTS 去掉 trigram OR，多词改 AND。diag 指标 12/12，no_answer empty_rate=1.0。hybrid semantic 实测 0.10。详情见 `eval/EVAL_PLAN.md` §2.8。
+
+### 16.11 400 字分块实验（2026-08-23）
+
+`index --rebuild-chunks` 按 `embedding.chunk_size` 重切。400 字：块数 36,039→68,196；diag 上 semantic-027 从向量第 7 升到第 1；召不回仍 13/18。freeze hybrid semantic 0.10→0.05，已从备份恢复 800 字索引。见 `eval/EVAL_PLAN.md` §5.1。
+
+### 16.12 diag 证据清单（2026-08-23）
+
+分析/跨语言 diag 题改为多源 GT，命中任一可接受出处即算；另报年报/中报召回。027/028 拆开。freeze 不变。见 `eval/EVAL_PLAN.md` §5.2。
+
+### 16.13 hybrid 无答案空结果（2026-08-23）
+
+FTS 为空时，向量不再无条件填满 top-k：问句年份超出该公司入库年报区间，或非常见实体未出现在命中页，则返回空。见 `eval/EVAL_PLAN.md` §2.8。
+
+### 16.14 科目数字走三表（2026-08-23）
+
+`get_financial_statements` 增加 `keyword`；笔记 skill 规定收入/净利先指标、减值/股息/资本开支先三表，`search_reports` 只查叙述。

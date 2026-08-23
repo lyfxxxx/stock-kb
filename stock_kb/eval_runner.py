@@ -279,12 +279,16 @@ def _normalize_source(source: Any) -> dict[str, Any]:
         relevance = int(relevance)
     except (TypeError, ValueError):
         relevance = 1
+    authority = str(source.get("authority") or "").strip().lower()
+    if authority not in {"annual", "interim", "research", "prospectus"}:
+        authority = ""
     return {
         "file": str(source.get("file") or ""),
         "page": page,
         "table": source.get("table"),
         "required": bool(source.get("required", False)),
         "relevance": relevance,
+        "authority": authority,
     }
 
 
@@ -411,6 +415,11 @@ def _retrieval_result(
             negative_ranks.append(i)
     hit = bool(matched_ranks)
     rank = matched_ranks[0] if matched_ranks else None
+    filing = [s for s in sources if s.get("authority") in {"annual", "interim"}]
+    filing_ranks: list[int] = []
+    for i, h in enumerate(hits, start=1):
+        if any(_source_matches(h, s) for s in filing):
+            filing_ranks.append(i)
     result: dict[str, Any] = {
         "hit": hit,
         "rank": rank,
@@ -420,6 +429,9 @@ def _retrieval_result(
         "negative_hit_at_k": bool(negative_ranks),
         "negative_hit_at_1": bool(negative_ranks and negative_ranks[0] == 1),
         "negative_ranks": negative_ranks,
+        "annual_eligible": bool(filing),
+        "annual_hit": bool(filing_ranks),
+        "annual_rank": filing_ranks[0] if filing_ranks else None,
         "top_hits": [
             {
                 "page_id": h.get("page_id"),
@@ -773,6 +785,8 @@ def _blank_ret_bucket() -> dict[str, Any]:
         "neg_at_1": 0,
         "fused_n": 0,
         "error_tags": {},
+        "annual_n": 0,
+        "annual_hit": 0,
     }
 
 
@@ -814,6 +828,10 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
             s["neg_at_1"] += 1
         if r.get("hybrid_fused"):
             s["fused_n"] += 1
+        if r.get("annual_eligible"):
+            s["annual_n"] += 1
+            if r.get("annual_hit"):
+                s["annual_hit"] += 1
         for tag in r.get("error_tags") or []:
             s["error_tags"][tag] = s["error_tags"].get(tag, 0) + 1
 
@@ -933,6 +951,11 @@ def _finalize_retrieval(ret_stats: dict[str, dict[str, Any]]) -> dict[str, Any]:
             "hybrid_fused_n": s["fused_n"],
             "error_tags": s["error_tags"],
         }
+        if s.get("annual_n"):
+            retrieval[typ]["annual_n"] = s["annual_n"]
+            retrieval[typ]["annual_recall_at_k"] = round(
+                s["annual_hit"] / s["annual_n"], 3
+            )
     if ret_stats:
         n = sum(s["n"] for s in ret_stats.values())
         retrieval["total"] = {
@@ -966,6 +989,12 @@ def _finalize_retrieval(ret_stats: dict[str, dict[str, Any]]) -> dict[str, Any]:
                 s["error_tags"] for s in ret_stats.values()
             ),
         }
+        annual_n = sum(s.get("annual_n", 0) for s in ret_stats.values())
+        if annual_n:
+            retrieval["total"]["annual_n"] = annual_n
+            retrieval["total"]["annual_recall_at_k"] = round(
+                sum(s.get("annual_hit", 0) for s in ret_stats.values()) / annual_n, 3
+            )
     return retrieval
 
 

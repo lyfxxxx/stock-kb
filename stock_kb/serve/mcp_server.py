@@ -11,7 +11,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from stock_kb import search
+from stock_kb import db, search
 
 
 class TokenAuthMiddleware(BaseHTTPMiddleware):
@@ -85,7 +85,7 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         report_type: str | None = None,
         language: str | None = None,
     ) -> list[dict[str, Any]]:
-        """检索报告页。engine: fts/vector/hybrid；vector/hybrid 需要已建向量索引。"""
+        """检索报告页（经营叙述：翻台率/同店/师徒等）。科目数字请用 get_indicators 或 get_financial_statements(keyword=)。engine: fts/vector/hybrid。"""
         conn = _conn()
         try:
             if engine == "fts":
@@ -139,31 +139,24 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         statement_type: str | None = None,
         year: int | None = None,
         period_type: str | None = None,
+        keyword: str | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
-        """获取三大报表行项目。statement_type: income/balance/cashflow/equity。"""
-        sql = """
-            SELECT s.id AS statement_id, r.id AS report_id, s.statement_type,
-                   s.line_name_orig, s.line_name_norm, s.value,
-                   s.unit, s.currency, s.year, s.page_no, r.title, r.path
-            FROM statements s JOIN reports r ON r.id = s.report_id
-            WHERE r.company=?
-        """
-        params: list[Any] = [company]
-        if statement_type is not None:
-            sql += " AND s.statement_type=?"
-            params.append(statement_type)
-        if year is not None:
-            sql += " AND s.year=?"
-            params.append(year)
-        if period_type is not None:
-            sql += " AND r.period_type=?"
-            params.append(period_type)
-        sql += " ORDER BY r.year DESC, s.page_no, s.line_name_norm LIMIT ?"
-        params.append(limit)
+        """获取三大报表行项目。statement_type: income/balance/cashflow/equity。keyword 按科目名过滤（减值/已付股息/资本开支）。"""
+        from stock_kb.textutil import to_simplified
+
         conn = _conn()
         try:
-            rows = [dict(r) for r in conn.execute(sql, params).fetchall()]
+            kw = to_simplified(keyword).strip() if keyword else None
+            rows = db.query_statements(
+                conn,
+                company,
+                statement_type=statement_type,
+                year=year,
+                period_type=period_type,
+                keyword=kw or None,
+                limit=limit,
+            )
             for row in rows:
                 row["locator"] = f"{row['title']} 第{row['page_no']}页"
             return rows
@@ -176,7 +169,7 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         years: list[int] | None = None,
         metrics: list[str] | None = None,
     ) -> list[dict[str, Any]]:
-        """获取财务指标；当前来自 indicators 表，后续由三表自动计算补充。"""
+        """获取财务指标。metrics 如 revenue / net_profit / total_assets / total_equity / operating_cashflow / gross_profit。"""
         sql = "SELECT * FROM indicators WHERE company=?"
         params: list[Any] = [company]
         if years:

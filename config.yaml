@@ -21,6 +21,7 @@ embedding:
   model: "BAAI/bge-small-zh-v1.5"
   device: "cuda"
   backend: "sentence-transformers"
+  chunk_size: 800  # 400 在 freeze hybrid semantic 上从 0.10 掉到 0.05，未采用；改粒度须 index --rebuild-chunks
 
 mcp:
   host: "127.0.0.1"

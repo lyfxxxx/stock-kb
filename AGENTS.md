@@ -12,7 +12,7 @@ NAS 财报/研报 → 解析（pdfplumber/xlrd/OCR 兜底）→ SQLite（页文�
 ```
 
 - 试点公司：海底捞（06862.HK）、百胜中国（YUMC/09987.HK），已在 `config.yaml` 配置。
-- 当前规模：60 份报告、8,128 页、5,570 条三表行项目、117 条指标（2026-08-16 解析器收紧后；评测执行方案见 `eval/EVAL_PLAN.md`）。
+- 当前规模：60 份报告、8,128 页、5,570 条三表行项目、117 条指标（2026-08-16 解析器收紧后；评测体系见 `eval/EVAL_SYSTEM.md`，过程记录见 `eval/EVAL_PLAN.md`）。
 - 核心目标：笔记中的关键数字必须能追溯到「文件 + 页码/表名」，不允许凭记忆编数。
 
 ## 2. 环境与安装
@@ -33,6 +33,8 @@ python -m stock_kb eval                              # FTS5 基线评测
 python -m stock_kb eval --engine vector --model BAAI/bge-small-zh-v1.5   # 向量评测
 python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5   # 混合检索评测
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5       # 增量建向量索引
+python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild-chunks  # 按 chunk_size 重切；清空所有模型向量
+python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json
 python -m stock_kb indicators                       # 重算/写入财务指标
 python -m stock_kb reparse-statements --company 海底捞        # 从已存页文本重算三表（不重读 NAS）
 python tools/audit_notes.py                         # 审计两篇试点笔记数字与 DB 交叉验证
@@ -101,8 +103,8 @@ python tools/test_mcp_http.py                       # 端到端测试
 3. PDF：pdfplumber 逐页提文本；文本量低于 `ocr.min_chars` 的页走 tesseract OCR 兜底；随后繁体转简体存 `pages.content`，原文存 `pages.content_orig`。
 4. 三表：按报表页标题定位（前 10 行内），按「行标签 + 行尾数字」解析，不依赖 `extract_tables()`（港股双栏表格会错位）。
 5. 页文本同步写入 `pages_fts`（FTS5 trigram 分词，短于 3 字的查询走 `LIKE` 兜底）。
-6. 向量：`pages.content` 按行合并成约 800 字/块写入 `chunks`；`index` 用指定模型嵌入未索引块，写入 `chunks_vec_<dim>` 与 `embedding_index`。
-7. `indicators` 从 `statements` 行项目关键词匹配提取收入/净利/资产等，再派生毛利率、净利率、ROE。
+6. 向量：`pages.content` 按行合并成约 800 字/块写入 `chunks`（`embedding.chunk_size`）；`index` 用指定模型嵌入未索引块。`--rebuild` 只删当前模型向量；`--rebuild-chunks` 重切页面并清空**所有**模型索引（chunk_id 会变）。400 字块已在 diag 试过，freeze hybrid semantic 从 0.10 掉到 0.05，未采用。
+7. `indicators` 从 `statements` 行项目关键词匹配提取收入/净利/资产等，再派生毛利率、净利率、ROE。`net_profit` 是归母（港股「本公司拥有人应占」，美国 `Net income — Yum China Holdings`），不是年内溢利合计。
 8. MCP 以 `mode=ro` 打开 SQLite，只暴露 7 个只读工具；HTTP 传输外包 Starlette 中间件做 Bearer 鉴权。
 9. `stock-note` skill 调 MCP/CLI 查数 → 按模板生成笔记 → 自查引用。
 
@@ -154,13 +156,13 @@ python tools/test_mcp_http.py                       # 端到端测试
 
 ### 新增 MCP 工具
 
-在 `stock_kb/serve/mcp_server.py` 的 `create_server()` 内用 `@mcp.tool()` 定义；用内部 `_conn()` 只读连接，函数内 `finally: conn.close()`。加完后跑 stdio（直接调用工具函数/`mcp run`）与 HTTP（`tools/test_mcp_http.py`）两种验证。
+在 `stock_kb/serve/mcp_server.py` 的 `create_server()` 内用 `@mcp.tool()` 定义；用内部 `_conn()` 只读连接，函数内 `finally: conn.close()`。加完后跑 stdio（直接调用工具函数/`mcp run`）与 HTTP（`tools/test_mcp_http.py`）两种验证。科目数字走 `get_indicators` / `get_financial_statements(keyword=)`，不要先 `search_reports`。
 
 ### 修改解析器或分块逻辑
 
 1. 用 `python -m stock_kb reparse-statements --company <公司>` 验证三表提取（不重读 NAS）；
 2. 页面文本变化时跑 `scan --company <公司> --limit 1` 或单文件脚本验证；
-3. 分块逻辑变化时：备份 DB → 清 `chunks` 与 `embedding_index` → `index --rebuild` → `eval --engine hybrid --model <默认模型>` 回归；
+3. 分块逻辑变化时：备份 DB → 改 `embedding.chunk_size` → `index --rebuild-chunks`（会清空所有模型）→ `python tools/run_eval_regression.py`；不劣化才能留下。`--rebuild` 不会重切 chunks。
 4. 对比 `eval/reports/` 历史基线与当前差异，不劣化才能收尾。
 
 ### 换/新增 embedding 模型
@@ -169,7 +171,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 
 ### 新增评测题
 
-在 `eval/questions.yaml` 追加。`type`：exact / keyword / semantic / cross / end2end / indicator / no_answer。`split` 缺省为 freeze（进回归）；诊断题写 `split: diag`。`expected[].file` 为不含扩展名的 `reports.title` 片段。结构化题必须 `golden_source: pdf`，禁止从 DB 抄 `expected_value`。回归：`python tools/run_eval_regression.py`（只评 freeze）。说明见 `eval/EVAL_PLAN.md`。
+在 `eval/questions.yaml` 追加。`type`：exact / keyword / semantic / cross / end2end / indicator / no_answer。`split` 缺省为 freeze（进回归）；诊断题写 `split: diag`。`expected[].file` 为不含扩展名的 `reports.title` 片段。结构化题必须 `golden_source: pdf`，禁止从 DB 抄 `expected_value`。diag 分析/跨语言题可列多条 `sources`（均 `required: true`，命中任一即算）；`authority` 为 `annual` / `interim` / `research` / `prospectus`，评测另报年报/中报召回。回归：`python tools/run_eval_regression.py`（freeze 检索/结构化 + diag 指标/无答案）。体系见 `eval/EVAL_SYSTEM.md`，过程见 `eval/EVAL_PLAN.md`。
 
 ### 更新文档
 
@@ -179,7 +181,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 
 - [ ] `python -m stock_kb stats --json` 正常，数字与改动前一致（除非本意就是改数据）；
 - [ ] `python -m stock_kb search "翻台率" --top-k 5 --json` 返回非空且命中正确；
-- [ ] `python -m stock_kb eval` 与 `python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5` 跑通，核心指标不低于当前基线（freeze：FTS keyword Recall≥0.75、Neg@k≤0.65；hybrid semantic Recall≥0.10、结构化 26/26，见 `eval/EVAL_PLAN.md`），同时新增的 Neg@k 不得劣化；
+- [ ] `python tools/run_eval_regression.py` 跑通（门槛见 `eval/EVAL_SYSTEM.md` §5）；
 - [ ] 涉及三表/笔记时 `python tools/audit_notes.py` 通过；
 - [ ] 涉及 MCP 时 `tools/test_mcp_http.py` 通过（stdio 与 HTTP 至少各验证一次）；
 - [ ] 输出路径、环境变量、新增命令已写进文档。
@@ -190,7 +192,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 - 港股繁体、中英混排：先归一化再索引，引用用原文。
 - FTS5 默认分词器对中文无效，必须 trigram；<3 字查询走 LIKE。
 - `index --rebuild` 曾误删所有模型索引——回归时重点检查「按 model 隔离」。
-- 整页嵌入语义效果差，当前是 800 字分块；改粒度要重跑评测。
+- 整页嵌入语义效果差，当前是 800 字分块。400 已试：diag 上 027 进 top-5，但 freeze hybrid semantic 0.10→0.05，已回滚。改粒度必须 `--rebuild-chunks` 并跑回归。
 - CUDA/onnxruntime 依赖脆弱，当前推理走 sentence-transformers + torch；非必要不要切回 onnxruntime-gpu。
 - 模型缓存后仍可能联网：离线环境变量必须在相关库 import 之前设置。
 - `mcp` 锁定 1.x；`streamable_http_app()` 路径默认 `/mcp`；客户端 header 通过 `httpx.AsyncClient` 传。
@@ -200,7 +202,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 
 > 2026-08-16 自动修复后的最新状态见 `docs/fix-record-20260816.md`；以下只列仍未完成或需要人工的事项。
 
-- 评测现状见 `eval/EVAL_PLAN.md`。结构化 26 题已 PDF golden；freeze 语义已去词面泄漏（hybrid semantic 门槛 ≥0.10）。仍未改产品：海底捞 `indicators.net_profit` 是合计不是归母；无答案查询 empty_rate=0。hybrid 对短于 6 字的查询短路回 FTS。
+- 评测现状见 `eval/EVAL_PLAN.md`。`indicators.net_profit` 已改为归母；FTS 无答案 empty_rate=1.0。hybrid 对短于 6 字的查询仍短路回 FTS；FTS 为空时向量不再无条件填满（年份超出入库区间或实体未落地则空）。真语义 / 跨语言 diag FTS Recall 为 0。400 字分块已试过并回滚。
 - 两字查询已建 `pages_bigram_fts`，但 bigram 排序暂未启用（避免牺牲 keyword 基线），需独立评测集调权。
 - reranker / jina 对比未完成（可选）。
 - US/HK 年报等“内容不同但语义重复”的 canonical 标记未实现；SHA 完全重复已自动标记并排除。

@@ -74,10 +74,32 @@ def main(argv: list[str] | None = None) -> int:
     p_index = sub.add_parser("index", help="构建向量索引")
     p_index.add_argument("--model", default="BAAI/bge-small-zh-v1.5")
     p_index.add_argument("--limit", type=int, default=None)
-    p_index.add_argument("--rebuild", action="store_true")
+    p_index.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="只重建当前模型的向量，不重切 chunks",
+    )
+    p_index.add_argument(
+        "--rebuild-chunks",
+        action="store_true",
+        help="按 embedding.chunk_size 重切全部页面；会清空所有模型的向量索引",
+    )
 
     p_reclassify = sub.add_parser("reclassify", help="按文件名/目录重新分类已有报告")
     p_dedupe = sub.add_parser("dedupe", help="按 SHA-256 标记重复报告并保留 canonical 版本")
+
+    p_statements = sub.add_parser("statements", help="查询三表行项目")
+    p_statements.add_argument("--company", required=True)
+    p_statements.add_argument(
+        "--type",
+        dest="statement_type",
+        help="income / balance / cashflow / equity",
+    )
+    p_statements.add_argument("--year", type=int, default=None)
+    p_statements.add_argument("--period-type", default=None)
+    p_statements.add_argument("--keyword", help="科目名片段，如 已付股息 / 减值 / 资本开支")
+    p_statements.add_argument("--limit", type=int, default=20)
+    p_statements.add_argument("--json", action="store_true")
 
     p_indicators = sub.add_parser("indicators", help="从三表计算常用财务指标")
 
@@ -208,7 +230,11 @@ def main(argv: list[str] | None = None) -> int:
         from stock_kb import vector
 
         result = vector.build_index(
-            cfg, model=args.model, limit=args.limit, rebuild=args.rebuild
+            cfg,
+            model=args.model,
+            limit=args.limit,
+            rebuild=args.rebuild,
+            rebuild_chunks=args.rebuild_chunks,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
@@ -252,6 +278,23 @@ def main(argv: list[str] | None = None) -> int:
         marked = db.mark_duplicate_reports(conn)
         conn.close()
         print(json.dumps({"duplicates_marked": marked}, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.cmd == "statements":
+        from stock_kb.textutil import to_simplified
+
+        kw = to_simplified(args.keyword).strip() if args.keyword else None
+        rows = db.query_statements(
+            conn,
+            args.company,
+            statement_type=args.statement_type,
+            year=args.year,
+            period_type=args.period_type,
+            keyword=kw or None,
+            limit=args.limit,
+        )
+        conn.close()
+        print(json.dumps(rows, ensure_ascii=False, indent=2))
         return 0
 
     if args.cmd == "indicators":

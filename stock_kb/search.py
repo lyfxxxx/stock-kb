@@ -41,18 +41,12 @@ def fts_search(
         return rows
 
     expr = _match_expression(q)
-    rows = _match_search(
+    if not expr:
+        return []
+    return _match_search(
         conn, expr, company=company, top_k=top_k,
         year=year, report_type=report_type, language=language,
     )
-    if not rows and len(q) >= 6 and re.search(r"[\u4e00-\u9fff]", q):
-        expr = _trigram_or_expression(q)
-        if expr:
-            rows = _match_search(
-                conn, expr, company=company, top_k=top_k,
-                year=year, report_type=report_type, language=language,
-            )
-    return rows
 
 
 def _match_search(
@@ -169,21 +163,168 @@ def _quote_fts(term: str) -> str:
     return '"' + term.replace('"', '""') + '"'
 
 
+# 问句里的虚词不参与 AND，避免「是多少」把真实科目查询打成空。
+_QUERY_STOP = {
+    "是多少",
+    "怎么样",
+    "如何",
+    "是否",
+    "什么",
+    "哪些",
+    "有没有",
+    "多少",
+    "哪年",
+    "高不高",
+    "好不好",
+    "对不对",
+    "能不能",
+    "成为",
+}
+
+
+def _content_terms(q: str) -> list[str]:
+    raw = [t for t in q.split(" ") if t]
+    terms = [t for t in raw if t not in _QUERY_STOP and len(t) >= 3]
+    return terms or raw
+
+
+_YEAR_RE = re.compile(r"(?:19|20)\d{2}")
+_CLAIM_SPLIT = re.compile(
+    r"(?:的|了|是|和|与|为|对|把|从|到|等|及|在|年|里|吗|呢|吧|这|那|个|几|怎么|如何|"
+    r"是否|有没有|多少|什么|哪些|能不能|成为|主要|还是|得)+|[，。；;:：?!！？、,\s]+"
+)
+# 财报/分析常用词，不拿来约束向量；火星/比特币/瑞幸等实体不在其中。
+_GENERIC_CLAIM = frozenset(
+    {
+        "营业收入",
+        "收入",
+        "利润",
+        "净利",
+        "净利润",
+        "门店",
+        "数量",
+        "销售",
+        "同店",
+        "研发",
+        "投入",
+        "持股",
+        "比例",
+        "储备",
+        "规模",
+        "开店",
+        "净增",
+        "股息",
+        "回购",
+        "股东",
+        "现金",
+        "资产",
+        "负债",
+        "现金流",
+        "费用",
+        "成本",
+        "计划",
+        "优化",
+        "格局",
+        "竞争",
+        "增长",
+        "曲线",
+        "第二",
+        "店长",
+        "下一家",
+        "留住",
+        "开出",
+        "赚钱",
+        "含金量",
+        "座位",
+        "火锅",
+        "火锅店",
+        "热饮",
+        "炸鸡",
+        "披萨",
+        "咖啡",
+        "新店",
+        "地方",
+        "好转",
+        "开销",
+        "扩张",
+        "收口",
+        "员工",
+        "激励",
+        "数字化",
+        "家店",
+        "餐厅",
+        "公司",
+        "企业",
+        "条线",
+        "给谁",
+        "开给谁",
+        "最近",
+        "薄不薄",
+        "变厚",
+        "变薄",
+        "拿回",
+        "快不快",
+    }
+)
+
+
+def query_years(query: str) -> list[int]:
+    return [int(m) for m in _YEAR_RE.findall(normalize_query(query))]
+
+
+def _strip_generic(part: str) -> str:
+    text = part
+    changed = True
+    gens = sorted(_GENERIC_CLAIM, key=len, reverse=True)
+    while text and changed:
+        changed = False
+        for g in gens:
+            if g and g in text:
+                text = text.replace(g, "")
+                changed = True
+    return text
+
+
+def claim_needles(query: str, company: str | None = None) -> list[str]:
+    """问句里需要在命中页出现的非常见词。空列表表示不约束向量。"""
+    q = normalize_query(query)
+    if company:
+        q = q.replace(company, " ")
+        if company.endswith("中国") and len(company) > 2:
+            q = q.replace(company[:-2], " ")
+    for stop in sorted(_QUERY_STOP, key=len, reverse=True):
+        q = q.replace(stop, " ")
+    needles: list[str] = []
+    seen: set[str] = set()
+    for part in _CLAIM_SPLIT.split(q):
+        if not part or _YEAR_RE.fullmatch(part):
+            continue
+        if re.fullmatch(r"[A-Za-z]+", part) and re.search(r"[\u4e00-\u9fff]", q):
+            continue
+        if not re.search(r"[\u4e00-\u9fff]", q):
+            for lat in re.findall(r"[A-Za-z]{3,}", part):
+                low = lat.lower()
+                if low not in seen and low not in {"the", "and", "for", "with"}:
+                    needles.append(lat)
+                    seen.add(low)
+        stripped = _strip_generic(part)
+        if (
+            len(stripped) >= 2
+            and stripped not in _GENERIC_CLAIM
+            and stripped not in seen
+        ):
+            needles.append(stripped)
+            seen.add(stripped)
+    return needles
+
+
 def _match_expression(q: str) -> str:
-    terms = [t for t in q.split(" ") if t]
+    terms = _content_terms(q)
+    if not terms:
+        return ""
     if len(terms) > 1:
-        return " OR ".join(_quote_fts(t) for t in terms)
-    return _quote_fts(q)
-
-
-def _trigram_or_expression(q: str) -> str:
-    grams: list[str] = []
-    compact = re.sub(r"\s+", "", q)
-    for i in range(len(compact) - 2):
-        gram = compact[i : i + 3]
-        if gram not in grams:
-            grams.append(gram)
-    return " OR ".join(_quote_fts(g) for g in grams[:12])
+        return " AND ".join(_quote_fts(t) for t in terms)
+    return _quote_fts(terms[0])
 
 
 def stats(conn: sqlite3.Connection) -> dict[str, Any]:

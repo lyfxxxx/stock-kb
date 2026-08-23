@@ -227,14 +227,53 @@
 - 解决：改写 18 道 freeze 语义问句；keyword-007/010/020 等补高词频正样本页后启用 `ORDER BY score DESC`。hybrid semantic Recall 降至 0.15（FTS 0.10），门禁改为 ≥0.10，并加 keyword Neg@k≤0.65。抽查笔记 `2026-08-22-海底捞-抽查笔记.md`。
 - 教训：语义门槛必须在去泄漏之后重钉，不能沿用 0.50。
 
+### 32. 净利润改归母；FTS 无答案不再硬填
+
+- 现象：`indicators.net_profit` 取「年内溢利」合计；损益表续页两行都叫 `Owners of the Company`（归母净利 vs 归母综合收益，差约 1%）。长句 FTS 用 trigram OR / 多词 OR 总会返回 5 条，no_answer empty_rate=0。
+- 解决：归母词优先；多行归母取与合计最接近者；同年年报正文加分。去掉 trigram OR，多词改 AND。diag 指标 12/12，FTS no_answer 8/8 空。
+- 副作用：freeze FTS semantic 0.10→0.00；hybrid semantic 0.15→0.10（仍达门禁）。向量 / hybrid 仍是 k 近邻。
+- 教训：合计和归母不能靠 2% 容差区分；同名截断行要用数值关系，不能只改关键词优先级。
+
+### 33. diag 语义/跨语言对照：先是 GT 错页，然后才是召不回
+
+- 现象：18 道 diag 题 FTS/hybrid top-5 全空。对照正文后 7 道 GT 不是答案页（服务 IP 当成师徒制、利润率页当成股东回报、年报封面当成 K-Coffee）。
+- 解决：按页文本改 GT。改完后只有 semantic-022 进入向量 top-1；4 题在 6–50；其余 13 题不在 50 名。无答案 hybrid 仍 8/8 填满。
+- 教训：没对过正文的语义 GT 不能当检索实验目标。reranker 解决不了「页根本不在候选里」。
+
+### 34. 400 字分块：diag 上抬一题，freeze 语义掉门禁
+
+- 现象：diag 13/18 召不回，不少是同文件错页，怀疑 800 字块淹没关键行。
+- 做了什么：备份 DB；`embedding.chunk_size=400`；新增 `index --rebuild-chunks`（重切会清空所有模型，与 `--rebuild` 只删当前模型分开）；只重嵌 bge-small-zh，68,196 块。
+- 结果：semantic-027 向量 7→1（hybrid 也进 top-5）；召不回仍 13。024 同文件排到第 1 但 GT 页仍不在 50 名。freeze hybrid semantic 0.10→0.05（只剩「啄木鸟」），keyword 0.80 / 结构化 26/26 没掉。
+- 解决：从 `data/stock_kb.db.bak-chunk800-20260823` 恢复 800 字三模型索引。400 库另存 `bak-chunk400-20260823`。对照报告：`eval/reports/diag_retrieval_chunk800.json` / `diag_retrieval_chunk400.json`。
+- 教训：`--rebuild` 不重切 chunks，只改常量会继续嵌旧块。更小块解决不了「页不在 top-50」，还会丢掉 freeze 上那 1 道语义命中。
+
+### 35. 分析题唯一页 GT 把能用的出处判成 miss
+
+- 现象：diag「召不回」里，向量第 1 经常是另一份同样能答的材料（中报翻台率 3.8、HK 年报 K-Coffee、Q1 新开门店图），只因不是标注的那一页。027 与 028 还钉在同一张海通封面。
+- 解决：diag semantic/cross 改为证据清单（多条 `required` 源，OR 命中）；`authority` 区分年报/中报/研报/招股书，另报年报/中报召回。028 改到 2022 年报 K-Coffee 页。freeze 与回归门禁不动。
+- 教训：分析题评「有没有可用出处」，不要评「是不是这一页」。权威写进清单，不要加权公式。
+
+### 36. hybrid 无答案不再 k 近邻硬填
+
+- 现象：FTS 对 8 道 no_answer 已空；hybrid 仍返回 5 条。2026 营收命中研报 2026E 预测，距离 0.63，比真语义「师徒制」0.73 还近，不能靠距离阈值。
+- 解决：向量检索在 FTS 路径之外增加两条约束——问句年份不在该公司 `reports.year` 区间则空；问句里剥掉财报常用词后的实体必须出现在命中页，否则丢掉该页。hybrid 融合空 FTS + 空向量后为空。
+- 教训：无答案和真语义在向量空间里叠在一起。用「年份范围 + 实体落地」比调 distance 更稳。
+
+### 37. 科目数字不要先走 search_reports
+
+- 现象：减值、已付股息、资本开支在三表里，skill 仍让 `search_reports` 搜经营细节，英文问句打不到附注行。
+- 解决：`get_financial_statements` 增加 `keyword`；CLI `statements --keyword`；stock-note 规定收入/净利等先 `get_indicators`，减值/股息/资本开支先三表，全文只补叙述。
+- 教训：结构化通道和页检索不要混用。评测 cross 题仍走检索，产品调用要改顺序。
+
 ## 七、当前已知局限与下一步
 
-> 评测现状见 `eval/EVAL_PLAN.md`；8-16 数据修复见 `docs/fix-record-20260816.md`。
+> 评测体系见 `eval/EVAL_SYSTEM.md`；过程记录见 `eval/EVAL_PLAN.md`；8-16 数据修复见 `docs/fix-record-20260816.md`。
 
-- 评测基建已完成。产品未改：海底捞 `indicators.net_profit` 仍是年内溢利合计；无答案查询 empty_rate=0。
+- `net_profit` 已是归母；FTS 无答案 empty_rate=1.0。hybrid 无答案已按年份/实体约束，不再一律填满 top-k。
 - `statements.unit/currency` 已回填；研报等单位未知项仍可能为空。
 - 两字查询 `pages_bigram_fts` 仍只作空结果兜底；LIKE 已改按词频排序。
-- reranker / jina、US/HK 语义重复 canonical、Docker / Hermes、watch 真实新增文件：未做。
+- 400 字分块已试过并回滚。跨语言（英文问中文页）未做；不要用整句语言 ID 分流。reranker / jina、US/HK 语义重复 canonical、Docker / Hermes、watch 真实新增文件：未做。
 
 ## 八、可复用经验清单
 

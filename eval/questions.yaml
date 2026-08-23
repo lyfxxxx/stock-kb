@@ -1848,7 +1848,7 @@ questions:
     expected:
       sources: []
 
-  # ---------------- semantic diag: 真语义（问句避免答案页关键词） ----------------
+  # ---------------- semantic diag: 真语义；sources 为证据清单，任一 required 即命中 ----------------
   - id: semantic-021
     type: semantic
     split: diag
@@ -1860,6 +1860,7 @@ questions:
           page: 41
           required: true
           relevance: 3
+          authority: research
       negatives:
         - file: "国信证券_百胜中国_2023年报费用管控效果显著"
           page: 3
@@ -1871,9 +1872,10 @@ questions:
     expected:
       sources:
         - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 25
+          page: 28
           required: true
           relevance: 3
+          authority: research
       negatives:
         - file: "研报-东吴证券-2019-管理体系深度解析"
           page: 15
@@ -1888,6 +1890,12 @@ questions:
           page: 14
           required: true
           relevance: 3
+          authority: research
+        - file: "2025中报"
+          page: 11
+          required: true
+          relevance: 3
+          authority: interim
       negatives:
         - file: "研报-国信证券-2023-降本增效静待新一轮增长"
           page: 3
@@ -1902,6 +1910,17 @@ questions:
           page: 19
           required: true
           relevance: 3
+          authority: research
+        - file: "2025中报"
+          page: 11
+          required: true
+          relevance: 3
+          authority: interim
+        - file: "2025年报"
+          page: 18
+          required: true
+          relevance: 3
+          authority: annual
       negatives:
         - file: "研报-国信证券HK-2021-餐饮业复苏中"
           page: 4
@@ -1913,9 +1932,20 @@ questions:
     expected:
       sources:
         - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
-          page: 4
+          page: 1
+          required: true
+          relevance: 2
+          authority: research
+        - file: "百胜中国_2025_Annual_Report"
+          page: 20
           required: true
           relevance: 3
+          authority: annual
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 15
+          required: true
+          relevance: 3
+          authority: annual
       negatives:
         - file: "百胜中国_2025_Annual_Report"
           page: 62
@@ -1930,6 +1960,12 @@ questions:
           page: 4
           required: true
           relevance: 3
+          authority: research
+        - file: "百胜中国_2025_Annual_Report"
+          page: 3
+          required: true
+          relevance: 2
+          authority: annual
       negatives:
         - file: "百胜中国_招股书_中文版"
           page: 134
@@ -1944,6 +1980,12 @@ questions:
           page: 1
           required: true
           relevance: 3
+          authority: research
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 78
+          required: true
+          relevance: 2
+          authority: annual
       negatives:
         - file: "国信证券_百胜中国_2023年报费用管控效果显著"
           page: 3
@@ -1954,10 +1996,21 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "百胜中国_2024_Annual_Report"
-          page: 3
+        - file: "百胜中国_2022_HK_Annual_Report"
+          page: 8
           required: true
           relevance: 3
+          authority: annual
+        - file: "百胜中国_2022_Annual_Report"
+          page: 120
+          required: true
+          relevance: 3
+          authority: annual
+        - file: "国信证券_百胜中国_同店销售增速重新转正"
+          page: 3
+          required: true
+          relevance: 2
+          authority: research
       negatives:
         - file: "百胜中国_招股书_中文版"
           page: 54
@@ -1973,7 +2026,13 @@ questions:
         - file: "2022年报"
           page: 331
           required: true
+          relevance: 3
+          authority: annual
+        - file: "2025年报"
+          page: 188
+          required: true
           relevance: 2
+          authority: annual
       negatives:
         - file: "2021年报"
           page: 264
@@ -1987,7 +2046,13 @@ questions:
         - file: "2024年报"
           page: 151
           required: true
+          relevance: 3
+          authority: annual
+        - file: "2025年报"
+          page: 161
+          required: true
           relevance: 2
+          authority: annual
       negatives:
         - file: "2019年报"
           page: 205
@@ -1999,9 +2064,15 @@ questions:
     expected:
       sources:
         - file: "百胜中国_招股书_中文版"
-          page: 166
+          page: 183
+          required: true
+          relevance: 3
+          authority: prospectus
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 8
           required: true
           relevance: 2
+          authority: research
       negatives:
         - file: "百胜中国_2025_HK_Annual_Report"
           page: 45
@@ -2015,7 +2086,18 @@ questions:
         - file: "国信证券_百胜中国_同店销售增速重新转正"
           page: 1
           required: true
+          relevance: 3
+          authority: research
+        - file: "百胜中国_2025_Annual_Report"
+          page: 3
+          required: true
           relevance: 2
+          authority: annual
+        - file: "百胜中国_2025_HK_Annual_Report"
+          page: 78
+          required: true
+          relevance: 2
+          authority: annual
       negatives:
         - file: "百胜中国_招股书_中文版"
           page: 200
@@ -2029,7 +2111,13 @@ questions:
         - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
           page: 2
           required: true
-          relevance: 2
+          relevance: 3
+          authority: research
+        - file: "国信证券_百胜中国_2024Q1高基数同店承压"
+          page: 2
+          required: true
+          relevance: 3
+          authority: research
       negatives:
         - file: "国信证券_百胜中国_2024Q3经营数据改善"
           page: 3
@@ -2041,9 +2129,15 @@ questions:
     expected:
       sources:
         - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 25
+          page: 28
           required: true
-          relevance: 2
+          relevance: 3
+          authority: research
+        - file: "2022年报"
+          page: 189
+          required: true
+          relevance: 3
+          authority: annual
       negatives:
         - file: "研报-东吴证券-2019-管理体系深度解析"
           page: 15
@@ -2057,7 +2151,13 @@ questions:
         - file: "2024_百胜中国_快餐业龙头多品牌布局"
           page: 10
           required: true
+          relevance: 3
+          authority: research
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 7
+          required: true
           relevance: 2
+          authority: research
       negatives:
         - file: "百胜中国_招股书_中文版"
           page: 161
@@ -2068,13 +2168,24 @@ questions:
     company: 海底捞
     expected:
       sources:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 39
+        - file: "研报-浦银国际-2024-翻台率估值承压"
+          page: 2
           required: true
           relevance: 2
-      negatives:
+          authority: research
         - file: "2024年报"
           page: 239
+          required: true
+          relevance: 3
+          authority: annual
+        - file: "2025年报"
+          page: 254
+          required: true
+          relevance: 2
+          authority: annual
+      negatives:
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 23
   - id: cross-021
     type: cross
     split: diag
@@ -2082,10 +2193,16 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "百胜中国_2024_Annual_Report"
-          page: 3
+        - file: "百胜中国_2022_Annual_Report"
+          page: 120
           required: true
-          relevance: 2
+          relevance: 3
+          authority: annual
+        - file: "百胜中国_2022_HK_Annual_Report"
+          page: 8
+          required: true
+          relevance: 3
+          authority: annual
       negatives:
         - file: "百胜中国_招股书_中文版"
           page: 54
@@ -2099,7 +2216,18 @@ questions:
         - file: "海底捞研报-国信-202502"
           page: 19
           required: true
-          relevance: 2
+          relevance: 3
+          authority: research
+        - file: "2025中报"
+          page: 11
+          required: true
+          relevance: 3
+          authority: interim
+        - file: "2025年报"
+          page: 18
+          required: true
+          relevance: 3
+          authority: annual
       negatives:
         - file: "研报-国信证券-2021-阿米巴模式师徒制"
           page: 23

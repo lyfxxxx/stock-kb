@@ -3,6 +3,7 @@ from __future__ import annotations
 from stock_kb.eval_runner import (
     classify_retrieval_errors,
     primary_query,
+    _retrieval_result,
     _summarize,
     _value_within,
 )
@@ -111,6 +112,45 @@ def test_classify_lexical_overlap_on_semantic():
         norm=norm,
     )
     assert "lexical_overlap" in tags
+
+
+def test_retrieval_any_required_source_and_annual_hit():
+    norm = {
+        "sources": [
+            {
+                "file": "国信研报",
+                "page": 19,
+                "required": True,
+                "relevance": 3,
+                "authority": "research",
+            },
+            {
+                "file": "2025中报",
+                "page": 11,
+                "required": True,
+                "relevance": 3,
+                "authority": "interim",
+            },
+        ],
+        "negatives": [],
+    }
+    hits = [
+        {"title": "2025中报", "page_no": 11},
+        {"title": "其它年报", "page_no": 3},
+    ]
+    result = _retrieval_result(hits, norm, top_k=5)
+    assert result["hit"] is True
+    assert result["rank"] == 1
+    assert result["annual_eligible"] is True
+    assert result["annual_hit"] is True
+    assert result["annual_rank"] == 1
+
+    miss_filing = _retrieval_result(
+        [{"title": "国信研报", "page_no": 19}], norm, top_k=5
+    )
+    assert miss_filing["hit"] is True
+    assert miss_filing["annual_hit"] is False
+    assert miss_filing["annual_rank"] is None
 
 
 def test_value_within_tight_tolerance_separates_owners_vs_total():

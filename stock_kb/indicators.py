@@ -23,8 +23,15 @@ METRIC_RULES = {
     },
     "net_profit": {
         "statement_type": "income",
+        # 归母优先：港股「年内溢利」是合计，美国「Net income — Yum China Holdings」已是归母。
         "positive": [
             "netincomeyumchinaholdings",
+            "attributabletoowners",
+            "ownersofthecompany",
+            "本公司拥有人",
+            "拥有人应占",
+            "归属于母公司",
+            "归母",
             "profitfortheyear",
             "净利润",
             "netprofit",
@@ -33,11 +40,15 @@ METRIC_RULES = {
         ],
         "negative": [
             "noncontrolling",
+            "非控股",
             "othercomprehensive",
             "beforeincometaxes",
             "beforetax",
             "incometax",
             "comprehensiveincome",
+            "shareofprofit",
+            "associate",
+            "联营",
         ],
     },
     "total_assets": {
@@ -93,11 +104,66 @@ def _candidate_score(line_name: Any, rule: dict[str, Any]) -> int | None:
     return None
 
 
+_OWNERS_MARKERS = (
+    "netincomeyumchinaholdings",
+    "attributabletoowners",
+    "ownersofthecompany",
+    "本公司拥有人",
+    "拥有人应占",
+    "归属于母公司",
+    "归母",
+)
+_TOTAL_PROFIT_MARKERS = ("profitfortheyear", "年内溢利", "净利润")
+_TOTAL_PROFIT_EXCLUDE = (
+    "continuing",
+    "持续经营",
+    "beforetax",
+    "除税前",
+    "associate",
+    "联营",
+)
+
+
+def _name_has_marker(name: str, markers: tuple[str, ...]) -> bool:
+    n = _normalize_name(name)
+    return any(_normalize_name(m) in n for m in markers)
+
+
+def _is_owners_profit(line_name: Any) -> bool:
+    return _name_has_marker(str(line_name or ""), _OWNERS_MARKERS)
+
+
+def _is_total_profit(line_name: Any) -> bool:
+    n = _normalize_name(line_name)
+    if not n or _is_owners_profit(n):
+        return False
+    if any(_normalize_name(x) in n for x in _TOTAL_PROFIT_EXCLUDE):
+        return False
+    return _name_has_marker(n, _TOTAL_PROFIT_MARKERS)
+
+
+def _pick_metric_row(metric: str, items: list[dict[str, Any]]) -> dict[str, Any]:
+    """同一 (company, year, metric) 选一行。净利润优先归母，并用与合计的距离排除综合收益行。"""
+    if metric != "net_profit" or len(items) == 1:
+        return max(items, key=lambda x: x["_score"])
+    owners = [x for x in items if _is_owners_profit(x["line_name"])]
+    if not owners:
+        return max(items, key=lambda x: x["_score"])
+    totals = [x for x in items if _is_total_profit(x["line_name"])]
+    if not totals:
+        return max(owners, key=lambda x: x["_score"])
+    ref = float(max(totals, key=lambda x: x["_score"])["value"])
+    return min(
+        owners,
+        key=lambda x: (abs(float(x["value"]) - ref), -x["_score"]),
+    )
+
+
 def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
     conn = db.connect(cfg["db_path"])
     rows = conn.execute(
         """
-        SELECT r.company, r.id AS report_id, r.title, r.period_type,
+        SELECT r.company, r.id AS report_id, r.title, r.period_type, r.year AS report_year,
                s.statement_type, s.year, s.line_name_norm, s.value,
                s.unit, s.currency, s.page_no
         FROM statements s JOIN reports r ON r.id = s.report_id
@@ -105,8 +171,8 @@ def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
         """
     ).fetchall()
 
-    # key: (company, year, metric) -> 得分最高的候选行
-    best: dict[tuple[str, int, str], dict[str, Any]] = {}
+    # key: (company, year, metric) -> 全部候选，稍后按规则挑一行
+    buckets: dict[tuple[str, int, str], list[dict[str, Any]]] = {}
     for row in rows:
         rule = None
         for metric, candidate_rule in METRIC_RULES.items():
@@ -122,11 +188,11 @@ def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
         period_score = {"annual": 30, "interim": 20, "q3": 15}.get(
             row["period_type"] or "", 0
         )
-        score = base_score + period_score
+        same_year = 10 if row["report_year"] == row["year"] else 0
+        score = base_score + period_score + same_year
         key = (row["company"], row["year"], metric)
-        current = best.get(key)
-        if current is None or score > current["_score"]:
-            best[key] = {
+        buckets.setdefault(key, []).append(
+            {
                 "_score": score,
                 "company": row["company"],
                 "year": row["year"],
@@ -139,9 +205,11 @@ def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
                 "page_no": row["page_no"],
                 "line_name": row["line_name_norm"],
             }
+        )
 
     output: list[dict[str, Any]] = []
-    for (company, year, metric), base in sorted(best.items()):
+    for (company, year, metric), items in sorted(buckets.items()):
+        base = _pick_metric_row(metric, items)
         item = {k: v for k, v in base.items() if not k.startswith("_")}
         output.append(item)
 

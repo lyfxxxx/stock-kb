@@ -23,6 +23,14 @@ CHUNK_SIZE = 800
 _EMBEDDER_CACHE: dict[tuple[str, str], object] = {}
 
 
+def _chunk_size(cfg: dict[str, Any] | None = None) -> int:
+    if cfg:
+        raw = (cfg.get("embedding") or {}).get("chunk_size")
+        if raw is not None:
+            return int(raw)
+    return CHUNK_SIZE
+
+
 def get_embedder(model: str, cache_dir: str, backend: str = "auto"):
     Path(cache_dir).mkdir(parents=True, exist_ok=True)
     if model == "BAAI/bge-m3":
@@ -182,7 +190,7 @@ def _split_chunks(text: str, size: int = CHUNK_SIZE) -> list[str]:
     return chunks
 
 
-def _ensure_chunks(conn) -> None:
+def _ensure_chunks(conn, size: int = CHUNK_SIZE) -> None:
     rows = conn.execute(
         """
         SELECT p.id AS page_id, p.content FROM pages p
@@ -191,7 +199,7 @@ def _ensure_chunks(conn) -> None:
         """
     ).fetchall()
     for r in rows:
-        for no, chunk in enumerate(_split_chunks(r["content"] or "")):
+        for no, chunk in enumerate(_split_chunks(r["content"] or "", size=size)):
             conn.execute(
                 "INSERT OR IGNORE INTO chunks(page_id, chunk_no, content) VALUES(?,?,?)",
                 (r["page_id"], no, chunk),
@@ -199,20 +207,74 @@ def _ensure_chunks(conn) -> None:
     conn.commit()
 
 
+def _reset_chunks(conn) -> None:
+    """删除全部分块与全部模型的向量。chunk_id 会变，其它模型必须重嵌。"""
+    conn.execute("DELETE FROM embedding_index")
+    names = db.vector_table_names(conn)
+    if names:
+        db.load_vector_extension(conn)
+        for table in names:
+            conn.execute(f"DROP TABLE IF EXISTS {table}")
+    conn.execute("DELETE FROM chunks")
+    conn.commit()
+
+
+def _index_stats(
+    conn,
+    *,
+    size: int,
+    indexed: int,
+    total: int,
+    cleared_models: list[str] | None = None,
+) -> dict[str, Any]:
+    n_chunks = conn.execute("SELECT COUNT(*) AS n FROM chunks").fetchone()["n"]
+    out: dict[str, Any] = {
+        "indexed": indexed,
+        "total": total,
+        "chunk_size": size,
+        "chunks": n_chunks,
+    }
+    if cleared_models is not None:
+        out["cleared_models"] = cleared_models
+    return out
+
+
 def build_index(
     cfg: dict[str, Any],
     model: str,
     limit: int | None = None,
     rebuild: bool = False,
-) -> dict[str, int]:
+    rebuild_chunks: bool = False,
+) -> dict[str, Any]:
     conn = db.connect(cfg["db_path"])
     db.load_vector_extension(conn)
     dim = MODEL_DIMS.get(model)
     if not dim:
         raise ValueError(f"不支持的模型维度映射: {model}")
 
-    old_table = None
-    if rebuild:
+    size = _chunk_size(cfg)
+    existing = conn.execute(
+        "SELECT COUNT(*) AS n, COALESCE(MAX(LENGTH(content)), 0) AS max_len FROM chunks"
+    ).fetchone()
+    if existing["n"] and existing["max_len"] > size and not rebuild_chunks:
+        print(
+            f"[index] warning: existing chunks max_len={existing['max_len']} > chunk_size={size}; "
+            "pass --rebuild-chunks to re-split (this clears ALL models)",
+            flush=True,
+        )
+
+    cleared_models: list[str] | None = None
+    if rebuild_chunks:
+        cleared_models = [
+            str(r[0])
+            for r in conn.execute("SELECT DISTINCT model FROM embedding_index").fetchall()
+        ]
+        print(
+            f"[index] rebuild_chunks size={size} cleared_models={cleared_models}",
+            flush=True,
+        )
+        _reset_chunks(conn)
+    elif rebuild:
         row = conn.execute(
             "SELECT vec_table FROM embedding_index WHERE model=? AND vec_table IS NOT NULL LIMIT 1",
             (model,),
@@ -229,7 +291,7 @@ def build_index(
         f"chunk_id INTEGER PRIMARY KEY, embedding FLOAT[{dim}])"
     )
 
-    _ensure_chunks(conn)
+    _ensure_chunks(conn, size=size)
 
     rows = conn.execute(
         """
@@ -243,8 +305,11 @@ def build_index(
     if limit is not None:
         rows = rows[:limit]
     if not rows:
+        stats = _index_stats(
+            conn, size=size, indexed=0, total=0, cleared_models=cleared_models
+        )
         conn.close()
-        return {"indexed": 0, "total": 0}
+        return stats
 
     embedder = get_embedder(
         model, cfg["models_dir"], backend=cfg.get("embedding", {}).get("backend", "auto")
@@ -269,8 +334,11 @@ def build_index(
             indexed += 1
         conn.commit()
         print(f"[index] {indexed}/{len(rows)}", flush=True)
+    stats = _index_stats(
+        conn, size=size, indexed=indexed, total=len(rows), cleared_models=cleared_models
+    )
     conn.close()
-    return {"indexed": indexed, "total": len(rows)}
+    return stats
 
 
 def vector_search(
@@ -289,6 +357,9 @@ def vector_search(
     query = search.normalize_query(query)
     if not query:
         return []
+    if _year_out_of_corpus(conn, query, company):
+        return []
+    needles = search.claim_needles(query, company)
     row = conn.execute(
         "SELECT dim, vec_table FROM embedding_index WHERE model=? LIMIT 1", (model,)
     ).fetchone()
@@ -332,6 +403,8 @@ def vector_search(
             continue
         if language is not None and r["language"] != language:
             continue
+        if not _content_has_needle(r["content"] or "", needles):
+            continue
         cur = best.get(r["page_id"])
         if cur is None or h["distance"] < cur["score"]:
             best[r["page_id"]] = {
@@ -350,6 +423,31 @@ def vector_search(
             }
     out = sorted(best.values(), key=lambda x: x["score"])
     return out[:top_k]
+
+
+def _year_out_of_corpus(conn, query: str, company: str | None) -> bool:
+    years = search.query_years(query)
+    if not years:
+        return False
+    sql = (
+        "SELECT MIN(year) AS mn, MAX(year) AS mx FROM reports "
+        "WHERE COALESCE(is_duplicate, 0) = 0 AND year IS NOT NULL"
+    )
+    params: list[Any] = []
+    if company:
+        sql += " AND company=?"
+        params.append(company)
+    row = conn.execute(sql, params).fetchone()
+    if not row or row["mn"] is None:
+        return False
+    lo, hi = int(row["mn"]), int(row["mx"])
+    return any(y < lo or y > hi for y in years)
+
+
+def _content_has_needle(content: str, needles: list[str]) -> bool:
+    if not needles:
+        return True
+    return any(n in content for n in needles)
 
 
 def hybrid_search(

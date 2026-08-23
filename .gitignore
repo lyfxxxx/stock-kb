@@ -18,3 +18,4 @@ models/
 # 本地环境
 .env
 .env.*
+.grok/
