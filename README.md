@@ -113,10 +113,6 @@ stock-kb/
 2026-08-16 的自动修复记录见
 [docs/fix-record-20260816.md](docs/fix-record-20260816.md)。
 
-## skill
-
-`stock-note` 已安装到 `C:\Users\89462\.codex\skills\stock-note`，也可从
-`skill/stock-note` 整体复制到任意机器。
 
 ## 说明
 
