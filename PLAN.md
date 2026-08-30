@@ -460,7 +460,7 @@ SQLite 主要表：
   `statements.unit/currency` 已回填（2026-08-16 解析器修复后重新 reparse）
 - 检索：FTS5（trigram + 繁简归一化）+ 向量索引（bge-small-zh、多语言 MiniLM、BGE-M3；已从整页嵌入升级为约 800 字/块的段落分块嵌入，使用 sentence-transformers + CUDA）
 - 评测：`eval/questions.yaml` + `eval/EVAL_SYSTEM.md`（现行体系）+ `eval/EVAL_PLAN.md`（过程）。结构化 26 题 PDF golden；freeze/diag 分集；回归见 `tools/run_eval_regression.py`。
-- MCP：7 个只读工具，stdio + Streamable HTTP 双传输，HTTP 支持 Bearer token 鉴权；stdio 与 HTTP 均已端到端验证
+- MCP：只读工具（含 `route_query`），stdio + Streamable HTTP 双传输，HTTP 支持 Bearer token 鉴权；stdio 与 HTTP 均已端到端验证
 - 增量扫描：`scan --watch-interval 秒数` 开关，默认关闭
 - 模型下载：`models download` 支持 hf-mirror 镜像 + hf_transfer 多线程 + snapshot_download 断点续传；缓存完整后离线加载可用
 - Skill：`stock-note` 已复制到 `C:\Users\89462\.codex\skills\stock-note`，可整体移植

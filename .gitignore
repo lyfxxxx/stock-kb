@@ -10,6 +10,7 @@ venv/
 # 运行时数据（不提交，属数据而非源码）
 data/
 models/
+eval/generated_notes/
 
 # 日志与进程文件
 *.log

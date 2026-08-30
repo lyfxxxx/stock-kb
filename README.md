@@ -78,17 +78,25 @@ python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild
 # 按 config embedding.chunk_size 重切全部页面（会清空所有模型的向量）
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild-chunks
 
-# 检索评测（回归只评 freeze；diag 不进门禁）
+# 检索评测（回归：freeze 检索/结构化 + 路由/年份/组稿 + diag 指标/无答案 + 笔记审计）
 python tools/run_eval_regression.py
+python tools/run_eval_regression.py --write-baseline
+
+# embedding 模型筛选（vector@5/@50；不进 freeze 门禁）
+python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger BAAI/bge-m3
 python -m stock_kb eval --split freeze
 python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5 --split freeze
+python -m stock_kb eval-generation
+python -m stock_kb route "海底捞 2024 年营业收入是多少" --company 海底捞
+python -m stock_kb compose-note --company 海底捞
 
 # 评测体系与过程记录
 # eval/EVAL_SYSTEM.md （现行分层、GT、门禁）
 # eval/EVAL_PLAN.md   （过程中改掉的问题）
 
-# 三表行项目（科目数字；不要先全文搜）
+# 三表行项目（科目数字；不要先全文搜；--year 默认当年年报正文）
 python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json
+python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --include-comparatives --json
 
 # 计算常用指标（营收/净利/ROE/现金流等）
 python -m stock_kb indicators

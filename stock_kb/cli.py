@@ -71,6 +71,27 @@ def main(argv: list[str] | None = None) -> int:
         help="只评 questions.yaml 中 split 字段匹配的题；缺省 split 视为 freeze",
     )
 
+    p_ee = sub.add_parser(
+        "eval-embed",
+        help="embedding 模型筛选（vector@5/@50 分桶；可对比候选）",
+    )
+    p_ee.add_argument(
+        "--base",
+        default=None,
+        help="基线模型，默认 config embedding.model",
+    )
+    p_ee.add_argument(
+        "--challenger",
+        action="append",
+        default=None,
+        help="候选模型，可重复",
+    )
+    p_ee.add_argument(
+        "--models",
+        default=None,
+        help="逗号分隔的模型列表：第一项当基线，其余当候选",
+    )
+
     p_index = sub.add_parser("index", help="构建向量索引")
     p_index.add_argument("--model", default="BAAI/bge-small-zh-v1.5")
     p_index.add_argument("--limit", type=int, default=None)
@@ -100,6 +121,28 @@ def main(argv: list[str] | None = None) -> int:
     p_statements.add_argument("--keyword", help="科目名片段，如 已付股息 / 减值 / 资本开支")
     p_statements.add_argument("--limit", type=int, default=20)
     p_statements.add_argument("--json", action="store_true")
+    p_statements.add_argument(
+        "--include-comparatives",
+        action="store_true",
+        help="包含次年报比较列（默认只要当年年报正文）",
+    )
+
+    p_route = sub.add_parser("route", help="按 skill 规则判断该走哪把工具")
+    p_route.add_argument("question")
+    p_route.add_argument("--company")
+    p_route.add_argument("--json", action="store_true")
+
+    p_compose = sub.add_parser(
+        "compose-note",
+        help="按 skill 工具顺序组稿一篇可审计笔记（不含模型判断）",
+    )
+    p_compose.add_argument("--company", required=True)
+    p_compose.add_argument("--out-dir", default=None)
+
+    p_egen = sub.add_parser(
+        "eval-generation",
+        help="组稿试点公司笔记并审计引用是否落在页文本上",
+    )
 
     p_indicators = sub.add_parser("indicators", help="从三表计算常用财务指标")
 
@@ -148,6 +191,33 @@ def main(argv: list[str] | None = None) -> int:
                 use_ocr=not args.no_ocr,
             )
             print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.cmd == "eval-embed":
+        from stock_kb.embed_eval import run_cli as run_embed_cli
+
+        return run_embed_cli(cfg, args)
+
+    if args.cmd == "eval-generation":
+        from stock_kb.generation_eval import run_generation_eval
+
+        report = run_generation_eval(cfg)
+        print(json.dumps(report["summary"], ensure_ascii=False, indent=2))
+        return 0 if report["summary"]["fail_count"] == 0 else 1
+
+    if args.cmd == "route":
+        from stock_kb.route import route
+
+        decision = route(args.question, company=args.company)
+        print(json.dumps(decision, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.cmd == "compose-note":
+        from stock_kb.note_builder import compose_note
+
+        out_dir = Path(args.out_dir) if args.out_dir else None
+        meta = compose_note(cfg, args.company, out_dir=out_dir)
+        print(json.dumps(meta, ensure_ascii=False, indent=2))
         return 0
 
     conn = db.connect(cfg["db_path"])
@@ -292,6 +362,7 @@ def main(argv: list[str] | None = None) -> int:
             period_type=args.period_type,
             keyword=kw or None,
             limit=args.limit,
+            include_comparatives=args.include_comparatives,
         )
         conn.close()
         print(json.dumps(rows, ensure_ascii=False, indent=2))

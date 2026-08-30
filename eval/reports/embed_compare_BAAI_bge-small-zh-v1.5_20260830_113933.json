@@ -1,0 +1,3620 @@
+{
+  "base": "BAAI/bge-small-zh-v1.5",
+  "challengers": [
+    "BAAI/bge-m3",
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+  ],
+  "runs": {
+    "BAAI/bge-small-zh-v1.5": {
+      "meta": {
+        "suite": "embedding",
+        "engine": "vector",
+        "model": "BAAI/bge-small-zh-v1.5",
+        "vec_k": 50,
+        "top_k": 5,
+        "n": 44,
+        "duration_seconds": 16.316,
+        "db_mtime": "2026-08-23T03:23:50.989889+00:00"
+      },
+      "summary": {
+        "n": 44,
+        "recall_at_5": 0.159,
+        "recall_at_5_ci": [
+          0.079,
+          0.294
+        ],
+        "recall_at_50": 0.364,
+        "recall_at_50_ci": [
+          0.238,
+          0.511
+        ],
+        "n_top5": 7,
+        "n_mid": 9,
+        "n_miss": 28,
+        "mrr_at_50": 0.136,
+        "hybrid_fused_n": 44,
+        "hybrid_recall_at_5": 0.182,
+        "hybrid_recall_at_5_ci": [
+          0.095,
+          0.32
+        ],
+        "by_split": {
+          "freeze": {
+            "n": 26,
+            "recall_at_5": 0.115,
+            "recall_at_5_ci": [
+              0.04,
+              0.29
+            ],
+            "recall_at_50": 0.308,
+            "recall_at_50_ci": [
+              0.165,
+              0.5
+            ],
+            "n_top5": 3,
+            "n_mid": 5,
+            "n_miss": 18,
+            "mrr_at_50": 0.081,
+            "hybrid_fused_n": 26,
+            "hybrid_recall_at_5": 0.154,
+            "hybrid_recall_at_5_ci": [
+              0.061,
+              0.335
+            ]
+          },
+          "diag": {
+            "n": 18,
+            "recall_at_5": 0.222,
+            "recall_at_5_ci": [
+              0.09,
+              0.452
+            ],
+            "recall_at_50": 0.444,
+            "recall_at_50_ci": [
+              0.246,
+              0.663
+            ],
+            "n_top5": 4,
+            "n_mid": 4,
+            "n_miss": 10,
+            "mrr_at_50": 0.216,
+            "hybrid_fused_n": 18,
+            "hybrid_recall_at_5": 0.222,
+            "hybrid_recall_at_5_ci": [
+              0.09,
+              0.452
+            ]
+          }
+        },
+        "by_type": {
+          "semantic": {
+            "n": 28,
+            "recall_at_5": 0.179,
+            "recall_at_5_ci": [
+              0.079,
+              0.356
+            ],
+            "recall_at_50": 0.429,
+            "recall_at_50_ci": [
+              0.265,
+              0.609
+            ],
+            "n_top5": 5,
+            "n_mid": 7,
+            "n_miss": 16,
+            "mrr_at_50": 0.138,
+            "hybrid_fused_n": 28,
+            "hybrid_recall_at_5": 0.179,
+            "hybrid_recall_at_5_ci": [
+              0.079,
+              0.356
+            ]
+          },
+          "cross": {
+            "n": 16,
+            "recall_at_5": 0.125,
+            "recall_at_5_ci": [
+              0.035,
+              0.36
+            ],
+            "recall_at_50": 0.25,
+            "recall_at_50_ci": [
+              0.102,
+              0.495
+            ],
+            "n_top5": 2,
+            "n_mid": 2,
+            "n_miss": 12,
+            "mrr_at_50": 0.134,
+            "hybrid_fused_n": 16,
+            "hybrid_recall_at_5": 0.188,
+            "hybrid_recall_at_5_ci": [
+              0.066,
+              0.43
+            ]
+          }
+        }
+      },
+      "results": [
+        {
+          "id": "semantic-001",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞赚到的利润有多少能变成真金白银？",
+          "query": "海底捞赚到的利润有多少能变成真金白银？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-002",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞把门店铺到什么程度才算合适？",
+          "query": "海底捞把门店铺到什么程度才算合适？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-003",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞怎么把开销打下去？",
+          "query": "海底捞怎么把开销打下去？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-004",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "一线员工为什么愿意把服务做到极致？",
+          "query": "一线员工为什么愿意把服务做到极致？",
+          "vector_rank": 3,
+          "vector_bucket": "top5",
+          "hybrid_rank": 3,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 31,
+          "top_hit": {
+            "title": "2021年报",
+            "page": 20
+          }
+        },
+        {
+          "id": "semantic-005",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "客人来得勤不勤、一桌坐得转不转？",
+          "query": "客人来得勤不勤、一桌坐得转不转？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-006",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "一个店长如何带出下一家店的负责人？",
+          "query": "一个店长如何带出下一家店的负责人？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 9,
+          "top_hit": {
+            "title": "2021年报",
+            "page": 89
+          }
+        },
+        {
+          "id": "semantic-007",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "座位周转是在变快还是变慢？",
+          "query": "座位周转是在变快还是变慢？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 7,
+          "top_hit": {
+            "title": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 41
+          }
+        },
+        {
+          "id": "semantic-008",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞的啄木鸟计划与门店优化",
+          "query": "海底捞的啄木鸟计划与门店优化",
+          "vector_rank": 2,
+          "vector_bucket": "top5",
+          "hybrid_rank": 2,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 26,
+          "top_hit": {
+            "title": "研报-浙商证券-2023-从成长到坚韧餐饮王者",
+            "page": 8
+          }
+        },
+        {
+          "id": "semantic-009",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "赚一块钱能剩多少，近几年怎么变？",
+          "query": "赚一块钱能剩多少，近几年怎么变？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-010",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "客人为一餐花多少钱，和来得频不频，哪个更撑收入？",
+          "query": "客人为一餐花多少钱，和来得频不频，哪个更撑收入？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 20,
+          "top_hit": {
+            "title": "2024中报",
+            "page": 17
+          }
+        },
+        {
+          "id": "semantic-011",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "客人愿不愿意再来这家快餐店？",
+          "query": "客人愿不愿意再来这家快餐店？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-012",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "百胜中国怎么把开销按住？",
+          "query": "百胜中国怎么把开销按住？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-013",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "肯德基之外还有哪些牌子在撑场面？",
+          "query": "肯德基之外还有哪些牌子在撑场面？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-014",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "百胜中国的竞争格局",
+          "query": "百胜中国的竞争格局",
+          "vector_rank": 29,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "海通国际_百胜中国_2025Q2经营利润创新高",
+            "page": 2
+          }
+        },
+        {
+          "id": "semantic-015",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "新店主要开在什么地方、开给谁？",
+          "query": "新店主要开在什么地方、开给谁？",
+          "vector_rank": 33,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 185
+          }
+        },
+        {
+          "id": "semantic-016",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "除了炸鸡和披萨，热饮这条线怎么走？",
+          "query": "除了炸鸡和披萨，热饮这条线怎么走？",
+          "vector_rank": 1,
+          "vector_bucket": "top5",
+          "hybrid_rank": 1,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2024_Annual_Report",
+            "page": 3
+          }
+        },
+        {
+          "id": "semantic-017",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "不到店点单、送到家，哪头更重要？",
+          "query": "不到店点单、送到家，哪头更重要？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-018",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "利润薄不薄，最近是在好转吗？",
+          "query": "利润薄不薄，最近是在好转吗？",
+          "vector_rank": 15,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "国信证券_百胜中国_2024Q4同店降幅收窄",
+            "page": 1
+          }
+        },
+        {
+          "id": "semantic-019",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "股东能从公司拿回现金吗？",
+          "query": "股东能从公司拿回现金吗？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 351
+          }
+        },
+        {
+          "id": "semantic-020",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "不到店能不能吃到？",
+          "query": "不到店能不能吃到？",
+          "vector_rank": 45,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 141
+          }
+        },
+        {
+          "id": "cross-007",
+          "type": "cross",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "Yum China same-store sales trend",
+          "query": "Yum China same-store sales trend",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "page": 85
+          }
+        },
+        {
+          "id": "cross-008",
+          "type": "cross",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "Haidilao restaurant count 门店数量",
+          "query": "Haidilao restaurant count 门店数量",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2024年报",
+            "page": 29
+          }
+        },
+        {
+          "id": "cross-009",
+          "type": "cross",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "Yum China dividends and buyback 股息与回购",
+          "query": "Yum China dividends and buyback 股息与回购",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2016_Annual_Report",
+            "page": 132
+          }
+        },
+        {
+          "id": "cross-010",
+          "type": "cross",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞 same-store sales 同店销售",
+          "query": "海底捞 same-store sales 同店销售",
+          "vector_rank": 9,
+          "vector_bucket": "mid",
+          "hybrid_rank": 2,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2023中报",
+            "page": 17
+          }
+        },
+        {
+          "id": "cross-011",
+          "type": "cross",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "Yum China store count by year",
+          "query": "Yum China store count by year",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2022_HK_Annual_Report",
+            "page": 127
+          }
+        },
+        {
+          "id": "cross-012",
+          "type": "cross",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "Haidilao table turnover rate 翻台率",
+          "query": "Haidilao table turnover rate 翻台率",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 24,
+          "top_hit": {
+            "title": "2021中报",
+            "page": 11
+          }
+        },
+        {
+          "id": "semantic-021",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞赚钱的含金量高不高？",
+          "query": "海底捞赚钱的含金量高不高？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 27
+          }
+        },
+        {
+          "id": "semantic-022",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞靠什么把店长留住并开出下一家？",
+          "query": "海底捞靠什么把店长留住并开出下一家？",
+          "vector_rank": 1,
+          "vector_bucket": "top5",
+          "hybrid_rank": 1,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 28
+          }
+        },
+        {
+          "id": "semantic-023",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞门店是开得太猛还是在主动收口？",
+          "query": "海底捞门店是开得太猛还是在主动收口？",
+          "vector_rank": 6,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 10,
+          "top_hit": {
+            "title": "海底捞研报-国信-202502",
+            "page": 23
+          }
+        },
+        {
+          "id": "semantic-024",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "这家火锅店里座位转得快不快？",
+          "query": "这家火锅店里座位转得快不快？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 30
+          }
+        },
+        {
+          "id": "semantic-025",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "百胜中国股东能拿回多少现金？",
+          "query": "百胜中国股东能拿回多少现金？",
+          "vector_rank": 18,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 348
+          }
+        },
+        {
+          "id": "semantic-026",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "肯德基和必胜客在中国怎么一起打？",
+          "query": "肯德基和必胜客在中国怎么一起打？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 160
+          }
+        },
+        {
+          "id": "semantic-027",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "百胜中国的利润是变厚还是变薄？",
+          "query": "百胜中国的利润是变厚还是变薄？",
+          "vector_rank": 7,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 204
+          }
+        },
+        {
+          "id": "semantic-028",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "咖啡能不能成为百胜的第二增长曲线？",
+          "query": "咖啡能不能成为百胜的第二增长曲线？",
+          "vector_rank": 2,
+          "vector_bucket": "top5",
+          "hybrid_rank": 2,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 134
+          }
+        },
+        {
+          "id": "cross-013",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao impairment losses",
+          "query": "Haidilao impairment losses",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2021年报",
+            "page": 113
+          }
+        },
+        {
+          "id": "cross-014",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao dividend paid",
+          "query": "Haidilao dividend paid",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2021年报",
+            "page": 113
+          }
+        },
+        {
+          "id": "cross-015",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China delivery and takeaway",
+          "query": "Yum China delivery and takeaway",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2022_HK_Annual_Report",
+            "page": 127
+          }
+        },
+        {
+          "id": "cross-016",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China same-store sales",
+          "query": "Yum China same-store sales",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "page": 85
+          }
+        },
+        {
+          "id": "cross-017",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "百胜中国 store openings 门店净增",
+          "query": "百胜中国 store openings 门店净增",
+          "vector_rank": 1,
+          "vector_bucket": "top5",
+          "hybrid_rank": 1,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "国信证券_百胜中国_2024Q1高基数同店承压",
+            "page": 2
+          }
+        },
+        {
+          "id": "cross-018",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao staff incentive 员工激励",
+          "query": "Haidilao staff incentive 员工激励",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2021年报",
+            "page": 172
+          }
+        },
+        {
+          "id": "cross-019",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China digital transformation",
+          "query": "Yum China digital transformation",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2022_HK_Annual_Report",
+            "page": 127
+          }
+        },
+        {
+          "id": "cross-020",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao capital expenditure 资本开支",
+          "query": "Haidilao capital expenditure 资本开支",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 11,
+          "top_hit": {
+            "title": "2020中报",
+            "page": 74
+          }
+        },
+        {
+          "id": "cross-021",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China K-Coffee",
+          "query": "Yum China K-Coffee",
+          "vector_rank": 36,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2022_HK_Annual_Report",
+            "page": 155
+          }
+        },
+        {
+          "id": "cross-022",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞 table turnover rate",
+          "query": "海底捞 table turnover rate",
+          "vector_rank": 1,
+          "vector_bucket": "top5",
+          "hybrid_rank": 2,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2025中报",
+            "page": 11
+          }
+        }
+      ]
+    },
+    "BAAI/bge-m3": {
+      "meta": {
+        "suite": "embedding",
+        "engine": "vector",
+        "model": "BAAI/bge-m3",
+        "vec_k": 50,
+        "top_k": 5,
+        "n": 44,
+        "duration_seconds": 114.62,
+        "db_mtime": "2026-08-23T03:23:50.989889+00:00"
+      },
+      "summary": {
+        "n": 44,
+        "recall_at_5": 0.114,
+        "recall_at_5_ci": [
+          0.05,
+          0.24
+        ],
+        "recall_at_50": 0.409,
+        "recall_at_50_ci": [
+          0.277,
+          0.556
+        ],
+        "n_top5": 5,
+        "n_mid": 13,
+        "n_miss": 26,
+        "mrr_at_50": 0.106,
+        "hybrid_fused_n": 44,
+        "hybrid_recall_at_5": 0.159,
+        "hybrid_recall_at_5_ci": [
+          0.079,
+          0.294
+        ],
+        "by_split": {
+          "freeze": {
+            "n": 26,
+            "recall_at_5": 0.038,
+            "recall_at_5_ci": [
+              0.007,
+              0.189
+            ],
+            "recall_at_50": 0.269,
+            "recall_at_50_ci": [
+              0.137,
+              0.461
+            ],
+            "n_top5": 1,
+            "n_mid": 6,
+            "n_miss": 19,
+            "mrr_at_50": 0.054,
+            "hybrid_fused_n": 26,
+            "hybrid_recall_at_5": 0.077,
+            "hybrid_recall_at_5_ci": [
+              0.021,
+              0.241
+            ]
+          },
+          "diag": {
+            "n": 18,
+            "recall_at_5": 0.222,
+            "recall_at_5_ci": [
+              0.09,
+              0.452
+            ],
+            "recall_at_50": 0.611,
+            "recall_at_50_ci": [
+              0.386,
+              0.797
+            ],
+            "n_top5": 4,
+            "n_mid": 7,
+            "n_miss": 7,
+            "mrr_at_50": 0.181,
+            "hybrid_fused_n": 18,
+            "hybrid_recall_at_5": 0.278,
+            "hybrid_recall_at_5_ci": [
+              0.125,
+              0.509
+            ]
+          }
+        },
+        "by_type": {
+          "semantic": {
+            "n": 28,
+            "recall_at_5": 0.107,
+            "recall_at_5_ci": [
+              0.037,
+              0.272
+            ],
+            "recall_at_50": 0.464,
+            "recall_at_50_ci": [
+              0.295,
+              0.642
+            ],
+            "n_top5": 3,
+            "n_mid": 10,
+            "n_miss": 15,
+            "mrr_at_50": 0.089,
+            "hybrid_fused_n": 28,
+            "hybrid_recall_at_5": 0.107,
+            "hybrid_recall_at_5_ci": [
+              0.037,
+              0.272
+            ]
+          },
+          "cross": {
+            "n": 16,
+            "recall_at_5": 0.125,
+            "recall_at_5_ci": [
+              0.035,
+              0.36
+            ],
+            "recall_at_50": 0.312,
+            "recall_at_50_ci": [
+              0.142,
+              0.556
+            ],
+            "n_top5": 2,
+            "n_mid": 3,
+            "n_miss": 11,
+            "mrr_at_50": 0.135,
+            "hybrid_fused_n": 16,
+            "hybrid_recall_at_5": 0.25,
+            "hybrid_recall_at_5_ci": [
+              0.102,
+              0.495
+            ]
+          }
+        }
+      },
+      "results": [
+        {
+          "id": "semantic-001",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞赚到的利润有多少能变成真金白银？",
+          "query": "海底捞赚到的利润有多少能变成真金白银？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-002",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞把门店铺到什么程度才算合适？",
+          "query": "海底捞把门店铺到什么程度才算合适？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-003",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞怎么把开销打下去？",
+          "query": "海底捞怎么把开销打下去？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-004",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "一线员工为什么愿意把服务做到极致？",
+          "query": "一线员工为什么愿意把服务做到极致？",
+          "vector_rank": 6,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 23,
+          "top_hit": {
+            "title": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 18
+          }
+        },
+        {
+          "id": "semantic-005",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "客人来得勤不勤、一桌坐得转不转？",
+          "query": "客人来得勤不勤、一桌坐得转不转？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-006",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "一个店长如何带出下一家店的负责人？",
+          "query": "一个店长如何带出下一家店的负责人？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 3,
+          "top_hit": {
+            "title": "2022年报",
+            "page": 205
+          }
+        },
+        {
+          "id": "semantic-007",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "座位周转是在变快还是变慢？",
+          "query": "座位周转是在变快还是变慢？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 9,
+          "top_hit": {
+            "title": "2025年报",
+            "page": 34
+          }
+        },
+        {
+          "id": "semantic-008",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞的啄木鸟计划与门店优化",
+          "query": "海底捞的啄木鸟计划与门店优化",
+          "vector_rank": 1,
+          "vector_bucket": "top5",
+          "hybrid_rank": 1,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 27,
+          "top_hit": {
+            "title": "海底捞研报-国信-202502",
+            "page": 14
+          }
+        },
+        {
+          "id": "semantic-009",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "赚一块钱能剩多少，近几年怎么变？",
+          "query": "赚一块钱能剩多少，近几年怎么变？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-010",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "客人为一餐花多少钱，和来得频不频，哪个更撑收入？",
+          "query": "客人为一餐花多少钱，和来得频不频，哪个更撑收入？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 33,
+          "top_hit": {
+            "title": "2024中报",
+            "page": 17
+          }
+        },
+        {
+          "id": "semantic-011",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "客人愿不愿意再来这家快餐店？",
+          "query": "客人愿不愿意再来这家快餐店？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-012",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "百胜中国怎么把开销按住？",
+          "query": "百胜中国怎么把开销按住？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-013",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "肯德基之外还有哪些牌子在撑场面？",
+          "query": "肯德基之外还有哪些牌子在撑场面？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-014",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "百胜中国的竞争格局",
+          "query": "百胜中国的竞争格局",
+          "vector_rank": 17,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "海通国际_百胜中国_2025投资者日_创新与提效双轮驱动",
+            "page": 1
+          }
+        },
+        {
+          "id": "semantic-015",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "新店主要开在什么地方、开给谁？",
+          "query": "新店主要开在什么地方、开给谁？",
+          "vector_rank": 47,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 152
+          }
+        },
+        {
+          "id": "semantic-016",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "除了炸鸡和披萨，热饮这条线怎么走？",
+          "query": "除了炸鸡和披萨，热饮这条线怎么走？",
+          "vector_rank": 49,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2022_Annual_Report",
+            "page": 118
+          }
+        },
+        {
+          "id": "semantic-017",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "不到店点单、送到家，哪头更重要？",
+          "query": "不到店点单、送到家，哪头更重要？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-018",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "利润薄不薄，最近是在好转吗？",
+          "query": "利润薄不薄，最近是在好转吗？",
+          "vector_rank": 19,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 213
+          }
+        },
+        {
+          "id": "semantic-019",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "股东能从公司拿回现金吗？",
+          "query": "股东能从公司拿回现金吗？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 374
+          }
+        },
+        {
+          "id": "semantic-020",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "不到店能不能吃到？",
+          "query": "不到店能不能吃到？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 304
+          }
+        },
+        {
+          "id": "cross-007",
+          "type": "cross",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "Yum China same-store sales trend",
+          "query": "Yum China same-store sales trend",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2023_Annual_Report",
+            "page": 6
+          }
+        },
+        {
+          "id": "cross-008",
+          "type": "cross",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "Haidilao restaurant count 门店数量",
+          "query": "Haidilao restaurant count 门店数量",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2018招股说明书（全球发售）",
+            "page": 259
+          }
+        },
+        {
+          "id": "cross-009",
+          "type": "cross",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "Yum China dividends and buyback 股息与回购",
+          "query": "Yum China dividends and buyback 股息与回购",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2016_Annual_Report",
+            "page": 141
+          }
+        },
+        {
+          "id": "cross-010",
+          "type": "cross",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞 same-store sales 同店销售",
+          "query": "海底捞 same-store sales 同店销售",
+          "vector_rank": 13,
+          "vector_bucket": "mid",
+          "hybrid_rank": 5,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2025年报",
+            "page": 27
+          }
+        },
+        {
+          "id": "cross-011",
+          "type": "cross",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "Yum China store count by year",
+          "query": "Yum China store count by year",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2016_Annual_Report",
+            "page": 125
+          }
+        },
+        {
+          "id": "cross-012",
+          "type": "cross",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "Haidilao table turnover rate 翻台率",
+          "query": "Haidilao table turnover rate 翻台率",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2025中报",
+            "page": 11
+          }
+        },
+        {
+          "id": "semantic-021",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞赚钱的含金量高不高？",
+          "query": "海底捞赚钱的含金量高不高？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "研报-浙商证券-2023-从成长到坚韧餐饮王者",
+            "page": 1
+          }
+        },
+        {
+          "id": "semantic-022",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞靠什么把店长留住并开出下一家？",
+          "query": "海底捞靠什么把店长留住并开出下一家？",
+          "vector_rank": 4,
+          "vector_bucket": "top5",
+          "hybrid_rank": 4,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 18
+          }
+        },
+        {
+          "id": "semantic-023",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞门店是开得太猛还是在主动收口？",
+          "query": "海底捞门店是开得太猛还是在主动收口？",
+          "vector_rank": 7,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 12,
+          "top_hit": {
+            "title": "海底捞研报-国信-202502",
+            "page": 23
+          }
+        },
+        {
+          "id": "semantic-024",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "这家火锅店里座位转得快不快？",
+          "query": "这家火锅店里座位转得快不快？",
+          "vector_rank": 6,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 30
+          }
+        },
+        {
+          "id": "semantic-025",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "百胜中国股东能拿回多少现金？",
+          "query": "百胜中国股东能拿回多少现金？",
+          "vector_rank": 28,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 348
+          }
+        },
+        {
+          "id": "semantic-026",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "肯德基和必胜客在中国怎么一起打？",
+          "query": "肯德基和必胜客在中国怎么一起打？",
+          "vector_rank": 32,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 168
+          }
+        },
+        {
+          "id": "semantic-027",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "百胜中国的利润是变厚还是变薄？",
+          "query": "百胜中国的利润是变厚还是变薄？",
+          "vector_rank": 21,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "国信证券_百胜中国_2024Q1高基数同店承压",
+            "page": 1
+          }
+        },
+        {
+          "id": "semantic-028",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "咖啡能不能成为百胜的第二增长曲线？",
+          "query": "咖啡能不能成为百胜的第二增长曲线？",
+          "vector_rank": 2,
+          "vector_bucket": "top5",
+          "hybrid_rank": 2,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "海通国际_百胜中国_2025投资者日_创新与提效双轮驱动",
+            "page": 1
+          }
+        },
+        {
+          "id": "cross-013",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao impairment losses",
+          "query": "Haidilao impairment losses",
+          "vector_rank": 33,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2021年报",
+            "page": 113
+          }
+        },
+        {
+          "id": "cross-014",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao dividend paid",
+          "query": "Haidilao dividend paid",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2018招股说明书（全球发售）",
+            "page": 416
+          }
+        },
+        {
+          "id": "cross-015",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China delivery and takeaway",
+          "query": "Yum China delivery and takeaway",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2016_Annual_Report",
+            "page": 11
+          }
+        },
+        {
+          "id": "cross-016",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China same-store sales",
+          "query": "Yum China same-store sales",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "海通国际_百胜中国_2025Q2经营利润创新高",
+            "page": 5
+          }
+        },
+        {
+          "id": "cross-017",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "百胜中国 store openings 门店净增",
+          "query": "百胜中国 store openings 门店净增",
+          "vector_rank": 1,
+          "vector_bucket": "top5",
+          "hybrid_rank": 1,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "国信证券_百胜中国_2024Q1高基数同店承压",
+            "page": 2
+          }
+        },
+        {
+          "id": "cross-018",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao staff incentive 员工激励",
+          "query": "Haidilao staff incentive 员工激励",
+          "vector_rank": 19,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2018招股说明书（全球发售）",
+            "page": 131
+          }
+        },
+        {
+          "id": "cross-019",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China digital transformation",
+          "query": "Yum China digital transformation",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2020_Annual_Report",
+            "page": 6
+          }
+        },
+        {
+          "id": "cross-020",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao capital expenditure 资本开支",
+          "query": "Haidilao capital expenditure 资本开支",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": 3,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 7,
+          "top_hit": {
+            "title": "2022中报",
+            "page": 73
+          }
+        },
+        {
+          "id": "cross-021",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China K-Coffee",
+          "query": "Yum China K-Coffee",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2021_Annual_Report",
+            "page": 251
+          }
+        },
+        {
+          "id": "cross-022",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞 table turnover rate",
+          "query": "海底捞 table turnover rate",
+          "vector_rank": 1,
+          "vector_bucket": "top5",
+          "hybrid_rank": 2,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2025中报",
+            "page": 11
+          }
+        }
+      ]
+    },
+    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2": {
+      "meta": {
+        "suite": "embedding",
+        "engine": "vector",
+        "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "vec_k": 50,
+        "top_k": 5,
+        "n": 44,
+        "duration_seconds": 13.623,
+        "db_mtime": "2026-08-23T03:23:50.989889+00:00"
+      },
+      "summary": {
+        "n": 44,
+        "recall_at_5": 0.136,
+        "recall_at_5_ci": [
+          0.064,
+          0.267
+        ],
+        "recall_at_50": 0.364,
+        "recall_at_50_ci": [
+          0.238,
+          0.511
+        ],
+        "n_top5": 6,
+        "n_mid": 10,
+        "n_miss": 28,
+        "mrr_at_50": 0.099,
+        "hybrid_fused_n": 44,
+        "hybrid_recall_at_5": 0.114,
+        "hybrid_recall_at_5_ci": [
+          0.05,
+          0.24
+        ],
+        "by_split": {
+          "freeze": {
+            "n": 26,
+            "recall_at_5": 0.077,
+            "recall_at_5_ci": [
+              0.021,
+              0.241
+            ],
+            "recall_at_50": 0.154,
+            "recall_at_50_ci": [
+              0.061,
+              0.335
+            ],
+            "n_top5": 2,
+            "n_mid": 2,
+            "n_miss": 22,
+            "mrr_at_50": 0.032,
+            "hybrid_fused_n": 26,
+            "hybrid_recall_at_5": 0.077,
+            "hybrid_recall_at_5_ci": [
+              0.021,
+              0.241
+            ]
+          },
+          "diag": {
+            "n": 18,
+            "recall_at_5": 0.222,
+            "recall_at_5_ci": [
+              0.09,
+              0.452
+            ],
+            "recall_at_50": 0.667,
+            "recall_at_50_ci": [
+              0.437,
+              0.837
+            ],
+            "n_top5": 4,
+            "n_mid": 8,
+            "n_miss": 6,
+            "mrr_at_50": 0.196,
+            "hybrid_fused_n": 18,
+            "hybrid_recall_at_5": 0.167,
+            "hybrid_recall_at_5_ci": [
+              0.058,
+              0.392
+            ]
+          }
+        },
+        "by_type": {
+          "semantic": {
+            "n": 28,
+            "recall_at_5": 0.107,
+            "recall_at_5_ci": [
+              0.037,
+              0.272
+            ],
+            "recall_at_50": 0.321,
+            "recall_at_50_ci": [
+              0.179,
+              0.507
+            ],
+            "n_top5": 3,
+            "n_mid": 6,
+            "n_miss": 19,
+            "mrr_at_50": 0.054,
+            "hybrid_fused_n": 28,
+            "hybrid_recall_at_5": 0.071,
+            "hybrid_recall_at_5_ci": [
+              0.02,
+              0.226
+            ]
+          },
+          "cross": {
+            "n": 16,
+            "recall_at_5": 0.188,
+            "recall_at_5_ci": [
+              0.066,
+              0.43
+            ],
+            "recall_at_50": 0.438,
+            "recall_at_50_ci": [
+              0.231,
+              0.668
+            ],
+            "n_top5": 3,
+            "n_mid": 4,
+            "n_miss": 9,
+            "mrr_at_50": 0.179,
+            "hybrid_fused_n": 16,
+            "hybrid_recall_at_5": 0.188,
+            "hybrid_recall_at_5_ci": [
+              0.066,
+              0.43
+            ]
+          }
+        }
+      },
+      "results": [
+        {
+          "id": "semantic-001",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞赚到的利润有多少能变成真金白银？",
+          "query": "海底捞赚到的利润有多少能变成真金白银？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-002",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞把门店铺到什么程度才算合适？",
+          "query": "海底捞把门店铺到什么程度才算合适？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-003",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞怎么把开销打下去？",
+          "query": "海底捞怎么把开销打下去？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-004",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "一线员工为什么愿意把服务做到极致？",
+          "query": "一线员工为什么愿意把服务做到极致？",
+          "vector_rank": 4,
+          "vector_bucket": "top5",
+          "hybrid_rank": 4,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 8,
+          "top_hit": {
+            "title": "2021年报",
+            "page": 20
+          }
+        },
+        {
+          "id": "semantic-005",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "客人来得勤不勤、一桌坐得转不转？",
+          "query": "客人来得勤不勤、一桌坐得转不转？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-006",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "一个店长如何带出下一家店的负责人？",
+          "query": "一个店长如何带出下一家店的负责人？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 4,
+          "top_hit": {
+            "title": "2021年报",
+            "page": 89
+          }
+        },
+        {
+          "id": "semantic-007",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "座位周转是在变快还是变慢？",
+          "query": "座位周转是在变快还是变慢？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 1,
+          "top_hit": {
+            "title": "2018年报",
+            "page": 24
+          }
+        },
+        {
+          "id": "semantic-008",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞的啄木鸟计划与门店优化",
+          "query": "海底捞的啄木鸟计划与门店优化",
+          "vector_rank": 2,
+          "vector_bucket": "top5",
+          "hybrid_rank": 2,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 13,
+          "top_hit": {
+            "title": "海底捞研报-国信-202502",
+            "page": 32
+          }
+        },
+        {
+          "id": "semantic-009",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "赚一块钱能剩多少，近几年怎么变？",
+          "query": "赚一块钱能剩多少，近几年怎么变？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-010",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "客人为一餐花多少钱，和来得频不频，哪个更撑收入？",
+          "query": "客人为一餐花多少钱，和来得频不频，哪个更撑收入？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 24,
+          "top_hit": {
+            "title": "2023中报",
+            "page": 16
+          }
+        },
+        {
+          "id": "semantic-011",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "客人愿不愿意再来这家快餐店？",
+          "query": "客人愿不愿意再来这家快餐店？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-012",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "百胜中国怎么把开销按住？",
+          "query": "百胜中国怎么把开销按住？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-013",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "肯德基之外还有哪些牌子在撑场面？",
+          "query": "肯德基之外还有哪些牌子在撑场面？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-014",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "百胜中国的竞争格局",
+          "query": "百胜中国的竞争格局",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2017_Annual_Report",
+            "page": 98
+          }
+        },
+        {
+          "id": "semantic-015",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "新店主要开在什么地方、开给谁？",
+          "query": "新店主要开在什么地方、开给谁？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_英文版",
+            "page": 53
+          }
+        },
+        {
+          "id": "semantic-016",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "除了炸鸡和披萨，热饮这条线怎么走？",
+          "query": "除了炸鸡和披萨，热饮这条线怎么走？",
+          "vector_rank": 25,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2023_Annual_Report",
+            "page": 11
+          }
+        },
+        {
+          "id": "semantic-017",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "不到店点单、送到家，哪头更重要？",
+          "query": "不到店点单、送到家，哪头更重要？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 0,
+          "top_hit": null
+        },
+        {
+          "id": "semantic-018",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "利润薄不薄，最近是在好转吗？",
+          "query": "利润薄不薄，最近是在好转吗？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "国信证券_百胜中国_同店销售增速重新转正",
+            "page": 3
+          }
+        },
+        {
+          "id": "semantic-019",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "股东能从公司拿回现金吗？",
+          "query": "股东能从公司拿回现金吗？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "page": 173
+          }
+        },
+        {
+          "id": "semantic-020",
+          "type": "semantic",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "不到店能不能吃到？",
+          "query": "不到店能不能吃到？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_招股书_英文版",
+            "page": 42
+          }
+        },
+        {
+          "id": "cross-007",
+          "type": "cross",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "Yum China same-store sales trend",
+          "query": "Yum China same-store sales trend",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2022_Annual_Report",
+            "page": 118
+          }
+        },
+        {
+          "id": "cross-008",
+          "type": "cross",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "Haidilao restaurant count 门店数量",
+          "query": "Haidilao restaurant count 门店数量",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2024年报",
+            "page": 90
+          }
+        },
+        {
+          "id": "cross-009",
+          "type": "cross",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "Yum China dividends and buyback 股息与回购",
+          "query": "Yum China dividends and buyback 股息与回购",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "page": 15
+          }
+        },
+        {
+          "id": "cross-010",
+          "type": "cross",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "海底捞 same-store sales 同店销售",
+          "query": "海底捞 same-store sales 同店销售",
+          "vector_rank": 28,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "研报-浙商证券-2023-从成长到坚韧餐饮王者",
+            "page": 5
+          }
+        },
+        {
+          "id": "cross-011",
+          "type": "cross",
+          "split": "freeze",
+          "company": "百胜中国",
+          "question": "Yum China store count by year",
+          "query": "Yum China store count by year",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "page": 211
+          }
+        },
+        {
+          "id": "cross-012",
+          "type": "cross",
+          "split": "freeze",
+          "company": "海底捞",
+          "question": "Haidilao table turnover rate 翻台率",
+          "query": "Haidilao table turnover rate 翻台率",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2025中报",
+            "page": 11
+          }
+        },
+        {
+          "id": "semantic-021",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞赚钱的含金量高不高？",
+          "query": "海底捞赚钱的含金量高不高？",
+          "vector_rank": 7,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 39
+          }
+        },
+        {
+          "id": "semantic-022",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞靠什么把店长留住并开出下一家？",
+          "query": "海底捞靠什么把店长留住并开出下一家？",
+          "vector_rank": 17,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 9
+          }
+        },
+        {
+          "id": "semantic-023",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞门店是开得太猛还是在主动收口？",
+          "query": "海底捞门店是开得太猛还是在主动收口？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 6,
+          "top_hit": {
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 25
+          }
+        },
+        {
+          "id": "semantic-024",
+          "type": "semantic",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "这家火锅店里座位转得快不快？",
+          "query": "这家火锅店里座位转得快不快？",
+          "vector_rank": 12,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2024年报",
+            "page": 26
+          }
+        },
+        {
+          "id": "semantic-025",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "百胜中国股东能拿回多少现金？",
+          "query": "百胜中国股东能拿回多少现金？",
+          "vector_rank": 9,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "page": 91
+          }
+        },
+        {
+          "id": "semantic-026",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "肯德基和必胜客在中国怎么一起打？",
+          "query": "肯德基和必胜客在中国怎么一起打？",
+          "vector_rank": 4,
+          "vector_bucket": "top5",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 13,
+          "top_hit": {
+            "title": "百胜中国_招股书_中文版",
+            "page": 83
+          }
+        },
+        {
+          "id": "semantic-027",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "百胜中国的利润是变厚还是变薄？",
+          "query": "百胜中国的利润是变厚还是变薄？",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "page": 51
+          }
+        },
+        {
+          "id": "semantic-028",
+          "type": "semantic",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "咖啡能不能成为百胜的第二增长曲线？",
+          "query": "咖啡能不能成为百胜的第二增长曲线？",
+          "vector_rank": 16,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2025_Annual_Report",
+            "page": 49
+          }
+        },
+        {
+          "id": "cross-013",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao impairment losses",
+          "query": "Haidilao impairment losses",
+          "vector_rank": 9,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2023年报",
+            "page": 348
+          }
+        },
+        {
+          "id": "cross-014",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao dividend paid",
+          "query": "Haidilao dividend paid",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2018年报",
+            "page": 224
+          }
+        },
+        {
+          "id": "cross-015",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China delivery and takeaway",
+          "query": "Yum China delivery and takeaway",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "page": 95
+          }
+        },
+        {
+          "id": "cross-016",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China same-store sales",
+          "query": "Yum China same-store sales",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2022_HK_Annual_Report",
+            "page": 201
+          }
+        },
+        {
+          "id": "cross-017",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "百胜中国 store openings 门店净增",
+          "query": "百胜中国 store openings 门店净增",
+          "vector_rank": 2,
+          "vector_bucket": "top5",
+          "hybrid_rank": 2,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "国信证券_百胜中国_2024Q4同店降幅收窄",
+            "page": 4
+          }
+        },
+        {
+          "id": "cross-018",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao staff incentive 员工激励",
+          "query": "Haidilao staff incentive 员工激励",
+          "vector_rank": 1,
+          "vector_bucket": "top5",
+          "hybrid_rank": 1,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2022年报",
+            "page": 189
+          }
+        },
+        {
+          "id": "cross-019",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China digital transformation",
+          "query": "Yum China digital transformation",
+          "vector_rank": null,
+          "vector_bucket": "miss",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2020_Annual_Report",
+            "page": 6
+          }
+        },
+        {
+          "id": "cross-020",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "Haidilao capital expenditure 资本开支",
+          "query": "Haidilao capital expenditure 资本开支",
+          "vector_rank": 1,
+          "vector_bucket": "top5",
+          "hybrid_rank": 1,
+          "hybrid_hit": true,
+          "hybrid_fused": true,
+          "n_vec_hits": 9,
+          "top_hit": {
+            "title": "2025年报",
+            "page": 254
+          }
+        },
+        {
+          "id": "cross-021",
+          "type": "cross",
+          "split": "diag",
+          "company": "百胜中国",
+          "question": "Yum China K-Coffee",
+          "query": "Yum China K-Coffee",
+          "vector_rank": 6,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "page": 43
+          }
+        },
+        {
+          "id": "cross-022",
+          "type": "cross",
+          "split": "diag",
+          "company": "海底捞",
+          "question": "海底捞 table turnover rate",
+          "query": "海底捞 table turnover rate",
+          "vector_rank": 22,
+          "vector_bucket": "mid",
+          "hybrid_rank": null,
+          "hybrid_hit": false,
+          "hybrid_fused": true,
+          "n_vec_hits": 50,
+          "top_hit": {
+            "title": "2018招股说明书（全球发售）",
+            "page": 145
+          }
+        }
+      ]
+    }
+  },
+  "compares": [
+    {
+      "base": "BAAI/bge-small-zh-v1.5",
+      "challenger": "BAAI/bge-m3",
+      "n": 44,
+      "better_at_50": 6,
+      "worse_at_50": 11,
+      "net_at_50": -5,
+      "gained_top5": 0,
+      "lost_top5": 2,
+      "recall_at_5_ci_overlap": true,
+      "recall_at_50_ci_overlap": true,
+      "label": "indistinguishable",
+      "recommend_switch": false,
+      "note": "Wilson 区间重叠或只差 1 题时不当作模型胜出。better 才建议换模；换之前仍须 `python -m stock_kb eval --engine hybrid --model <候选> --split freeze` 过 hybrid semantic 门槛，并跑 run_eval_regression.py。",
+      "questions": [
+        {
+          "id": "cross-007",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-008",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-009",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-010",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": 9,
+          "chal_rank": 13,
+          "base_bucket": "mid",
+          "chal_bucket": "mid",
+          "delta": -4
+        },
+        {
+          "id": "cross-011",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-012",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-013",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": 33,
+          "base_bucket": "miss",
+          "chal_bucket": "mid",
+          "delta": 18
+        },
+        {
+          "id": "cross-014",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-015",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-016",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-017",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": 1,
+          "chal_rank": 1,
+          "base_bucket": "top5",
+          "chal_bucket": "top5",
+          "delta": 0
+        },
+        {
+          "id": "cross-018",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": 19,
+          "base_bucket": "miss",
+          "chal_bucket": "mid",
+          "delta": 32
+        },
+        {
+          "id": "cross-019",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-020",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-021",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": 36,
+          "chal_rank": null,
+          "base_bucket": "mid",
+          "chal_bucket": "miss",
+          "delta": -15
+        },
+        {
+          "id": "cross-022",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": 1,
+          "chal_rank": 1,
+          "base_bucket": "top5",
+          "chal_bucket": "top5",
+          "delta": 0
+        },
+        {
+          "id": "semantic-001",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-002",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-003",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-004",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 3,
+          "chal_rank": 6,
+          "base_bucket": "top5",
+          "chal_bucket": "mid",
+          "delta": -3
+        },
+        {
+          "id": "semantic-005",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-006",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-007",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-008",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 2,
+          "chal_rank": 1,
+          "base_bucket": "top5",
+          "chal_bucket": "top5",
+          "delta": 1
+        },
+        {
+          "id": "semantic-009",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-010",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-011",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-012",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-013",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-014",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 29,
+          "chal_rank": 17,
+          "base_bucket": "mid",
+          "chal_bucket": "mid",
+          "delta": 12
+        },
+        {
+          "id": "semantic-015",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 33,
+          "chal_rank": 47,
+          "base_bucket": "mid",
+          "chal_bucket": "mid",
+          "delta": -14
+        },
+        {
+          "id": "semantic-016",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 1,
+          "chal_rank": 49,
+          "base_bucket": "top5",
+          "chal_bucket": "mid",
+          "delta": -48
+        },
+        {
+          "id": "semantic-017",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-018",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 15,
+          "chal_rank": 19,
+          "base_bucket": "mid",
+          "chal_bucket": "mid",
+          "delta": -4
+        },
+        {
+          "id": "semantic-019",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-020",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 45,
+          "chal_rank": null,
+          "base_bucket": "mid",
+          "chal_bucket": "miss",
+          "delta": -6
+        },
+        {
+          "id": "semantic-021",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-022",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": 1,
+          "chal_rank": 4,
+          "base_bucket": "top5",
+          "chal_bucket": "top5",
+          "delta": -3
+        },
+        {
+          "id": "semantic-023",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": 6,
+          "chal_rank": 7,
+          "base_bucket": "mid",
+          "chal_bucket": "mid",
+          "delta": -1
+        },
+        {
+          "id": "semantic-024",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": 6,
+          "base_bucket": "miss",
+          "chal_bucket": "mid",
+          "delta": 45
+        },
+        {
+          "id": "semantic-025",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": 18,
+          "chal_rank": 28,
+          "base_bucket": "mid",
+          "chal_bucket": "mid",
+          "delta": -10
+        },
+        {
+          "id": "semantic-026",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": 32,
+          "base_bucket": "miss",
+          "chal_bucket": "mid",
+          "delta": 19
+        },
+        {
+          "id": "semantic-027",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": 7,
+          "chal_rank": 21,
+          "base_bucket": "mid",
+          "chal_bucket": "mid",
+          "delta": -14
+        },
+        {
+          "id": "semantic-028",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": 2,
+          "chal_rank": 2,
+          "base_bucket": "top5",
+          "chal_bucket": "top5",
+          "delta": 0
+        }
+      ]
+    },
+    {
+      "base": "BAAI/bge-small-zh-v1.5",
+      "challenger": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "n": 44,
+      "better_at_50": 8,
+      "worse_at_50": 13,
+      "net_at_50": -5,
+      "gained_top5": 3,
+      "lost_top5": 4,
+      "recall_at_5_ci_overlap": true,
+      "recall_at_50_ci_overlap": true,
+      "label": "lean_worse",
+      "recommend_switch": false,
+      "note": "Wilson 区间重叠或只差 1 题时不当作模型胜出。better 才建议换模；换之前仍须 `python -m stock_kb eval --engine hybrid --model <候选> --split freeze` 过 hybrid semantic 门槛，并跑 run_eval_regression.py。",
+      "questions": [
+        {
+          "id": "cross-007",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-008",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-009",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-010",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": 9,
+          "chal_rank": 28,
+          "base_bucket": "mid",
+          "chal_bucket": "mid",
+          "delta": -19
+        },
+        {
+          "id": "cross-011",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-012",
+          "split": "freeze",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-013",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": 9,
+          "base_bucket": "miss",
+          "chal_bucket": "mid",
+          "delta": 42
+        },
+        {
+          "id": "cross-014",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-015",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-016",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-017",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": 1,
+          "chal_rank": 2,
+          "base_bucket": "top5",
+          "chal_bucket": "top5",
+          "delta": -1
+        },
+        {
+          "id": "cross-018",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": 1,
+          "base_bucket": "miss",
+          "chal_bucket": "top5",
+          "delta": 50
+        },
+        {
+          "id": "cross-019",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "cross-020",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": null,
+          "chal_rank": 1,
+          "base_bucket": "miss",
+          "chal_bucket": "top5",
+          "delta": 50
+        },
+        {
+          "id": "cross-021",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": 36,
+          "chal_rank": 6,
+          "base_bucket": "mid",
+          "chal_bucket": "mid",
+          "delta": 30
+        },
+        {
+          "id": "cross-022",
+          "split": "diag",
+          "type": "cross",
+          "base_rank": 1,
+          "chal_rank": 22,
+          "base_bucket": "top5",
+          "chal_bucket": "mid",
+          "delta": -21
+        },
+        {
+          "id": "semantic-001",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-002",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-003",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-004",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 3,
+          "chal_rank": 4,
+          "base_bucket": "top5",
+          "chal_bucket": "top5",
+          "delta": -1
+        },
+        {
+          "id": "semantic-005",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-006",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-007",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-008",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 2,
+          "chal_rank": 2,
+          "base_bucket": "top5",
+          "chal_bucket": "top5",
+          "delta": 0
+        },
+        {
+          "id": "semantic-009",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-010",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-011",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-012",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-013",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-014",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 29,
+          "chal_rank": null,
+          "base_bucket": "mid",
+          "chal_bucket": "miss",
+          "delta": -22
+        },
+        {
+          "id": "semantic-015",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 33,
+          "chal_rank": null,
+          "base_bucket": "mid",
+          "chal_bucket": "miss",
+          "delta": -18
+        },
+        {
+          "id": "semantic-016",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 1,
+          "chal_rank": 25,
+          "base_bucket": "top5",
+          "chal_bucket": "mid",
+          "delta": -24
+        },
+        {
+          "id": "semantic-017",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-018",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 15,
+          "chal_rank": null,
+          "base_bucket": "mid",
+          "chal_bucket": "miss",
+          "delta": -36
+        },
+        {
+          "id": "semantic-019",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": null,
+          "base_bucket": "miss",
+          "chal_bucket": "miss",
+          "delta": null
+        },
+        {
+          "id": "semantic-020",
+          "split": "freeze",
+          "type": "semantic",
+          "base_rank": 45,
+          "chal_rank": null,
+          "base_bucket": "mid",
+          "chal_bucket": "miss",
+          "delta": -6
+        },
+        {
+          "id": "semantic-021",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": 7,
+          "base_bucket": "miss",
+          "chal_bucket": "mid",
+          "delta": 44
+        },
+        {
+          "id": "semantic-022",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": 1,
+          "chal_rank": 17,
+          "base_bucket": "top5",
+          "chal_bucket": "mid",
+          "delta": -16
+        },
+        {
+          "id": "semantic-023",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": 6,
+          "chal_rank": null,
+          "base_bucket": "mid",
+          "chal_bucket": "miss",
+          "delta": -45
+        },
+        {
+          "id": "semantic-024",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": 12,
+          "base_bucket": "miss",
+          "chal_bucket": "mid",
+          "delta": 39
+        },
+        {
+          "id": "semantic-025",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": 18,
+          "chal_rank": 9,
+          "base_bucket": "mid",
+          "chal_bucket": "mid",
+          "delta": 9
+        },
+        {
+          "id": "semantic-026",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": null,
+          "chal_rank": 4,
+          "base_bucket": "miss",
+          "chal_bucket": "top5",
+          "delta": 47
+        },
+        {
+          "id": "semantic-027",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": 7,
+          "chal_rank": null,
+          "base_bucket": "mid",
+          "chal_bucket": "miss",
+          "delta": -44
+        },
+        {
+          "id": "semantic-028",
+          "split": "diag",
+          "type": "semantic",
+          "base_rank": 2,
+          "chal_rank": 16,
+          "base_bucket": "top5",
+          "chal_bucket": "mid",
+          "delta": -14
+        }
+      ]
+    }
+  ],
+  "markdown": "# Embedding 筛选报告\n\n套件：semantic + 无三表的 cross；问句归一化后 ≥ 6 字（才会走向量）。主指标是 **vector@5 / vector@50 分桶**，不是 FTS。\n\n## BAAI/bge-small-zh-v1.5\n\nengine=vector，vec_k=50，耗时 16.316s\n\n### 合计\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 44 | 0.159 | 0.079–0.294 | 0.364 | 0.238–0.511 | 7 | 9 | 28 | 0.136 | 0.182 |\n\n### split=freeze\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 26 | 0.115 | 0.04–0.29 | 0.308 | 0.165–0.5 | 3 | 5 | 18 | 0.081 | 0.154 |\n\n### split=diag\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 18 | 0.222 | 0.09–0.452 | 0.444 | 0.246–0.663 | 4 | 4 | 10 | 0.216 | 0.222 |\n\n### type=semantic\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 28 | 0.179 | 0.079–0.356 | 0.429 | 0.265–0.609 | 5 | 7 | 16 | 0.138 | 0.179 |\n\n### type=cross\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 16 | 0.125 | 0.035–0.36 | 0.25 | 0.102–0.495 | 2 | 2 | 12 | 0.134 | 0.188 |\n\n逐题：\n\n- `semantic-001` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-002` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-003` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-004` freeze/semantic  vector=top5@3  hybrid_hit=True\n- `semantic-005` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-006` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-007` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-008` freeze/semantic  vector=top5@2  hybrid_hit=True\n- `semantic-009` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-010` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-011` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-012` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-013` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-014` freeze/semantic  vector=mid@29  hybrid_hit=False\n- `semantic-015` freeze/semantic  vector=mid@33  hybrid_hit=False\n- `semantic-016` freeze/semantic  vector=top5@1  hybrid_hit=True\n- `semantic-017` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-018` freeze/semantic  vector=mid@15  hybrid_hit=False\n- `semantic-019` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-020` freeze/semantic  vector=mid@45  hybrid_hit=False\n- `cross-007` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-008` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-009` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-010` freeze/cross  vector=mid@9  hybrid_hit=True\n- `cross-011` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-012` freeze/cross  vector=miss@—  hybrid_hit=False\n- `semantic-021` diag/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-022` diag/semantic  vector=top5@1  hybrid_hit=True\n- `semantic-023` diag/semantic  vector=mid@6  hybrid_hit=False\n- `semantic-024` diag/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-025` diag/semantic  vector=mid@18  hybrid_hit=False\n- `semantic-026` diag/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-027` diag/semantic  vector=mid@7  hybrid_hit=False\n- `semantic-028` diag/semantic  vector=top5@2  hybrid_hit=True\n- `cross-013` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-014` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-015` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-016` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-017` diag/cross  vector=top5@1  hybrid_hit=True\n- `cross-018` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-019` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-020` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-021` diag/cross  vector=mid@36  hybrid_hit=False\n- `cross-022` diag/cross  vector=top5@1  hybrid_hit=True\n\n## BAAI/bge-m3\n\nengine=vector，vec_k=50，耗时 114.62s\n\n### 合计\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 44 | 0.114 | 0.05–0.24 | 0.409 | 0.277–0.556 | 5 | 13 | 26 | 0.106 | 0.159 |\n\n### split=freeze\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 26 | 0.038 | 0.007–0.189 | 0.269 | 0.137–0.461 | 1 | 6 | 19 | 0.054 | 0.077 |\n\n### split=diag\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 18 | 0.222 | 0.09–0.452 | 0.611 | 0.386–0.797 | 4 | 7 | 7 | 0.181 | 0.278 |\n\n### type=semantic\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 28 | 0.107 | 0.037–0.272 | 0.464 | 0.295–0.642 | 3 | 10 | 15 | 0.089 | 0.107 |\n\n### type=cross\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 16 | 0.125 | 0.035–0.36 | 0.312 | 0.142–0.556 | 2 | 3 | 11 | 0.135 | 0.25 |\n\n逐题：\n\n- `semantic-001` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-002` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-003` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-004` freeze/semantic  vector=mid@6  hybrid_hit=False\n- `semantic-005` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-006` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-007` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-008` freeze/semantic  vector=top5@1  hybrid_hit=True\n- `semantic-009` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-010` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-011` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-012` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-013` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-014` freeze/semantic  vector=mid@17  hybrid_hit=False\n- `semantic-015` freeze/semantic  vector=mid@47  hybrid_hit=False\n- `semantic-016` freeze/semantic  vector=mid@49  hybrid_hit=False\n- `semantic-017` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-018` freeze/semantic  vector=mid@19  hybrid_hit=False\n- `semantic-019` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-020` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `cross-007` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-008` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-009` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-010` freeze/cross  vector=mid@13  hybrid_hit=True\n- `cross-011` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-012` freeze/cross  vector=miss@—  hybrid_hit=False\n- `semantic-021` diag/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-022` diag/semantic  vector=top5@4  hybrid_hit=True\n- `semantic-023` diag/semantic  vector=mid@7  hybrid_hit=False\n- `semantic-024` diag/semantic  vector=mid@6  hybrid_hit=False\n- `semantic-025` diag/semantic  vector=mid@28  hybrid_hit=False\n- `semantic-026` diag/semantic  vector=mid@32  hybrid_hit=False\n- `semantic-027` diag/semantic  vector=mid@21  hybrid_hit=False\n- `semantic-028` diag/semantic  vector=top5@2  hybrid_hit=True\n- `cross-013` diag/cross  vector=mid@33  hybrid_hit=False\n- `cross-014` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-015` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-016` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-017` diag/cross  vector=top5@1  hybrid_hit=True\n- `cross-018` diag/cross  vector=mid@19  hybrid_hit=False\n- `cross-019` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-020` diag/cross  vector=miss@—  hybrid_hit=True\n- `cross-021` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-022` diag/cross  vector=top5@1  hybrid_hit=True\n\n## sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2\n\nengine=vector，vec_k=50，耗时 13.623s\n\n### 合计\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 44 | 0.136 | 0.064–0.267 | 0.364 | 0.238–0.511 | 6 | 10 | 28 | 0.099 | 0.114 |\n\n### split=freeze\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 26 | 0.077 | 0.021–0.241 | 0.154 | 0.061–0.335 | 2 | 2 | 22 | 0.032 | 0.077 |\n\n### split=diag\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 18 | 0.222 | 0.09–0.452 | 0.667 | 0.437–0.837 | 4 | 8 | 6 | 0.196 | 0.167 |\n\n### type=semantic\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 28 | 0.107 | 0.037–0.272 | 0.321 | 0.179–0.507 | 3 | 6 | 19 | 0.054 | 0.071 |\n\n### type=cross\n\n| n | Recall@5 | @5 CI | Recall@50 | @50 CI | top5 | mid(6–50) | miss | MRR@50 | hybrid@5 |\n|---|---|---|---|---|---|---|---|---|---|\n| 16 | 0.188 | 0.066–0.43 | 0.438 | 0.231–0.668 | 3 | 4 | 9 | 0.179 | 0.188 |\n\n逐题：\n\n- `semantic-001` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-002` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-003` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-004` freeze/semantic  vector=top5@4  hybrid_hit=True\n- `semantic-005` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-006` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-007` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-008` freeze/semantic  vector=top5@2  hybrid_hit=True\n- `semantic-009` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-010` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-011` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-012` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-013` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-014` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-015` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-016` freeze/semantic  vector=mid@25  hybrid_hit=False\n- `semantic-017` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-018` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-019` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-020` freeze/semantic  vector=miss@—  hybrid_hit=False\n- `cross-007` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-008` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-009` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-010` freeze/cross  vector=mid@28  hybrid_hit=False\n- `cross-011` freeze/cross  vector=miss@—  hybrid_hit=False\n- `cross-012` freeze/cross  vector=miss@—  hybrid_hit=False\n- `semantic-021` diag/semantic  vector=mid@7  hybrid_hit=False\n- `semantic-022` diag/semantic  vector=mid@17  hybrid_hit=False\n- `semantic-023` diag/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-024` diag/semantic  vector=mid@12  hybrid_hit=False\n- `semantic-025` diag/semantic  vector=mid@9  hybrid_hit=False\n- `semantic-026` diag/semantic  vector=top5@4  hybrid_hit=False\n- `semantic-027` diag/semantic  vector=miss@—  hybrid_hit=False\n- `semantic-028` diag/semantic  vector=mid@16  hybrid_hit=False\n- `cross-013` diag/cross  vector=mid@9  hybrid_hit=False\n- `cross-014` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-015` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-016` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-017` diag/cross  vector=top5@2  hybrid_hit=True\n- `cross-018` diag/cross  vector=top5@1  hybrid_hit=True\n- `cross-019` diag/cross  vector=miss@—  hybrid_hit=False\n- `cross-020` diag/cross  vector=top5@1  hybrid_hit=True\n- `cross-021` diag/cross  vector=mid@6  hybrid_hit=False\n- `cross-022` diag/cross  vector=mid@22  hybrid_hit=False\n\n## 对比\n\n### BAAI/bge-m3 vs BAAI/bge-small-zh-v1.5\n\n- 判定：**indistinguishable**　建议换模：否\n- @50 变好 6 / 变差 11 （net -5）\n- 新进 top-5 0 / 掉出 top-5 2\n- Recall@5 CI 重叠=True，@50 CI 重叠=True\n- Wilson 区间重叠或只差 1 题时不当作模型胜出。better 才建议换模；换之前仍须 `python -m stock_kb eval --engine hybrid --model <候选> --split freeze` 过 hybrid semantic 门槛，并跑 run_eval_regression.py。\n\n| id | split | base | challenger | Δrank |\n|---|---|---|---|---|\n| cross-010 | freeze | mid@9 | mid@13 | -4 |\n| cross-013 | diag | miss@— | mid@33 | 18 |\n| cross-018 | diag | miss@— | mid@19 | 32 |\n| cross-021 | diag | mid@36 | miss@— | -15 |\n| semantic-004 | freeze | top5@3 | mid@6 | -3 |\n| semantic-008 | freeze | top5@2 | top5@1 | 1 |\n| semantic-014 | freeze | mid@29 | mid@17 | 12 |\n| semantic-015 | freeze | mid@33 | mid@47 | -14 |\n| semantic-016 | freeze | top5@1 | mid@49 | -48 |\n| semantic-018 | freeze | mid@15 | mid@19 | -4 |\n| semantic-020 | freeze | mid@45 | miss@— | -6 |\n| semantic-022 | diag | top5@1 | top5@4 | -3 |\n| semantic-023 | diag | mid@6 | mid@7 | -1 |\n| semantic-024 | diag | miss@— | mid@6 | 45 |\n| semantic-025 | diag | mid@18 | mid@28 | -10 |\n| semantic-026 | diag | miss@— | mid@32 | 19 |\n| semantic-027 | diag | mid@7 | mid@21 | -14 |\n\n### sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 vs BAAI/bge-small-zh-v1.5\n\n- 判定：**lean_worse**　建议换模：否\n- @50 变好 8 / 变差 13 （net -5）\n- 新进 top-5 3 / 掉出 top-5 4\n- Recall@5 CI 重叠=True，@50 CI 重叠=True\n- Wilson 区间重叠或只差 1 题时不当作模型胜出。better 才建议换模；换之前仍须 `python -m stock_kb eval --engine hybrid --model <候选> --split freeze` 过 hybrid semantic 门槛，并跑 run_eval_regression.py。\n\n| id | split | base | challenger | Δrank |\n|---|---|---|---|---|\n| cross-010 | freeze | mid@9 | mid@28 | -19 |\n| cross-013 | diag | miss@— | mid@9 | 42 |\n| cross-017 | diag | top5@1 | top5@2 | -1 |\n| cross-018 | diag | miss@— | top5@1 | 50 |\n| cross-020 | diag | miss@— | top5@1 | 50 |\n| cross-021 | diag | mid@36 | mid@6 | 30 |\n| cross-022 | diag | top5@1 | mid@22 | -21 |\n| semantic-004 | freeze | top5@3 | top5@4 | -1 |\n| semantic-014 | freeze | mid@29 | miss@— | -22 |\n| semantic-015 | freeze | mid@33 | miss@— | -18 |\n| semantic-016 | freeze | top5@1 | mid@25 | -24 |\n| semantic-018 | freeze | mid@15 | miss@— | -36 |\n| semantic-020 | freeze | mid@45 | miss@— | -6 |\n| semantic-021 | diag | miss@— | mid@7 | 44 |\n| semantic-022 | diag | top5@1 | mid@17 | -16 |\n| semantic-023 | diag | mid@6 | miss@— | -45 |\n| semantic-024 | diag | miss@— | mid@12 | 39 |\n| semantic-025 | diag | mid@18 | mid@9 | 9 |\n| semantic-026 | diag | miss@— | top5@4 | 47 |\n| semantic-027 | diag | mid@7 | miss@— | -44 |\n| semantic-028 | diag | top5@2 | mid@16 | -14 |\n\n## 怎么用这个结论\n\n- `indistinguishable` / `lean_*`：不要换默认模型。\n- `better`：候选在本套件上分得开，仍须过 freeze hybrid 门禁才改 `embedding.model`。\n- keyword / 结构化 / 无答案不靠 embedding，不能用来选模型。\n"
+}

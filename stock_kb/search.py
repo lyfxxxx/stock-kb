@@ -9,8 +9,32 @@ from stock_kb.textutil import to_simplified
 
 def normalize_query(query: str) -> str:
     q = to_simplified(query or "").strip()
+    q = re.sub(r"((?:19|20)\d{2})\s*年", r"\1 ", q)
     q = re.sub(r"[\s,，。；;:：?!！？、/\-—_–()\[\]（）\"']+", " ", q)
     return re.sub(r"\s+", " ", q).strip()
+
+
+def prefer_query_years(
+    hits: list[dict[str, Any]],
+    query: str,
+    *,
+    year: int | None,
+    top_k: int,
+) -> list[dict[str, Any]]:
+    """Keep report years named in the query first.
+
+    Explicit ``year=`` is a hard filter (already applied in SQL). Queries
+    with no year are left alone so freeze keyword GT (often older 研报)
+    does not jump to the latest annual.
+    """
+    if year is not None or not hits:
+        return hits[:top_k]
+    years = set(query_years(query))
+    if not years:
+        return hits[:top_k]
+    matched = [h for h in hits if h.get("year") in years]
+    rest = [h for h in hits if h.get("year") not in years]
+    return (matched + rest)[:top_k]
 
 
 def fts_search(
@@ -25,11 +49,16 @@ def fts_search(
     q = normalize_query(query)
     if not q:
         return []
+    implied_years = query_years(q) if year is None else []
+    if implied_years and years_out_of_corpus(conn, q, company):
+        return []
+    years = implied_years or None
 
     if len(q) < 3:
         rows = _like_search(
             conn, q, company=company, top_k=top_k,
             year=year, report_type=report_type, language=language,
+            years=years,
         )
         # 已建好中文 bigram 表，但当前评测下 bigram 排序会牺牲 keyword 基线；
         # 仅在 LIKE 无结果时用 bigram 兜底，后续可在独立评测集上再调权。
@@ -37,8 +66,9 @@ def fts_search(
             rows = _bigram_search(
                 conn, q, company=company, top_k=top_k,
                 year=year, report_type=report_type, language=language,
+                years=years,
             )
-        return rows
+        return rows[:top_k]
 
     expr = _match_expression(q)
     if not expr:
@@ -46,6 +76,7 @@ def fts_search(
     return _match_search(
         conn, expr, company=company, top_k=top_k,
         year=year, report_type=report_type, language=language,
+        years=years,
     )
 
 
@@ -57,6 +88,7 @@ def _match_search(
     year: int | None,
     report_type: str | None,
     language: str | None,
+    years: list[int] | None = None,
 ) -> list[dict[str, Any]]:
     sql = (
         "SELECT p.id AS page_id, p.report_id, p.page_no, p.char_count, r.company, "
@@ -67,7 +99,9 @@ def _match_search(
         "WHERE pages_fts MATCH ? "
     )
     params: list[Any] = [expr]
-    sql, params = _append_filters(sql, params, company, year, report_type, language)
+    sql, params = _append_filters(
+        sql, params, company, year, report_type, language, years=years
+    )
     sql += " ORDER BY rank LIMIT ?"
     params.append(top_k)
     try:
@@ -84,6 +118,7 @@ def _bigram_search(
     year: int | None,
     report_type: str | None,
     language: str | None,
+    years: list[int] | None = None,
 ) -> list[dict[str, Any]]:
     sql = (
         "SELECT p.id AS page_id, p.report_id, p.page_no, p.char_count, r.company, "
@@ -96,7 +131,9 @@ def _bigram_search(
         "WHERE pages_bigram_fts MATCH ? "
     )
     params: list[Any] = [q, q, _quote_fts(q)]
-    sql, params = _append_filters(sql, params, company, year, report_type, language)
+    sql, params = _append_filters(
+        sql, params, company, year, report_type, language, years=years
+    )
     sql += " ORDER BY rank LIMIT ?"
     params.append(top_k)
     try:
@@ -113,6 +150,7 @@ def _like_search(
     year: int | None,
     report_type: str | None,
     language: str | None,
+    years: list[int] | None = None,
 ) -> list[dict[str, Any]]:
     like = f"%{_escape_like(q)}%"
     sql = (
@@ -126,7 +164,9 @@ def _like_search(
         "WHERE p.content LIKE ? ESCAPE '\\' "
     )
     params: list[Any] = [q, q, q, q, like]
-    sql, params = _append_filters(sql, params, company, year, report_type, language)
+    sql, params = _append_filters(
+        sql, params, company, year, report_type, language, years=years
+    )
     sql += " ORDER BY score DESC, p.page_no ASC LIMIT ?"
     params.append(top_k)
     try:
@@ -142,6 +182,7 @@ def _append_filters(
     year: int | None,
     report_type: str | None,
     language: str | None,
+    years: list[int] | None = None,
 ) -> tuple[str, list[Any]]:
     sql += " AND COALESCE(r.is_duplicate, 0) = 0"
     if company is not None:
@@ -150,6 +191,9 @@ def _append_filters(
     if year is not None:
         sql += " AND r.year = ?"
         params.append(year)
+    elif years:
+        sql += " AND r.year IN (" + ",".join("?" * len(years)) + ")"
+        params.extend(years)
     if report_type is not None:
         sql += " AND r.report_type = ?"
         params.append(report_type)
@@ -184,8 +228,12 @@ _QUERY_STOP = {
 
 def _content_terms(q: str) -> list[str]:
     raw = [t for t in q.split(" ") if t]
-    terms = [t for t in raw if t not in _QUERY_STOP and len(t) >= 3]
-    return terms or raw
+    terms = [
+        t
+        for t in raw
+        if t not in _QUERY_STOP and len(t) >= 3 and not _YEAR_RE.fullmatch(t)
+    ]
+    return terms or [t for t in raw if not _YEAR_RE.fullmatch(t)] or raw
 
 
 _YEAR_RE = re.compile(r"(?:19|20)\d{2}")
@@ -270,6 +318,29 @@ _GENERIC_CLAIM = frozenset(
 
 def query_years(query: str) -> list[int]:
     return [int(m) for m in _YEAR_RE.findall(normalize_query(query))]
+
+
+def years_out_of_corpus(
+    conn: sqlite3.Connection,
+    query: str,
+    company: str | None = None,
+) -> bool:
+    years = query_years(query)
+    if not years:
+        return False
+    sql = (
+        "SELECT MIN(year) AS mn, MAX(year) AS mx FROM reports "
+        "WHERE COALESCE(is_duplicate, 0) = 0 AND year IS NOT NULL"
+    )
+    params: list[Any] = []
+    if company:
+        sql += " AND company=?"
+        params.append(company)
+    row = conn.execute(sql, params).fetchone()
+    if not row or row["mn"] is None:
+        return False
+    lo, hi = int(row["mn"]), int(row["mx"])
+    return any(y < lo or y > hi for y in years)
 
 
 def _strip_generic(part: str) -> str:

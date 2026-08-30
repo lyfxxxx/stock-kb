@@ -349,9 +349,9 @@ def test_year_out_of_corpus_and_needle_grounding(conn):
         "VALUES('海底捞','annual','zh',2024,'2024年报','/a.pdf','ok')"
     )
     conn.commit()
-    assert vector._year_out_of_corpus(conn, "海底捞 2026 年营业收入", "海底捞") is True
-    assert vector._year_out_of_corpus(conn, "海底捞 2024 年营业收入", "海底捞") is False
-    assert vector._year_out_of_corpus(conn, "海底捞在火星开了多少家店", "海底捞") is False
+    assert search.years_out_of_corpus(conn, "海底捞 2026 年营业收入", "海底捞") is True
+    assert search.years_out_of_corpus(conn, "海底捞 2024 年营业收入", "海底捞") is False
+    assert search.years_out_of_corpus(conn, "海底捞在火星开了多少家店", "海底捞") is False
     assert vector._content_has_needle("火星基地规划", ["火星开"]) is False
     assert vector._content_has_needle("啄木鸟计划关店", ["啄木鸟"]) is True
     assert vector._content_has_needle("任意正文", []) is True

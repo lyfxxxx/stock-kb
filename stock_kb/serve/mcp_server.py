@@ -134,6 +134,13 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
             conn.close()
 
     @mcp.tool()
+    def route_query(question: str, company: str | None = None) -> dict[str, Any]:
+        """按 skill 规则判断该走哪把只读工具。科目数字用 get_indicators / get_financial_statements，经营叙述用 search_reports。"""
+        from stock_kb.route import route
+
+        return route(question, company=company)
+
+    @mcp.tool()
     def get_financial_statements(
         company: str,
         statement_type: str | None = None,
@@ -141,8 +148,9 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         period_type: str | None = None,
         keyword: str | None = None,
         limit: int = 100,
+        include_comparatives: bool = False,
     ) -> list[dict[str, Any]]:
-        """获取三大报表行项目。statement_type: income/balance/cashflow/equity。keyword 按科目名过滤（减值/已付股息/资本开支）。"""
+        """获取三大报表行项目。statement_type: income/balance/cashflow/equity。keyword 按科目名过滤（减值/已付股息/资本开支）。默认只要当年年报正文（r.year=s.year）；比较列需 include_comparatives=True。"""
         from stock_kb.textutil import to_simplified
 
         conn = _conn()
@@ -156,6 +164,7 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                 period_type=period_type,
                 keyword=kw or None,
                 limit=limit,
+                include_comparatives=include_comparatives,
             )
             for row in rows:
                 row["locator"] = f"{row['title']} 第{row['page_no']}页"

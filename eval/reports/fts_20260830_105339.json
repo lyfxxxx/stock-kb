@@ -1,0 +1,6943 @@
+{
+  "meta": {
+    "engine": "fts",
+    "top_k": 5,
+    "model": null,
+    "search_path": "mcp_compat",
+    "split": "freeze",
+    "questions_sha256": "6654d7c4804bde78e26f3e0726b81cbc6f989904e48a398339fa6d244277c092",
+    "questions_count": 80,
+    "db_size_bytes": 560631808,
+    "db_mtime": "2026-08-23T03:23:50.989889+00:00",
+    "duration_seconds": 0.511
+  },
+  "top_k": 5,
+  "model": null,
+  "summary": {
+    "retrieval": {
+      "keyword": {
+        "n": 20,
+        "recall_at_k": 0.8,
+        "recall_at_k_ci": [
+          0.584,
+          0.919
+        ],
+        "hit_at_1": 0.5,
+        "mrr": 0.613,
+        "ndcg": 0.614,
+        "precision_at_k": 0.17,
+        "negative_hit_rate": 0.55,
+        "negative_at_1_rate": 0.1,
+        "hybrid_fused_n": 0,
+        "error_tags": {
+          "page_near_miss": 4,
+          "year_mismatch": 13,
+          "negative_at_1": 2
+        }
+      },
+      "semantic": {
+        "n": 20,
+        "recall_at_k": 0.0,
+        "recall_at_k_ci": [
+          0.0,
+          0.161
+        ],
+        "hit_at_1": 0.0,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_rate": 0.0,
+        "negative_at_1_rate": 0.0,
+        "hybrid_fused_n": 0,
+        "error_tags": {}
+      },
+      "cross": {
+        "n": 6,
+        "recall_at_k": 0.167,
+        "recall_at_k_ci": [
+          0.03,
+          0.564
+        ],
+        "hit_at_1": 0.167,
+        "mrr": 0.167,
+        "ndcg": 0.167,
+        "precision_at_k": 0.033,
+        "negative_hit_rate": 0.0,
+        "negative_at_1_rate": 0.0,
+        "hybrid_fused_n": 0,
+        "error_tags": {
+          "year_mismatch": 4
+        }
+      },
+      "total": {
+        "n": 46,
+        "recall_at_k": 0.37,
+        "hit_at_1": 0.239,
+        "mrr": 0.288,
+        "ndcg": 0.289,
+        "precision_at_k": 0.078,
+        "negative_hit_rate": 0.239,
+        "negative_at_1_rate": 0.043,
+        "recall_at_k_ci": [
+          0.245,
+          0.514
+        ],
+        "hybrid_fused_n": 0,
+        "error_tags": {
+          "page_near_miss": 4,
+          "year_mismatch": 17,
+          "negative_at_1": 2
+        }
+      }
+    },
+    "retrieval_diag": {},
+    "structured": {
+      "n": 26,
+      "hit": 26,
+      "parse_hit": 26,
+      "field_match": 26,
+      "value_match": 26,
+      "source_match": 26,
+      "page_match": 26,
+      "unit_match": 26,
+      "currency_match": 26,
+      "value_total": 26,
+      "source_total": 26,
+      "page_total": 26,
+      "unit_total": 26,
+      "currency_total": 26,
+      "parse_total": 26
+    },
+    "indicator": {
+      "n": 0,
+      "hit": 0,
+      "value_match": 0,
+      "value_total": 0
+    },
+    "no_answer": {
+      "n": 0,
+      "empty": 0,
+      "nonempty": 0
+    },
+    "generation": {
+      "n": 8,
+      "auto_scored": 8,
+      "pending_manual": 0,
+      "material_complete": 8
+    }
+  },
+  "results": [
+    {
+      "id": "exact-001",
+      "type": "exact",
+      "question": "海底捞 2024 年营业收入是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2024年报",
+            "page": 142,
+            "table": "损益表",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2023年报",
+            "page": 278,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2024 年营业收入是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "Revenue 收入",
+            "value": 42754687.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 142,
+            "title": "2024年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Other income 其他收入",
+            "value": 635651.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 142,
+            "title": "2024年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Revenue 收入",
+            "value": 42754687.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 152,
+            "title": "2025年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Other income 其他收入",
+            "value": 635651.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 152,
+            "title": "2025年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-002",
+      "type": "exact",
+      "question": "海底捞 2024 年归母净利润（本公司拥有人应占年内溢利）是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2024年报",
+            "page": 143,
+            "table": "损益表",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2023年报",
+            "page": 278,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2024 年归母净利润（本公司拥有人应占年内溢利）是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 2,
+        "matched_rows": [
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": 4708084.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 143,
+            "title": "2024年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": 4708084.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 153,
+            "title": "2025年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-003",
+      "type": "exact",
+      "question": "海底捞 2023 年营业收入是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2023年报",
+            "page": 278,
+            "table": "损益表",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2022年报",
+            "page": 243,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2023 年营业收入是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "Revenue 收入",
+            "value": 41453348.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 278,
+            "title": "2023年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Other income 其他收入",
+            "value": 940781.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 278,
+            "title": "2023年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Revenue 收入",
+            "value": 41453348.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 142,
+            "title": "2024年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Other income 其他收入",
+            "value": 940781.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 142,
+            "title": "2024年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-004",
+      "type": "exact",
+      "question": "海底捞 2023 年归母净利润（本公司拥有人应占年内溢利）是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2023年报",
+            "page": 279,
+            "table": "损益表",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2024年报",
+            "page": 142,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2023 年归母净利润（本公司拥有人应占年内溢利）是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 3,
+        "matched_rows": [
+          {
+            "line_name_norm": "owners of the Company",
+            "value": 4499080.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 279,
+            "title": "2023年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": 4562834.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 279,
+            "title": "2023年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": 4499080.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 143,
+            "title": "2024年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-005",
+      "type": "exact",
+      "question": "海底捞 2021 年归母年内亏损（本公司拥有人应占）是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2021年报",
+            "page": 225,
+            "table": "损益表",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2020年报",
+            "page": 213,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2021 年归母年内亏损（本公司拥有人应占）是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": -4163175.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 225,
+            "title": "2021年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": -4145298.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 226,
+            "title": "2021年报",
+            "source_ok": true,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "owners of the Company 溢利（亏损）",
+            "value": -4163175.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 244,
+            "title": "2022年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": -4145298.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 244,
+            "title": "2022年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-006",
+      "type": "exact",
+      "question": "海底捞 2020 年营业收入是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2020年报",
+            "page": 213,
+            "table": "损益表",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2019年报",
+            "page": 197,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2020 年营业收入是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "Revenue 收入",
+            "value": 28614255.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 213,
+            "title": "2020年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Other income 其他收入",
+            "value": 360867.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 213,
+            "title": "2020年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Revenue 收入",
+            "value": 28614255.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 225,
+            "title": "2021年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Other income 其他收入",
+            "value": 360867.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 225,
+            "title": "2021年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-007",
+      "type": "exact",
+      "question": "海底捞 2024 年经营活动所得现金净额是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2024年报",
+            "page": 149,
+            "table": "现金流量表",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2025年报",
+            "page": 159,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2024 年经营活动所得现金净额是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 2,
+        "matched_rows": [
+          {
+            "line_name_norm": "Net cash from operating activities 经营活动所得现金净额",
+            "value": 7634465.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 149,
+            "title": "2024年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Net cash from operating activities 经营活动所得现金净额",
+            "value": 7634465.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 159,
+            "title": "2025年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-008",
+      "type": "exact",
+      "question": "海底捞 2023 年经营活动所得现金净额是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2023年报",
+            "page": 285,
+            "table": "现金流量表",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2024年报",
+            "page": 149,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2023 年经营活动所得现金净额是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 2,
+        "matched_rows": [
+          {
+            "line_name_norm": "Net cash from operating activities 经营活动所得现金净额",
+            "value": 9000350.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 285,
+            "title": "2023年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Net cash from operating activities 经营活动所得现金净额",
+            "value": 9000350.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 149,
+            "title": "2024年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-009",
+      "type": "exact",
+      "question": "海底捞 2024 年资产净值（Net Assets）是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2024年报",
+            "page": 145,
+            "table": "综合财务状况表",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2025年报",
+            "page": 155,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2024 年资产净值（Net Assets）是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "Net Current Assets 流动资产净值",
+            "value": 5920337.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 145,
+            "title": "2024年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Assets 资产净值",
+            "value": 10417496.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 145,
+            "title": "2024年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Net Current Assets 流动资产净值",
+            "value": 5920337.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 155,
+            "title": "2025年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Assets 资产净值",
+            "value": 10417496.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 155,
+            "title": "2025年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-010",
+      "type": "exact",
+      "question": "海底捞 2025 年营业收入是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2025年报",
+            "page": 152,
+            "table": "损益表",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2024年报",
+            "page": 142,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2025 年营业收入是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 2,
+        "matched_rows": [
+          {
+            "line_name_norm": "Revenue 收入",
+            "value": 43225355.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 152,
+            "title": "2025年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Other income 其他收入",
+            "value": 580505.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 152,
+            "title": "2025年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-011",
+      "type": "exact",
+      "question": "百胜中国 2025 年 Total revenues 是多少？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 153,
+            "table": "Consolidated Statements of Income",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2024_HK_Annual_Report",
+            "page": 151,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国 2025 年 Total revenues 是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 2,
+        "matched_rows": [
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 11797.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 112,
+            "title": "百胜中国_2025_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total revenues",
+            "value": 11797.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 153,
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-012",
+      "type": "exact",
+      "question": "百胜中国 2025 年 Net Income（Yum China Holdings, Inc.）是多少？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 153,
+            "table": "Consolidated Statements of Income",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2024_HK_Annual_Report",
+            "page": 151,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国 2025 年 Net Income（Yum China Holdings, Inc.）是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 2,
+        "matched_rows": [
+          {
+            "line_name_norm": "NetIncome—YumChinaHoldings,Inc. $",
+            "value": 929.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 112,
+            "title": "百胜中国_2025_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Income — Yum China Holdings, Inc. $",
+            "value": 929.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 153,
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-013",
+      "type": "exact",
+      "question": "百胜中国 2024 年 Total revenues 是多少？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2024_HK_Annual_Report",
+            "page": 151,
+            "table": "Consolidated Statements of Income",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 153,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国 2024 年 Total revenues 是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 11303.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 110,
+            "title": "百胜中国_2024_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total revenues",
+            "value": 11303.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 151,
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 11303.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 112,
+            "title": "百胜中国_2025_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total revenues",
+            "value": 11303.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 153,
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-014",
+      "type": "exact",
+      "question": "百胜中国 2024 年 Net Income（Yum China Holdings, Inc.）是多少？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2024_HK_Annual_Report",
+            "page": 151,
+            "table": "Consolidated Statements of Income",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 153,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国 2024 年 Net Income（Yum China Holdings, Inc.）是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "NetIncome—YumChinaHoldings,Inc. $",
+            "value": 911.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 110,
+            "title": "百胜中国_2024_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Income — Yum China Holdings, Inc. $",
+            "value": 911.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 151,
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "NetIncome—YumChinaHoldings,Inc. $",
+            "value": 911.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 112,
+            "title": "百胜中国_2025_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Income — Yum China Holdings, Inc. $",
+            "value": 911.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 153,
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-015",
+      "type": "exact",
+      "question": "百胜中国 2023 年 Total revenues 是多少？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2023_HK_Annual_Report",
+            "page": 147,
+            "table": "Consolidated Statements of Income",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2024_HK_Annual_Report",
+            "page": 151,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国 2023 年 Total revenues 是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 6,
+        "matched_rows": [
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 10978.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 109,
+            "title": "百胜中国_2023_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total revenues",
+            "value": 10978.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 147,
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 10978.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 110,
+            "title": "百胜中国_2024_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total revenues",
+            "value": 10978.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 151,
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 10978.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 112,
+            "title": "百胜中国_2025_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total revenues",
+            "value": 10978.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 153,
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-016",
+      "type": "exact",
+      "question": "百胜中国 2023 年 Net Income（Yum China Holdings, Inc.）是多少？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2023_HK_Annual_Report",
+            "page": 147,
+            "table": "Consolidated Statements of Income",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2024_HK_Annual_Report",
+            "page": 151,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国 2023 年 Net Income（Yum China Holdings, Inc.）是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 6,
+        "matched_rows": [
+          {
+            "line_name_norm": "NetIncome—YumChinaHoldings,Inc. $",
+            "value": 827.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 109,
+            "title": "百胜中国_2023_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Income — Yum China Holdings, Inc. $",
+            "value": 827.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 147,
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "NetIncome—YumChinaHoldings,Inc. $",
+            "value": 827.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 110,
+            "title": "百胜中国_2024_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Income — Yum China Holdings, Inc. $",
+            "value": 827.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 151,
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "NetIncome—YumChinaHoldings,Inc. $",
+            "value": 827.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 112,
+            "title": "百胜中国_2025_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Income — Yum China Holdings, Inc. $",
+            "value": 827.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 153,
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-017",
+      "type": "exact",
+      "question": "百胜中国 2020 年 Total revenues 是多少？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2020_Annual_Report",
+            "page": 200,
+            "table": "Consolidated Statements of Income",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2021_Annual_Report",
+            "page": 194,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国 2020 年 Total revenues 是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 3,
+        "matched_rows": [
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 8263.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 200,
+            "title": "百胜中国_2020_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 8263.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 194,
+            "title": "百胜中国_2021_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 8263.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 217,
+            "title": "百胜中国_2022_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-018",
+      "type": "exact",
+      "question": "百胜中国 2024 年 Total Assets 是多少？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2024_HK_Annual_Report",
+            "page": 154,
+            "table": "Consolidated Balance Sheets",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 156,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国 2024 年 Total Assets 是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "TotalAssets",
+            "value": 11121.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 113,
+            "title": "百胜中国_2024_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total Assets",
+            "value": 11121.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 154,
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "TotalAssets",
+            "value": 11121.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 115,
+            "title": "百胜中国_2025_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total Assets",
+            "value": 11121.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 156,
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-019",
+      "type": "exact",
+      "question": "百胜中国 2024 年经营活动现金流净额（Net Cash Provided by Operating Activities）是多少？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2024_HK_Annual_Report",
+            "page": 153,
+            "table": "Consolidated Statements of Cash Flows",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 155,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国 2024 年经营活动现金流净额（Net Cash Provided by Operating Activities）是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "NetCashProvidedbyOperatingActivities",
+            "value": 1419.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 112,
+            "title": "百胜中国_2024_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Cash Provided by Operating Activities",
+            "value": 1419.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 153,
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "NetCashProvidedbyOperatingActivities",
+            "value": 1419.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 114,
+            "title": "百胜中国_2025_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Cash Provided by Operating Activities",
+            "value": 1419.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 155,
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-020",
+      "type": "exact",
+      "question": "百胜中国 2022 年 Total revenues 是多少？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2022_HK_Annual_Report",
+            "page": 150,
+            "table": "Consolidated Statements of Income",
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2023_HK_Annual_Report",
+            "page": 147,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国 2022 年 Total revenues 是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 6,
+        "matched_rows": [
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 9569.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 217,
+            "title": "百胜中国_2022_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total revenues",
+            "value": 9569.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 150,
+            "title": "百胜中国_2022_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 9569.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 109,
+            "title": "百胜中国_2023_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total revenues",
+            "value": 9569.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 147,
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Totalrevenues",
+            "value": 9569.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 110,
+            "title": "百胜中国_2024_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total revenues",
+            "value": 9569.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 151,
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "keyword-001",
+      "type": "keyword",
+      "question": "海底捞 翻台率",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 1.0,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": false,
+        "negative_ranks": [
+          2
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 3925,
+            "company": "海底捞",
+            "title": "海底捞研报-国信-202502",
+            "page": 19,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 4025,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 23,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 3926,
+            "company": "海底捞",
+            "title": "海底捞研报-国信-202502",
+            "page": 20,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 3970,
+            "company": "海底捞",
+            "title": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 22,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 4210,
+            "company": "海底捞",
+            "title": "研报-浦银国际-2024-翻台率估值承压",
+            "page": 1,
+            "year": 2024,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "海底捞研报-国信-202502",
+            "page": 19,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 23,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "翻台率",
+        "hybrid_fused": false,
+        "error_tags": [
+          "page_near_miss",
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-002",
+      "type": "keyword",
+      "question": "海底捞 同店销售",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 1.0,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": false,
+        "negative_ranks": [
+          5
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 4111,
+            "company": "海底捞",
+            "title": "研报-国信证券HK-2021-餐饮业复苏中",
+            "page": 4,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 4214,
+            "company": "海底捞",
+            "title": "研报-浦银国际-2024-翻台率估值承压",
+            "page": 5,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 3970,
+            "company": "海底捞",
+            "title": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 22,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 825,
+            "company": "海底捞",
+            "title": "2019中报",
+            "page": 15,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 925,
+            "company": "海底捞",
+            "title": "2019年报",
+            "page": 21,
+            "year": 2019,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券HK-2021-餐饮业复苏中",
+            "page": 4,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2019年报",
+            "page": 21,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "同店销售",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-003",
+      "type": "keyword",
+      "question": "海底捞 门店净增",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 4,
+        "mrr": 0.25,
+        "ndcg": 0.43068,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": false,
+        "negative_ranks": [
+          3
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 3915,
+            "company": "海底捞",
+            "title": "海底捞研报-国信-202502",
+            "page": 9,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 4159,
+            "company": "海底捞",
+            "title": "研报-招银证券-2024-2024H1业绩点评",
+            "page": 2,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 4147,
+            "company": "海底捞",
+            "title": "研报-平安证券-2022-中报点评疫情关店承压",
+            "page": 1,
+            "year": 2022,
+            "language": "zh"
+          },
+          {
+            "page_id": 4024,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 22,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 3936,
+            "company": "海底捞",
+            "title": "海底捞研报-国信-202502",
+            "page": 30,
+            "year": 2025,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 22,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-平安证券-2022-中报点评疫情关店承压",
+            "page": 1,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "门店净增",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-004",
+      "type": "keyword",
+      "question": "海底捞 减值",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 3392,
+            "company": "海底捞",
+            "title": "2024年报",
+            "page": 136,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 3766,
+            "company": "海底捞",
+            "title": "2025年报",
+            "page": 146,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 3028,
+            "company": "海底捞",
+            "title": "2023年报",
+            "page": 272,
+            "year": 2023,
+            "language": "zh"
+          },
+          {
+            "page_id": 3801,
+            "company": "海底捞",
+            "title": "2025年报",
+            "page": 181,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 1143,
+            "company": "海底捞",
+            "title": "2019年报",
+            "page": 239,
+            "year": 2019,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "2022年报",
+            "page": 285,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "2022年报",
+            "page": 331,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2021年报",
+            "page": 264,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "减值",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-005",
+      "type": "keyword",
+      "question": "海底捞 客单价",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 1.0,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": false,
+        "negative_ranks": [
+          4
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 4026,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 24,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 3925,
+            "company": "海底捞",
+            "title": "海底捞研报-国信-202502",
+            "page": 19,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 3980,
+            "company": "海底捞",
+            "title": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 32,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 4204,
+            "company": "海底捞",
+            "title": "研报-浙商证券-2023-从成长到坚韧餐饮王者",
+            "page": 12,
+            "year": 2023,
+            "language": "zh"
+          },
+          {
+            "page_id": 3909,
+            "company": "海底捞",
+            "title": "海底捞研报-国信-202502",
+            "page": 3,
+            "year": 2025,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 24,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-浙商证券-2023-从成长到坚韧餐饮王者",
+            "page": 12,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "客单价",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-006",
+      "type": "keyword",
+      "question": "海底捞 股息",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 972,
+            "company": "海底捞",
+            "title": "2019年报",
+            "page": 68,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 1416,
+            "company": "海底捞",
+            "title": "2020年报",
+            "page": 72,
+            "year": 2020,
+            "language": "zh"
+          },
+          {
+            "page_id": 2825,
+            "company": "海底捞",
+            "title": "2023年报",
+            "page": 69,
+            "year": 2023,
+            "language": "zh"
+          },
+          {
+            "page_id": 2331,
+            "company": "海底捞",
+            "title": "2022年报",
+            "page": 71,
+            "year": 2022,
+            "language": "zh"
+          },
+          {
+            "page_id": 1873,
+            "company": "海底捞",
+            "title": "2021年报",
+            "page": 73,
+            "year": 2021,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "2024年报",
+            "page": 151,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "2024年报",
+            "page": 205,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2019年报",
+            "page": 205,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "股息",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-007",
+      "type": "keyword",
+      "question": "海底捞 开店",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 0.61315,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 4035,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 33,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 4193,
+            "company": "海底捞",
+            "title": "研报-浙商证券-2023-从成长到坚韧餐饮王者",
+            "page": 1,
+            "year": 2023,
+            "language": "zh"
+          },
+          {
+            "page_id": 4052,
+            "company": "海底捞",
+            "title": "研报-国信证券-2023-降本增效静待新一轮增长",
+            "page": 1,
+            "year": 2023,
+            "language": "zh"
+          },
+          {
+            "page_id": 4111,
+            "company": "海底捞",
+            "title": "研报-国信证券HK-2021-餐饮业复苏中",
+            "page": 4,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 4134,
+            "company": "海底捞",
+            "title": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 19,
+            "year": 2019,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "2024中报",
+            "page": 12,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 33,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2020年报",
+            "page": 17,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "开店",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-008",
+      "type": "keyword",
+      "question": "海底捞 员工激励",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": true,
+        "negative_ranks": [
+          1
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 3963,
+            "company": "海底捞",
+            "title": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 15,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 4041,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 39,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 4140,
+            "company": "海底捞",
+            "title": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 25,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 4126,
+            "company": "海底捞",
+            "title": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 11,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 3972,
+            "company": "海底捞",
+            "title": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 24,
+            "year": 2019,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 25,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 15,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "员工激励",
+        "hybrid_fused": false,
+        "error_tags": [
+          "negative_at_1",
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-009",
+      "type": "keyword",
+      "question": "海底捞 师徒制",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 1.0,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": false,
+        "negative_ranks": [
+          3
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 4126,
+            "company": "海底捞",
+            "title": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 11,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 4127,
+            "company": "海底捞",
+            "title": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 12,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 138,
+            "company": "海底捞",
+            "title": "2018年报",
+            "page": 138,
+            "year": 2018,
+            "language": "zh"
+          },
+          {
+            "page_id": 3968,
+            "company": "海底捞",
+            "title": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 20,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 3919,
+            "company": "海底捞",
+            "title": "海底捞研报-国信-202502",
+            "page": 13,
+            "year": 2025,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 11,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2018年报",
+            "page": 138,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "师徒制",
+        "hybrid_fused": false,
+        "error_tags": [
+          "page_near_miss",
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-010",
+      "type": "keyword",
+      "question": "海底捞 阿米巴",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 0.87722,
+        "precision_at_k": 0.4,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": false,
+        "negative_ranks": [
+          2
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 4031,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 29,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 4127,
+            "company": "海底捞",
+            "title": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 12,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 4023,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 21,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 4029,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 27,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 4022,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 20,
+            "year": 2021,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 27,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 29,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 12,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "阿米巴",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-011",
+      "type": "keyword",
+      "question": "海底捞 现金流",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 4,
+        "mrr": 0.25,
+        "ndcg": 0.43068,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 4048,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 46,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 4057,
+            "company": "海底捞",
+            "title": "研报-国信证券-2023-降本增效静待新一轮增长",
+            "page": 6,
+            "year": 2023,
+            "language": "zh"
+          },
+          {
+            "page_id": 4162,
+            "company": "海底捞",
+            "title": "研报-招银证券-2024-2024H1业绩点评",
+            "page": 5,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 4064,
+            "company": "海底捞",
+            "title": "研报-国信证券-2025-收入利润再创新高",
+            "page": 5,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 4043,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 41,
+            "year": 2021,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2025-收入利润再创新高",
+            "page": 5,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 2,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "现金流",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-012",
+      "type": "keyword",
+      "question": "海底捞 资本开支",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 2,
+        "mrr": 0.5,
+        "ndcg": 0.63093,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": false,
+        "negative_ranks": [
+          3
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 1218,
+            "company": "海底捞",
+            "title": "2019年报",
+            "page": 314,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 4041,
+            "company": "海底捞",
+            "title": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 39,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 3495,
+            "company": "海底捞",
+            "title": "2024年报",
+            "page": 239,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 3131,
+            "company": "海底捞",
+            "title": "2023年报",
+            "page": 375,
+            "year": 2023,
+            "language": "zh"
+          },
+          {
+            "page_id": 3874,
+            "company": "海底捞",
+            "title": "2025年报",
+            "page": 254,
+            "year": 2025,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 39,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2024年报",
+            "page": 239,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "资本开支",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-013",
+      "type": "keyword",
+      "question": "百胜中国 同店销售",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 4,
+        "mrr": 0.25,
+        "ndcg": 0.43068,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": true,
+        "negative_ranks": [
+          1
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 11358,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 200,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11969,
+            "company": "百胜中国",
+            "title": "国信证券_百胜中国_2023年报费用管控效果显著",
+            "page": 3,
+            "year": 2023,
+            "language": "zh"
+          },
+          {
+            "page_id": 11367,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 209,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11998,
+            "company": "百胜中国",
+            "title": "国信证券_百胜中国_同店销售增速重新转正",
+            "page": 1,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11258,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 100,
+            "year": null,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "国信证券_百胜中国_同店销售增速重新转正",
+            "page": 1,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 200,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "同店销售",
+        "hybrid_fused": false,
+        "error_tags": [
+          "negative_at_1"
+        ]
+      }
+    },
+    {
+      "id": "keyword-014",
+      "type": "keyword",
+      "question": "百胜中国 门店净增",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 2,
+        "mrr": 0.5,
+        "ndcg": 0.63093,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": false,
+        "negative_ranks": [
+          4
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 11999,
+            "company": "百胜中国",
+            "title": "国信证券_百胜中国_同店销售增速重新转正",
+            "page": 2,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11991,
+            "company": "百胜中国",
+            "title": "国信证券_百胜中国_2024Q4同店降幅收窄",
+            "page": 2,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 11998,
+            "company": "百胜中国",
+            "title": "国信证券_百胜中国_同店销售增速重新转正",
+            "page": 1,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11984,
+            "company": "百胜中国",
+            "title": "国信证券_百胜中国_2024Q3经营数据改善",
+            "page": 3,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 11982,
+            "company": "百胜中国",
+            "title": "国信证券_百胜中国_2024Q3经营数据改善",
+            "page": 1,
+            "year": 2024,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "国信证券_百胜中国_2024Q4同店降幅收窄",
+            "page": 2,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "国信证券_百胜中国_2024Q3经营数据改善",
+            "page": 3,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "门店净增",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "keyword-015",
+      "type": "keyword",
+      "question": "百胜中国 资本开支",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 1.0,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 11964,
+            "company": "百胜中国",
+            "title": "华源证券研报",
+            "page": 1,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11490,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 332,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11460,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 302,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11984,
+            "company": "百胜中国",
+            "title": "国信证券_百胜中国_2024Q3经营数据改善",
+            "page": 3,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 12002,
+            "company": "百胜中国",
+            "title": "国信证券_百胜中国_同店销售增速重新转正",
+            "page": 5,
+            "year": null,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "华源证券研报",
+            "page": 1,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "国信证券_百胜中国_2023年报费用管控效果显著",
+            "page": 6,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "资本开支",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "keyword-016",
+      "type": "keyword",
+      "question": "百胜中国 股息",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 11227,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 69,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11534,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 376,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11378,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 220,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11509,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 351,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11183,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 25,
+            "year": null,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "国信证券_百胜中国_2024Q4同店降幅收窄",
+            "page": 4,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2025_Annual_Report",
+            "page": 62,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "股息",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "keyword-017",
+      "type": "keyword",
+      "question": "百胜中国 品牌布局",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 1.0,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 11952,
+            "company": "百胜中国",
+            "title": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 4,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 12031,
+            "company": "百胜中国",
+            "title": "研报参考清单_可自行下载",
+            "page": 1,
+            "year": null,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 4,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 134,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "品牌布局",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "keyword-018",
+      "type": "keyword",
+      "question": "百胜中国 数字化",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 1.0,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": true,
+        "negative_hit_at_1": false,
+        "negative_ranks": [
+          3
+        ],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 11958,
+            "company": "百胜中国",
+            "title": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 10,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 11324,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 166,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11319,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 161,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11416,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 258,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11959,
+            "company": "百胜中国",
+            "title": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 11,
+            "year": 2024,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 10,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 161,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "数字化",
+        "hybrid_fused": false,
+        "error_tags": [
+          "page_near_miss"
+        ]
+      }
+    },
+    {
+      "id": "keyword-019",
+      "type": "keyword",
+      "question": "百胜中国 KCOFFEE",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 2,
+        "mrr": 0.5,
+        "ndcg": 0.63093,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 10017,
+            "company": "百胜中国",
+            "title": "百胜中国_2023_Annual_Report",
+            "page": 5,
+            "year": 2023,
+            "language": "en"
+          },
+          {
+            "page_id": 10393,
+            "company": "百胜中国",
+            "title": "百胜中国_2024_Annual_Report",
+            "page": 3,
+            "year": 2024,
+            "language": "en"
+          },
+          {
+            "page_id": 10948,
+            "company": "百胜中国",
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "page": 7,
+            "year": 2025,
+            "language": "en"
+          },
+          {
+            "page_id": 10403,
+            "company": "百胜中国",
+            "title": "百胜中国_2024_Annual_Report",
+            "page": 13,
+            "year": 2024,
+            "language": "en"
+          },
+          {
+            "page_id": 10563,
+            "company": "百胜中国",
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "page": 7,
+            "year": 2024,
+            "language": "en"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2024_Annual_Report",
+            "page": 3,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 54,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "KCOFFEE",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "keyword-020",
+      "type": "keyword",
+      "question": "百胜中国 外卖",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 0.61315,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 11342,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 184,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11291,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 133,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11320,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 162,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11464,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 306,
+            "year": null,
+            "language": "zh"
+          },
+          {
+            "page_id": 11211,
+            "company": "百胜中国",
+            "title": "百胜中国_招股书_中文版",
+            "page": 53,
+            "year": null,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 166,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 184,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 45,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "外卖",
+        "hybrid_fused": false,
+        "error_tags": [
+          "page_near_miss"
+        ]
+      }
+    },
+    {
+      "id": "semantic-001",
+      "type": "semantic",
+      "question": "海底捞赚到的利润有多少能变成真金白银？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 40,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 41,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券-2025-收入利润再创新高",
+            "page": 5,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "海底捞研报-国信-202502",
+            "page": 14,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞赚到的利润有多少能变成真金白银？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-002",
+      "type": "semantic",
+      "question": "海底捞把门店铺到什么程度才算合适？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 33,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券-2023-降本增效静待新一轮增长",
+            "page": 3,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券-2023-降本增效静待新一轮增长",
+            "page": 5,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-浦银国际-2024-翻台率估值承压",
+            "page": 1,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞把门店铺到什么程度才算合适？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-003",
+      "type": "semantic",
+      "question": "海底捞怎么把开销打下去？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "研报-东方证券-2023-2022年报点评利润改善重启扩张",
+            "page": 1,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "研报-招银证券-2024-2024H1业绩点评",
+            "page": 1,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 24,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞怎么把开销打下去？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-004",
+      "type": "semantic",
+      "question": "一线员工为什么愿意把服务做到极致？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 25,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 39,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 11,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 15,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "一线员工为什么愿意把服务做到极致？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-005",
+      "type": "semantic",
+      "question": "客人来得勤不勤、一桌坐得转不转？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "海底捞研报-国信-202502",
+            "page": 19,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "研报-浦银国际-2024-翻台率估值承压",
+            "page": 1,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券HK-2021-餐饮业复苏中",
+            "page": 4,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 24,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "客人来得勤不勤、一桌坐得转不转？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-006",
+      "type": "semantic",
+      "question": "一个店长如何带出下一家店的负责人？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 26,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 28,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 27,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 15,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "一个店长如何带出下一家店的负责人？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-007",
+      "type": "semantic",
+      "question": "座位周转是在变快还是变慢？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2023-降本增效静待新一轮增长",
+            "page": 4,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 22,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "海底捞研报-国信-202502",
+            "page": 20,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-国信证券HK-2021-餐饮业复苏中",
+            "page": 4,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "座位周转是在变快还是变慢？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-008",
+      "type": "semantic",
+      "question": "海底捞的啄木鸟计划与门店优化",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "海底捞研报-国信-202502",
+            "page": 14,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "研报-平安证券-2022-中报点评疫情关店承压",
+            "page": 1,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "研报-浙商证券-2023-从成长到坚韧餐饮王者",
+            "page": 8,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-国信证券-2023-降本增效静待新一轮增长",
+            "page": 3,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞的啄木鸟计划与门店优化",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-009",
+      "type": "semantic",
+      "question": "赚一块钱能剩多少，近几年怎么变？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "海底捞研报-国信-202502",
+            "page": 20,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 23,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 27,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 22,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "赚一块钱能剩多少，近几年怎么变？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-010",
+      "type": "semantic",
+      "question": "客人为一餐花多少钱，和来得频不频，哪个更撑收入？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "海底捞研报-国信-202502",
+            "page": 19,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 24,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 32,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-国盛证券-2019-利益分享体系火锅巨头",
+            "page": 11,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "客人为一餐花多少钱，和来得频不频，哪个更撑收入？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-011",
+      "type": "semantic",
+      "question": "客人愿不愿意再来这家快餐店？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "国信证券_百胜中国_同店销售增速重新转正",
+            "page": 1,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "国信证券_百胜中国_2024Q4同店降幅收窄",
+            "page": 2,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "百胜中国_2023_HK_Annual_Report",
+            "page": 76,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 4,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "客人愿不愿意再来这家快餐店？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-012",
+      "type": "semantic",
+      "question": "百胜中国怎么把开销按住？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "国信证券_百胜中国_2023年报费用管控效果显著",
+            "page": 4,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "国信证券_百胜中国_2023年报费用管控效果显著",
+            "page": 1,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "国信证券_百胜中国_同店销售增速重新转正",
+            "page": 1,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国怎么把开销按住？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-013",
+      "type": "semantic",
+      "question": "肯德基之外还有哪些牌子在撑场面？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 4,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 10,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 11,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 134,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "肯德基之外还有哪些牌子在撑场面？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-014",
+      "type": "semantic",
+      "question": "百胜中国的竞争格局",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 134,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 4,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 10,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国的竞争格局",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-015",
+      "type": "semantic",
+      "question": "新店主要开在什么地方、开给谁？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "海通国际_百胜中国_2025投资者日_创新与提效双轮驱动",
+            "page": 1,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "国信证券_百胜中国_2024Q4同店降幅收窄",
+            "page": 2,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "国信证券_百胜中国_2024Q3经营数据改善",
+            "page": 1,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 159,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "新店主要开在什么地方、开给谁？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-016",
+      "type": "semantic",
+      "question": "除了炸鸡和披萨，热饮这条线怎么走？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2024_Annual_Report",
+            "page": 3,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 7,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 54,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "除了炸鸡和披萨，热饮这条线怎么走？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-017",
+      "type": "semantic",
+      "question": "不到店点单、送到家，哪头更重要？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 184,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 10,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 166,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 134,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "不到店点单、送到家，哪头更重要？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-018",
+      "type": "semantic",
+      "question": "利润薄不薄，最近是在好转吗？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "海通国际_百胜中国_2025Q2经营利润创新高",
+            "page": 1,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "国信证券_百胜中国_2024Q4同店降幅收窄",
+            "page": 3,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "华源证券研报",
+            "page": 1,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "国信证券_百胜中国_2023年报费用管控效果显著",
+            "page": 3,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "利润薄不薄，最近是在好转吗？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-019",
+      "type": "semantic",
+      "question": "股东能从公司拿回现金吗？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "国信证券_百胜中国_2024Q4同店降幅收窄",
+            "page": 4,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "百胜中国_2025_Annual_Report",
+            "page": 62,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "国信证券_百胜中国_同店销售增速重新转正",
+            "page": 1,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "股东能从公司拿回现金吗？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "semantic-020",
+      "type": "semantic",
+      "question": "不到店能不能吃到？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 166,
+            "table": null,
+            "required": true,
+            "relevance": 3,
+            "authority": ""
+          },
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 45,
+            "table": null,
+            "required": false,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 3,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "不到店能不能吃到？",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "cross-001",
+      "type": "cross",
+      "question": "Yum China 2025 operating profit",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 10860,
+            "company": "百胜中国",
+            "title": "百胜中国_2025_Annual_Report",
+            "page": 89,
+            "year": 2025,
+            "language": "en"
+          },
+          {
+            "page_id": 10862,
+            "company": "百胜中国",
+            "title": "百胜中国_2025_Annual_Report",
+            "page": 91,
+            "year": 2025,
+            "language": "en"
+          },
+          {
+            "page_id": 11025,
+            "company": "百胜中国",
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "page": 84,
+            "year": 2025,
+            "language": "en"
+          },
+          {
+            "page_id": 11023,
+            "company": "百胜中国",
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "page": 82,
+            "year": 2025,
+            "language": "en"
+          },
+          {
+            "page_id": 10857,
+            "company": "百胜中国",
+            "title": "百胜中国_2025_Annual_Report",
+            "page": 86,
+            "year": 2025,
+            "language": "en"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 153,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "query": "Yum China 2025 operating profit",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 2,
+        "matched_rows": [
+          {
+            "line_name_norm": "OperatingProfit",
+            "value": 1290.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 112,
+            "title": "百胜中国_2025_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Operating Profit",
+            "value": 1290.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 153,
+            "title": "百胜中国_2025_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "cross-002",
+      "type": "cross",
+      "question": "Yum China 2022 net income",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 5,
+        "mrr": 0.2,
+        "ndcg": 0.38685,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 10098,
+            "company": "百胜中国",
+            "title": "百胜中国_2023_Annual_Report",
+            "page": 86,
+            "year": 2023,
+            "language": "en"
+          },
+          {
+            "page_id": 9744,
+            "company": "百胜中国",
+            "title": "百胜中国_2022_Annual_Report",
+            "page": 218,
+            "year": 2022,
+            "language": "en"
+          },
+          {
+            "page_id": 9952,
+            "company": "百胜中国",
+            "title": "百胜中国_2022_HK_Annual_Report",
+            "page": 151,
+            "year": 2022,
+            "language": "en"
+          },
+          {
+            "page_id": 9743,
+            "company": "百胜中国",
+            "title": "百胜中国_2022_Annual_Report",
+            "page": 217,
+            "year": 2022,
+            "language": "en"
+          },
+          {
+            "page_id": 9951,
+            "company": "百胜中国",
+            "title": "百胜中国_2022_HK_Annual_Report",
+            "page": 150,
+            "year": 2022,
+            "language": "en"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2022_HK_Annual_Report",
+            "page": 150,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "query": "Yum China 2022 net income",
+        "hybrid_fused": false,
+        "error_tags": [
+          "page_near_miss",
+          "year_mismatch"
+        ]
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 6,
+        "matched_rows": [
+          {
+            "line_name_norm": "NetIncome—YumChinaHoldings,Inc. $",
+            "value": 442.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 217,
+            "title": "百胜中国_2022_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Income — Yum China Holdings, Inc. $",
+            "value": 442.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 150,
+            "title": "百胜中国_2022_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "NetIncome—YumChinaHoldings,Inc. $",
+            "value": 442.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 109,
+            "title": "百胜中国_2023_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Income — Yum China Holdings, Inc. $",
+            "value": 442.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 147,
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "NetIncome—YumChinaHoldings,Inc. $",
+            "value": 442.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 110,
+            "title": "百胜中国_2024_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Net Income — Yum China Holdings, Inc. $",
+            "value": 442.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 151,
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "cross-003",
+      "type": "cross",
+      "question": "Yum China 2023 total assets",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 3,
+        "mrr": 0.33333,
+        "ndcg": 0.5,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 10124,
+            "company": "百胜中国",
+            "title": "百胜中国_2023_Annual_Report",
+            "page": 112,
+            "year": 2023,
+            "language": "en"
+          },
+          {
+            "page_id": 10503,
+            "company": "百胜中国",
+            "title": "百胜中国_2024_Annual_Report",
+            "page": 113,
+            "year": 2024,
+            "language": "en"
+          },
+          {
+            "page_id": 10329,
+            "company": "百胜中国",
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "page": 150,
+            "year": 2023,
+            "language": "en"
+          },
+          {
+            "page_id": 10710,
+            "company": "百胜中国",
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "page": 154,
+            "year": 2024,
+            "language": "en"
+          },
+          {
+            "page_id": 10377,
+            "company": "百胜中国",
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "page": 198,
+            "year": 2023,
+            "language": "en"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2023_HK_Annual_Report",
+            "page": 150,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "query": "Yum China 2023 total assets",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "百万美元",
+        "expected_currency": "USD",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "TotalAssets",
+            "value": 12031.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 112,
+            "title": "百胜中国_2023_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total Assets",
+            "value": 12031.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 150,
+            "title": "百胜中国_2023_HK_Annual_Report",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "TotalAssets",
+            "value": 12031.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 113,
+            "title": "百胜中国_2024_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Total Assets",
+            "value": 12031.0,
+            "unit": "百万美元",
+            "currency": "USD",
+            "page_no": 154,
+            "title": "百胜中国_2024_HK_Annual_Report",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "cross-004",
+      "type": "cross",
+      "question": "海底捞 2019 年归母净利润（本公司拥有人应占年内溢利）是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2019年报",
+            "page": 197,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2019 年归母净利润（本公司拥有人应占年内溢利）是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": 2344711.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 197,
+            "title": "2019年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": 2343029.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 198,
+            "title": "2019年报",
+            "source_ok": true,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": 2344711.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 213,
+            "title": "2020年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": 2343029.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 214,
+            "title": "2020年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "cross-005",
+      "type": "cross",
+      "question": "海底捞 2022 年归母净利润（本公司拥有人应占年内溢利）是多少？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2022年报",
+            "page": 244,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2022 年归母净利润（本公司拥有人应占年内溢利）是多少？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 4,
+        "matched_rows": [
+          {
+            "line_name_norm": "owners of the Company 溢利（亏损）",
+            "value": 1374477.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 244,
+            "title": "2022年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          },
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": 1184856.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 244,
+            "title": "2022年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "owners of the Company",
+            "value": 1374477.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 279,
+            "title": "2023年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          },
+          {
+            "line_name_norm": "Owners of the Company 本公司拥有人",
+            "value": 1184856.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 279,
+            "title": "2023年报",
+            "source_ok": false,
+            "page_ok": false,
+            "source_row_match": false,
+            "value_ok": false,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "cross-006",
+      "type": "cross",
+      "question": "海底捞 2025 年 operating cash flow",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 3,
+        "mrr": 0.33333,
+        "ndcg": 0.5,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 3881,
+            "company": "海底捞",
+            "title": "2025年报",
+            "page": 261,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 3581,
+            "company": "海底捞",
+            "title": "2025中报",
+            "page": 55,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 3779,
+            "company": "海底捞",
+            "title": "2025年报",
+            "page": 159,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 3653,
+            "company": "海底捞",
+            "title": "2025年报",
+            "page": 33,
+            "year": 2025,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "2025年报",
+            "page": 159,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 2025 年 operating cash flow",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "structured": {
+        "hit": true,
+        "parse_hit": true,
+        "field_match": true,
+        "source_match": true,
+        "page_match": true,
+        "value_match": true,
+        "unit_match": true,
+        "currency_match": true,
+        "expected_unit": "千元",
+        "expected_currency": "CNY",
+        "matched_count": 1,
+        "matched_rows": [
+          {
+            "line_name_norm": "Net cash from operating activities 经营活动所得现金净额",
+            "value": 5664189.0,
+            "unit": "千元",
+            "currency": "CNY",
+            "page_no": 159,
+            "title": "2025年报",
+            "source_ok": true,
+            "page_ok": true,
+            "source_row_match": true,
+            "value_ok": true,
+            "unit_ok": true,
+            "currency_ok": true,
+            "row_pass": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "cross-007",
+      "type": "cross",
+      "question": "Yum China same-store sales trend",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 8339,
+            "company": "百胜中国",
+            "title": "百胜中国_2017_Annual_Report",
+            "page": 3,
+            "year": 2017,
+            "language": "en"
+          },
+          {
+            "page_id": 10473,
+            "company": "百胜中国",
+            "title": "百胜中国_2024_Annual_Report",
+            "page": 83,
+            "year": 2024,
+            "language": "en"
+          },
+          {
+            "page_id": 10856,
+            "company": "百胜中国",
+            "title": "百胜中国_2025_Annual_Report",
+            "page": 85,
+            "year": 2025,
+            "language": "en"
+          },
+          {
+            "page_id": 9443,
+            "company": "百胜中国",
+            "title": "百胜中国_2021_Annual_Report",
+            "page": 169,
+            "year": 2021,
+            "language": "en"
+          },
+          {
+            "page_id": 10094,
+            "company": "百胜中国",
+            "title": "百胜中国_2023_Annual_Report",
+            "page": 82,
+            "year": 2023,
+            "language": "en"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2023_HK_Annual_Report",
+            "page": 76,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_招股书_英文版",
+            "page": 206,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "Yum China same-store sales trend",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "cross-008",
+      "type": "cross",
+      "question": "Haidilao restaurant count 门店数量",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 2285,
+            "company": "海底捞",
+            "title": "2022年报",
+            "page": 25,
+            "year": 2022,
+            "language": "zh"
+          },
+          {
+            "page_id": 1721,
+            "company": "海底捞",
+            "title": "2021中报",
+            "page": 15,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 1717,
+            "company": "海底捞",
+            "title": "2021中报",
+            "page": 11,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 3012,
+            "company": "海底捞",
+            "title": "2023年报",
+            "page": 256,
+            "year": 2023,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 22,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-国信证券-2021-阿米巴模式师徒制",
+            "page": 24,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "Haidilao restaurant count 门店数量",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "cross-009",
+      "type": "cross",
+      "question": "Yum China dividends and buyback 股息与回购",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "国信证券_百胜中国_2024Q4同店降幅收窄",
+            "page": 4,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2025_Annual_Report",
+            "page": 62,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "Yum China dividends and buyback 股息与回购",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "cross-010",
+      "type": "cross",
+      "question": "海底捞 same-store sales 同店销售",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": true,
+        "rank": 1,
+        "mrr": 1.0,
+        "ndcg": 1.0,
+        "precision_at_k": 0.2,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 925,
+            "company": "海底捞",
+            "title": "2019年报",
+            "page": 21,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 825,
+            "company": "海底捞",
+            "title": "2019中报",
+            "page": 15,
+            "year": 2019,
+            "language": "zh"
+          },
+          {
+            "page_id": 19,
+            "company": "海底捞",
+            "title": "2018年报",
+            "page": 19,
+            "year": 2018,
+            "language": "zh"
+          },
+          {
+            "page_id": 3181,
+            "company": "海底捞",
+            "title": "2024中报",
+            "page": 19,
+            "year": 2024,
+            "language": "zh"
+          },
+          {
+            "page_id": 3546,
+            "company": "海底捞",
+            "title": "2025中报",
+            "page": 20,
+            "year": 2025,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "2019年报",
+            "page": 21,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "研报-国信证券HK-2021-餐饮业复苏中",
+            "page": 4,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞 same-store sales 同店销售",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "cross-011",
+      "type": "cross",
+      "question": "Yum China store count by year",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 10015,
+            "company": "百胜中国",
+            "title": "百胜中国_2023_Annual_Report",
+            "page": 3,
+            "year": 2023,
+            "language": "en"
+          },
+          {
+            "page_id": 8339,
+            "company": "百胜中国",
+            "title": "百胜中国_2017_Annual_Report",
+            "page": 3,
+            "year": 2017,
+            "language": "en"
+          },
+          {
+            "page_id": 9583,
+            "company": "百胜中国",
+            "title": "百胜中国_2022_Annual_Report",
+            "page": 57,
+            "year": 2022,
+            "language": "en"
+          },
+          {
+            "page_id": 9185,
+            "company": "百胜中国",
+            "title": "百胜中国_2020_Annual_Report",
+            "page": 171,
+            "year": 2020,
+            "language": "en"
+          },
+          {
+            "page_id": 8934,
+            "company": "百胜中国",
+            "title": "百胜中国_2019_Annual_Report",
+            "page": 148,
+            "year": 2019,
+            "language": "en"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "百胜中国_招股书_中文版",
+            "page": 15,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          },
+          {
+            "file": "2024_百胜中国_快餐业龙头多品牌布局",
+            "page": 4,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": 122,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "Yum China store count by year",
+        "hybrid_fused": false,
+        "error_tags": []
+      }
+    },
+    {
+      "id": "cross-012",
+      "type": "cross",
+      "question": "Haidilao table turnover rate 翻台率",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [
+          {
+            "page_id": 2772,
+            "company": "海底捞",
+            "title": "2023年报",
+            "page": 16,
+            "year": 2023,
+            "language": "zh"
+          },
+          {
+            "page_id": 3544,
+            "company": "海底捞",
+            "title": "2025中报",
+            "page": 18,
+            "year": 2025,
+            "language": "zh"
+          },
+          {
+            "page_id": 2276,
+            "company": "海底捞",
+            "title": "2022年报",
+            "page": 16,
+            "year": 2022,
+            "language": "zh"
+          },
+          {
+            "page_id": 1817,
+            "company": "海底捞",
+            "title": "2021年报",
+            "page": 17,
+            "year": 2021,
+            "language": "zh"
+          },
+          {
+            "page_id": 2673,
+            "company": "海底捞",
+            "title": "2023中报",
+            "page": 11,
+            "year": 2023,
+            "language": "zh"
+          }
+        ],
+        "expected_sources": [
+          {
+            "file": "研报-东吴证券-2019-管理体系深度解析",
+            "page": 22,
+            "table": null,
+            "required": true,
+            "relevance": 2,
+            "authority": ""
+          }
+        ],
+        "negatives": [
+          {
+            "file": "海底捞研报-国信-202502",
+            "page": 19,
+            "table": null,
+            "required": false,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "Haidilao table turnover rate 翻台率",
+        "hybrid_fused": false,
+        "error_tags": [
+          "year_mismatch"
+        ]
+      }
+    },
+    {
+      "id": "end2end-001",
+      "type": "end2end",
+      "question": "写海底捞笔记需要哪些材料和假设？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2025年报",
+            "page": null,
+            "table": null,
+            "required": true,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "写海底捞笔记需要哪些材料和假设？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "generation": {
+        "auto_scored": true,
+        "pending_manual": false,
+        "material_hit": 1,
+        "material_n": 1,
+        "missing": [],
+        "rubric": [
+          "必须覆盖三大报表和核心经营数据",
+          "关键数字必须带文件、页码或表名引用",
+          "研报预测与财报事实分离"
+        ]
+      }
+    },
+    {
+      "id": "end2end-002",
+      "type": "end2end",
+      "question": "写百胜中国笔记需要哪些材料？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2025_Annual_Report",
+            "page": null,
+            "table": null,
+            "required": true,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "写百胜中国笔记需要哪些材料？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "generation": {
+        "auto_scored": true,
+        "pending_manual": false,
+        "material_hit": 1,
+        "material_n": 1,
+        "missing": [],
+        "rubric": [
+          "覆盖中英文年报与港股美股口径差异",
+          "关键财务数字需标注来源年报与页码",
+          "同店销售与门店数据需区分财报事实和研报预测"
+        ]
+      }
+    },
+    {
+      "id": "end2end-003",
+      "type": "end2end",
+      "question": "海底捞与百胜中国同行对比需要哪些关键指标？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2025年报",
+            "page": null,
+            "table": null,
+            "required": true,
+            "relevance": 1,
+            "authority": ""
+          },
+          {
+            "file": "百胜中国_2025_Annual_Report",
+            "page": null,
+            "table": null,
+            "required": true,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞与百胜中国同行对比需要哪些关键指标？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "generation": {
+        "auto_scored": true,
+        "pending_manual": false,
+        "material_hit": 2,
+        "material_n": 2,
+        "missing": [],
+        "rubric": [
+          "列出可比指标：收入、利润率、翻台率/同店销售、门店数与资本开支",
+          "注明两家公司币种与单位差异",
+          "引用来源需落到具体年报或研报页"
+        ]
+      }
+    },
+    {
+      "id": "end2end-004",
+      "type": "end2end",
+      "question": "海底捞估值推演需要哪些材料和假设？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "研报-国信证券-2025-收入利润再创新高",
+            "page": null,
+            "table": null,
+            "required": true,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞估值推演需要哪些材料和假设？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "generation": {
+        "auto_scored": true,
+        "pending_manual": false,
+        "material_hit": 1,
+        "material_n": 1,
+        "missing": [],
+        "rubric": [
+          "包含盈利预测、翻台率/客单价/门店数假设",
+          "区分中性、乐观与悲观情景",
+          "引用研报预测时标注来源页"
+        ]
+      }
+    },
+    {
+      "id": "end2end-005",
+      "type": "end2end",
+      "question": "海底捞的风险与关键假设有哪些？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "研报-浦银国际-2024-翻台率估值承压",
+            "page": null,
+            "table": null,
+            "required": true,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞的风险与关键假设有哪些？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "generation": {
+        "auto_scored": true,
+        "pending_manual": false,
+        "material_hit": 1,
+        "material_n": 1,
+        "missing": [],
+        "rubric": [
+          "覆盖翻台率恢复不及预期、食品安全、扩张质量等风险",
+          "假设需可追溯至财报或研报依据"
+        ]
+      }
+    },
+    {
+      "id": "end2end-006",
+      "type": "end2end",
+      "question": "百胜中国的风险与关键假设有哪些？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2025_HK_Annual_Report",
+            "page": null,
+            "table": null,
+            "required": true,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国的风险与关键假设有哪些？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "generation": {
+        "auto_scored": true,
+        "pending_manual": false,
+        "material_hit": 1,
+        "material_n": 1,
+        "missing": [],
+        "rubric": [
+          "覆盖同店销售、加盟扩张、汇率与竞争等风险",
+          "材料需区分港股与美股披露口径"
+        ]
+      }
+    },
+    {
+      "id": "end2end-007",
+      "type": "end2end",
+      "question": "海底捞笔记材料完整性如何核对？",
+      "company": "海底捞",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "2024年报",
+            "page": null,
+            "table": null,
+            "required": true,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "海底捞笔记材料完整性如何核对？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "generation": {
+        "auto_scored": true,
+        "pending_manual": false,
+        "material_hit": 1,
+        "material_n": 1,
+        "missing": [],
+        "rubric": [
+          "核对损益表、现金流量表与财务状况表三表齐全",
+          "关键数字与数据库 statements/pages 可交叉验证"
+        ]
+      }
+    },
+    {
+      "id": "end2end-008",
+      "type": "end2end",
+      "question": "百胜中国中英文年报材料一致性如何核对？",
+      "company": "百胜中国",
+      "split": "freeze",
+      "retrieval": {
+        "hit": false,
+        "rank": null,
+        "mrr": 0.0,
+        "ndcg": 0.0,
+        "precision_at_k": 0.0,
+        "negative_hit_at_k": false,
+        "negative_hit_at_1": false,
+        "negative_ranks": [],
+        "annual_eligible": false,
+        "annual_hit": false,
+        "annual_rank": null,
+        "top_hits": [],
+        "expected_sources": [
+          {
+            "file": "百胜中国_2024_HK_Annual_Report",
+            "page": null,
+            "table": null,
+            "required": true,
+            "relevance": 1,
+            "authority": ""
+          },
+          {
+            "file": "百胜中国_2024_Annual_Report",
+            "page": null,
+            "table": null,
+            "required": true,
+            "relevance": 1,
+            "authority": ""
+          }
+        ],
+        "query": "百胜中国中英文年报材料一致性如何核对？",
+        "hybrid_fused": false,
+        "error_tags": []
+      },
+      "generation": {
+        "auto_scored": true,
+        "pending_manual": false,
+        "material_hit": 2,
+        "material_n": 2,
+        "missing": [],
+        "rubric": [
+          "核对港股与美股年报同一科目数值一致",
+          "关键数字需同时给出中英文来源"
+        ]
+      }
+    }
+  ]
+}

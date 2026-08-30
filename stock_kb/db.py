@@ -265,12 +265,18 @@ def query_statements(
     period_type: str | None = None,
     keyword: str | None = None,
     limit: int | None = 100,
+    include_comparatives: bool = False,
 ) -> list[dict[str, Any]]:
-    """按公司查三表行项目。keyword 匹配 line_name_norm / line_name_orig。"""
+    """按公司查三表行项目。keyword 匹配 line_name_norm / line_name_orig。
+
+    year 默认同时约束科目年 ``s.year`` 和报告年 ``r.year``，只要当年年报正文，
+    不要次年报比较列。比较列需显式 ``include_comparatives=True``。
+    """
     sql = """
         SELECT s.id AS statement_id, r.id AS report_id, s.statement_type,
                s.line_name_orig, s.line_name_norm, s.value,
-               s.unit, s.currency, s.year, s.page_no, r.title, r.path
+               s.unit, s.currency, s.year, s.page_no, r.title, r.path,
+               r.year AS report_year
         FROM statements s JOIN reports r ON r.id = s.report_id
         WHERE r.company=?
     """
@@ -281,6 +287,9 @@ def query_statements(
     if year is not None:
         sql += " AND s.year=?"
         params.append(year)
+        if not include_comparatives:
+            sql += " AND r.year=?"
+            params.append(year)
     if period_type is not None:
         sql += " AND r.period_type=?"
         params.append(period_type)
@@ -298,7 +307,10 @@ def query_statements(
             )
             params.extend([n, n])
         sql += " AND (" + " OR ".join(clauses) + ")"
-    sql += " ORDER BY r.year DESC, s.page_no, s.line_name_norm"
+    sql += (
+        " ORDER BY CASE WHEN r.year = s.year THEN 0 ELSE 1 END, "
+        "r.year DESC, s.page_no, s.line_name_norm"
+    )
     if limit is not None:
         sql += " LIMIT ?"
         params.append(limit)

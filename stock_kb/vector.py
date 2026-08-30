@@ -357,8 +357,10 @@ def vector_search(
     query = search.normalize_query(query)
     if not query:
         return []
-    if _year_out_of_corpus(conn, query, company):
+    implied_years = search.query_years(query) if year is None else []
+    if implied_years and search.years_out_of_corpus(conn, query, company):
         return []
+    allowed_years = {year} if year is not None else (set(implied_years) or None)
     needles = search.claim_needles(query, company)
     row = conn.execute(
         "SELECT dim, vec_table FROM embedding_index WHERE model=? LIMIT 1", (model,)
@@ -374,7 +376,7 @@ def vector_search(
     vec = next(embedder.embed([query]))
     has_filters = any(
         v is not None for v in (company, year, report_type, language)
-    )
+    ) or bool(allowed_years)
     chunk_limit = candidate_k or (top_k * 10 if has_filters else top_k * 5)
     hits = conn.execute(
         f"SELECT chunk_id, distance FROM {table} "
@@ -397,7 +399,7 @@ def vector_search(
             continue
         if company is not None and r["company"] != company:
             continue
-        if year is not None and r["year"] != year:
+        if allowed_years is not None and r["year"] not in allowed_years:
             continue
         if report_type is not None and r["report_type"] != report_type:
             continue
@@ -423,25 +425,6 @@ def vector_search(
             }
     out = sorted(best.values(), key=lambda x: x["score"])
     return out[:top_k]
-
-
-def _year_out_of_corpus(conn, query: str, company: str | None) -> bool:
-    years = search.query_years(query)
-    if not years:
-        return False
-    sql = (
-        "SELECT MIN(year) AS mn, MAX(year) AS mx FROM reports "
-        "WHERE COALESCE(is_duplicate, 0) = 0 AND year IS NOT NULL"
-    )
-    params: list[Any] = []
-    if company:
-        sql += " AND company=?"
-        params.append(company)
-    row = conn.execute(sql, params).fetchone()
-    if not row or row["mn"] is None:
-        return False
-    lo, hi = int(row["mn"]), int(row["mx"])
-    return any(y < lo or y > hi for y in years)
 
 
 def _content_has_needle(content: str, needles: list[str]) -> bool:

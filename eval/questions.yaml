@@ -7,6 +7,8 @@ notes: >
   比较数字优先用当年年报正文页。file 对应 reports.title（不含扩展名）。
   2026-08-22 阶段 C：semantic 20 题已加负样本；新增 split=diag 的 indicator 12 /
   no_answer 8 / 真语义 8 / 跨语言检索 10。回归请用 --split freeze。
+  2026-08-30：freeze 46 道检索 GT 按 pages.content 通读；8 道改 required 页，若干道改负样本。
+  2026-08-30：新增 freeze route 24（工具路由）与 year_filter 4（问句带年份）。
 questions:
   # ---------------- exact: 20 ----------------
   - id: exact-001
@@ -20,7 +22,7 @@ questions:
       period_type: annual
       line_contains: ["收入", "Revenue"]
       expected_value: 42754687
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -50,7 +52,7 @@ questions:
       period_type: annual
       line_contains: ['Owners of the Company', '本公司拥有人']
       expected_value: 4708084
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -80,7 +82,7 @@ questions:
       period_type: annual
       line_contains: ["收入", "Revenue"]
       expected_value: 41453348
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -110,7 +112,7 @@ questions:
       period_type: annual
       line_contains: ["owners of the Company", "拥有人应占年内溢利"]
       expected_value: 4499080
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -140,7 +142,7 @@ questions:
       period_type: annual
       line_contains: ["Owners of the Company", "本公司拥有人"]
       expected_value: -4163175
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -170,7 +172,7 @@ questions:
       period_type: annual
       line_contains: ["收入", "Revenue"]
       expected_value: 28614255
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -200,7 +202,7 @@ questions:
       period_type: annual
       line_contains: ["经营活动所得现金净额", "Net cash from operating activities"]
       expected_value: 7634465
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -230,7 +232,7 @@ questions:
       period_type: annual
       line_contains: ["经营活动所得现金净额", "Net cash from operating activities"]
       expected_value: 9000350
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -260,7 +262,7 @@ questions:
       period_type: annual
       line_contains: ["资产净值", "Net Assets"]
       expected_value: 10417496
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -290,7 +292,7 @@ questions:
       period_type: annual
       line_contains: ["收入", "Revenue"]
       expected_value: 43225355
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -320,7 +322,7 @@ questions:
       period_type: annual
       line_contains: ["Total revenues", "总收入"]
       expected_value: 11797
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -350,7 +352,7 @@ questions:
       period_type: annual
       line_contains: ['Net Income — Yum China Holdings', 'Yum China Holdings']
       expected_value: 929
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -380,7 +382,7 @@ questions:
       period_type: annual
       line_contains: ["Total revenues", "总收入"]
       expected_value: 11303
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -410,7 +412,7 @@ questions:
       period_type: annual
       line_contains: ['Net Income — Yum China Holdings', 'Yum China Holdings']
       expected_value: 911
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -440,7 +442,7 @@ questions:
       period_type: annual
       line_contains: ["Total revenues", "总收入"]
       expected_value: 10978
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -470,7 +472,7 @@ questions:
       period_type: annual
       line_contains: ['Net Income — Yum China Holdings', 'Yum China Holdings']
       expected_value: 827
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -500,7 +502,7 @@ questions:
       period_type: annual
       line_contains: ["Total revenues", "总收入"]
       expected_value: 8263
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -530,7 +532,7 @@ questions:
       period_type: annual
       line_contains: ["Total Assets", "总资产"]
       expected_value: 11121
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -560,7 +562,7 @@ questions:
       period_type: annual
       line_contains: ["Net Cash Provided by Operating Activities", "经营现金流"]
       expected_value: 1419
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -590,7 +592,7 @@ questions:
       period_type: annual
       line_contains: ["Total revenues", "总收入"]
       expected_value: 9569
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -846,8 +848,8 @@ questions:
           required: true
           relevance: 2
       negatives:
-        - file: "研报参考清单_可自行下载"
-          page: 1
+        - file: "百胜中国_招股书_中文版"
+          page: 134
   - id: keyword-018
     type: keyword
     question: 百胜中国 数字化
@@ -900,11 +902,11 @@ questions:
     expected:
       sources:
         - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 41
+          page: 40
           required: true
           relevance: 3
         - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 40
+          page: 41
           required: false
           relevance: 2
         - file: "研报-国信证券-2025-收入利润再创新高"
@@ -912,26 +914,26 @@ questions:
           required: false
           relevance: 2
       negatives:
-        - file: "国信证券_百胜中国_2023年报费用管控效果显著"
-          page: 3
+        - file: "海底捞研报-国信-202502"
+          page: 14
   - id: semantic-002
     type: semantic
     question: 海底捞把门店铺到什么程度才算合适？
     company: 海底捞
     expected:
       sources:
-        - file: "研报-国信证券-2023-降本增效静待新一轮增长"
-          page: 3
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 33
           required: true
           relevance: 3
+        - file: "研报-国信证券-2023-降本增效静待新一轮增长"
+          page: 3
+          required: false
+          relevance: 2
         - file: "研报-国信证券-2023-降本增效静待新一轮增长"
           page: 5
           required: false
           relevance: 2
-        - file: "2021年报"
-          page: 17
-          required: false
-          relevance: 1
       negatives:
         - file: "研报-浦银国际-2024-翻台率估值承压"
           page: 1
@@ -950,8 +952,8 @@ questions:
           required: false
           relevance: 2
       negatives:
-        - file: "国信证券_百胜中国_2023年报费用管控效果显著"
-          page: 3
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 24
   - id: semantic-004
     type: semantic
     question: 一线员工为什么愿意把服务做到极致？
@@ -979,12 +981,12 @@ questions:
     company: 海底捞
     expected:
       sources:
-        - file: "研报-浦银国际-2024-翻台率估值承压"
-          page: 5
-          required: true
-          relevance: 3
         - file: "海底捞研报-国信-202502"
           page: 19
+          required: true
+          relevance: 3
+        - file: "研报-浦银国际-2024-翻台率估值承压"
+          page: 1
           required: false
           relevance: 2
         - file: "研报-国信证券HK-2021-餐饮业复苏中"
@@ -992,8 +994,8 @@ questions:
           required: false
           relevance: 1
       negatives:
-        - file: "国信证券_百胜中国_同店销售增速重新转正"
-          page: 1
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 24
   - id: semantic-006
     type: semantic
     question: 一个店长如何带出下一家店的负责人？
@@ -1001,15 +1003,15 @@ questions:
     expected:
       sources:
         - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 27
+          page: 26
           required: true
           relevance: 3
         - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 20
+          page: 28
           required: false
           relevance: 2
         - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 21
+          page: 27
           required: false
           relevance: 2
       negatives:
@@ -1076,8 +1078,8 @@ questions:
           required: false
           relevance: 1
       negatives:
-        - file: "海通国际_百胜中国_2025Q2经营利润创新高"
-          page: 1
+        - file: "研报-东吴证券-2019-管理体系深度解析"
+          page: 22
   - id: semantic-010
     type: semantic
     question: 客人为一餐花多少钱，和来得频不频，哪个更撑收入？
@@ -1097,8 +1099,8 @@ questions:
           required: false
           relevance: 1
       negatives:
-        - file: "国信证券_百胜中国_同店销售增速重新转正"
-          page: 1
+        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
+          page: 11
   - id: semantic-011
     type: semantic
     question: 客人愿不愿意再来这家快餐店？
@@ -1118,7 +1120,7 @@ questions:
           required: false
           relevance: 2
       negatives:
-        - file: "研报-国信证券HK-2021-餐饮业复苏中"
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
           page: 4
   - id: semantic-012
     type: semantic
@@ -1127,15 +1129,15 @@ questions:
     expected:
       sources:
         - file: "国信证券_百胜中国_2023年报费用管控效果显著"
-          page: 3
+          page: 4
           required: true
           relevance: 3
-        - file: "海通国际_百胜中国_2025投资者日_创新与提效双轮驱动"
+        - file: "国信证券_百胜中国_2023年报费用管控效果显著"
           page: 1
           required: false
           relevance: 2
       negatives:
-        - file: "研报-东方证券-2023-2022年报点评利润改善重启扩张"
+        - file: "国信证券_百胜中国_同店销售增速重新转正"
           page: 1
   - id: semantic-013
     type: semantic
@@ -1181,15 +1183,15 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
-          page: 2
+        - file: "海通国际_百胜中国_2025投资者日_创新与提效双轮驱动"
+          page: 1
           required: true
           relevance: 3
-        - file: "国信证券_百胜中国_2024Q3经营数据改善"
-          page: 3
+        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
+          page: 2
           required: false
           relevance: 2
-        - file: "海通国际_百胜中国_2025投资者日_创新与提效双轮驱动"
+        - file: "国信证券_百胜中国_2024Q3经营数据改善"
           page: 1
           required: false
           relevance: 2
@@ -1210,10 +1212,6 @@ questions:
           page: 7
           required: false
           relevance: 2
-        - file: "百胜中国_2022_Annual_Report"
-          page: 92
-          required: false
-          relevance: 1
       negatives:
         - file: "百胜中国_招股书_中文版"
           page: 54
@@ -1223,12 +1221,12 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
-          page: 10
+        - file: "百胜中国_招股书_中文版"
+          page: 184
           required: true
           relevance: 3
-        - file: "百胜中国_招股书_中文版"
-          page: 161
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 10
           required: false
           relevance: 2
         - file: "百胜中国_招股书_中文版"
@@ -1274,8 +1272,8 @@ questions:
           required: false
           relevance: 1
       negatives:
-        - file: "百胜中国_2025_Annual_Report"
-          page: 62
+        - file: "国信证券_百胜中国_同店销售增速重新转正"
+          page: 1
   - id: semantic-020
     type: semantic
     question: 不到店能不能吃到？
@@ -1306,7 +1304,7 @@ questions:
       period_type: annual
       line_contains: ["Operating Profit", "经营利润"]
       expected_value: 1290
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -1332,7 +1330,7 @@ questions:
       period_type: annual
       line_contains: ['Net Income — Yum China Holdings', 'Yum China Holdings']
       expected_value: 442
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -1358,7 +1356,7 @@ questions:
       period_type: annual
       line_contains: ["Total Assets", "总资产"]
       expected_value: 12031
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 百万美元
       expected_currency: USD
       golden_source: pdf
@@ -1384,7 +1382,7 @@ questions:
       period_type: annual
       line_contains: ['Owners of the Company', '本公司拥有人']
       expected_value: 2344711
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -1410,7 +1408,7 @@ questions:
       period_type: annual
       line_contains: ['owners of the Company', '拥有人应占']
       expected_value: 1374477
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -1436,7 +1434,7 @@ questions:
       period_type: annual
       line_contains: ["经营活动所得现金净额", "Net cash from operating activities"]
       expected_value: 5664189
-      tolerance_ratio: 0.02
+      tolerance_ratio: 0.0001
       expected_unit: 千元
       expected_currency: CNY
       golden_source: pdf
@@ -1477,8 +1475,8 @@ questions:
           required: true
           relevance: 2
       negatives:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
-          page: 4
+        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+          page: 24
   - id: cross-009
     type: cross
     question: Yum China dividends and buyback 股息与回购
@@ -1514,10 +1512,14 @@ questions:
     keywords: ["store count", "门店数量"]
     expected:
       sources:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
-          page: 4
+        - file: "百胜中国_招股书_中文版"
+          page: 15
           required: true
           relevance: 2
+        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+          page: 4
+          required: false
+          relevance: 1
       negatives:
         - file: "百胜中国_2025_HK_Annual_Report"
           page: 122
@@ -2231,3 +2233,206 @@ questions:
       negatives:
         - file: "研报-国信证券-2021-阿米巴模式师徒制"
           page: 23
+
+  # ---------------- route: 24（freeze；wrong-tool rate） ----------------
+  - id: route-001
+    type: route
+    question: 海底捞 2024 年营业收入是多少？
+    company: 海底捞
+    expected:
+      tool: get_indicators
+      name: revenue
+  - id: route-002
+    type: route
+    question: 海底捞 2024 年归母净利润（本公司拥有人应占年内溢利）是多少？
+    company: 海底捞
+    expected:
+      tool: get_indicators
+      name: net_profit
+  - id: route-003
+    type: route
+    question: 百胜中国 2025 年 Total revenues 是多少？
+    company: 百胜中国
+    expected:
+      tool: get_indicators
+      name: revenue
+  - id: route-004
+    type: route
+    question: 海底捞 2024 年经营活动所得现金净额是多少？
+    company: 海底捞
+    expected:
+      tool: get_indicators
+      name: operating_cashflow
+  - id: route-005
+    type: route
+    question: 百胜中国 2024 年 Total Assets 是多少？
+    company: 百胜中国
+    expected:
+      tool: get_indicators
+      name: total_assets
+  - id: route-006
+    type: route
+    question: 海底捞 2024 年净资产是多少？
+    company: 海底捞
+    expected:
+      tool: get_indicators
+      name: total_equity
+  - id: route-007
+    type: route
+    question: 海底捞 2024 年毛利是多少？
+    company: 海底捞
+    expected:
+      tool: get_indicators
+      name: gross_profit
+  - id: route-008
+    type: route
+    question: 百胜中国 2025 年 Net Income（Yum China Holdings, Inc.）是多少？
+    company: 百胜中国
+    expected:
+      tool: get_indicators
+      name: net_profit
+  - id: route-009
+    type: route
+    question: 海底捞 2024 年已付股息
+    company: 海底捞
+    expected:
+      tool: get_financial_statements
+      keyword: 已付股息
+  - id: route-010
+    type: route
+    question: 海底捞 资本开支
+    company: 海底捞
+    expected:
+      tool: get_financial_statements
+      keyword: 资本开支
+  - id: route-011
+    type: route
+    question: 海底捞 2022 年减值
+    company: 海底捞
+    expected:
+      tool: get_financial_statements
+      keyword: 减值
+  - id: route-012
+    type: route
+    question: 百胜中国 dividends paid
+    company: 百胜中国
+    expected:
+      tool: get_financial_statements
+      keyword: 已付股息
+  - id: route-013
+    type: route
+    question: 海底捞 购买物业
+    company: 海底捞
+    expected:
+      tool: get_financial_statements
+      keyword: 资本开支
+  - id: route-014
+    type: route
+    question: 海底捞 股息
+    company: 海底捞
+    expected:
+      tool: get_financial_statements
+      keyword: 已付股息
+  - id: route-015
+    type: route
+    question: 海底捞 翻台率
+    company: 海底捞
+    expected:
+      tool: search_reports
+  - id: route-016
+    type: route
+    question: 海底捞 同店销售
+    company: 海底捞
+    expected:
+      tool: search_reports
+  - id: route-017
+    type: route
+    question: 海底捞 师徒制
+    company: 海底捞
+    expected:
+      tool: search_reports
+  - id: route-018
+    type: route
+    question: 海底捞 客单价
+    company: 海底捞
+    expected:
+      tool: search_reports
+  - id: route-019
+    type: route
+    question: 海底捞 阿米巴
+    company: 海底捞
+    expected:
+      tool: search_reports
+  - id: route-020
+    type: route
+    question: Yum China same-store sales trend
+    company: 百胜中国
+    expected:
+      tool: search_reports
+  - id: route-021
+    type: route
+    question: 海底捞 2026 年营业收入是多少？
+    company: 海底捞
+    expected:
+      tool: no_answer
+  - id: route-022
+    type: route
+    question: 海底捞在火星开了多少家店？
+    company: 海底捞
+    expected:
+      tool: no_answer
+  - id: route-023
+    type: route
+    question: 百胜中国比特币储备规模
+    company: 百胜中国
+    expected:
+      tool: no_answer
+  - id: route-024
+    type: route
+    question: 瑞幸咖啡 2024 年营业收入
+    company: 百胜中国
+    expected:
+      tool: no_answer
+
+  # ---------------- year_filter: 4（freeze；问句带年份时命中页年份） ----------------
+  - id: year-001
+    type: year_filter
+    question: 海底捞 2022 年减值
+    company: 海底捞
+    expected:
+      year: 2022
+      sources:
+        - file: "2022年报"
+          page: 285
+          required: true
+  - id: year-002
+    type: year_filter
+    question: 海底捞 2024 年股息
+    company: 海底捞
+    expected:
+      year: 2024
+      sources:
+        - file: "2024年报"
+          page: 151
+          required: true
+  - id: year-003
+    type: year_filter
+    question: 百胜中国 2023 年同店销售
+    company: 百胜中国
+    expected:
+      year: 2023
+      sources:
+        - file: "百胜中国_2023_HK_Annual_Report"
+          page: 76
+          required: true
+  - id: year-004
+    type: year_filter
+    question: 海底捞 2025 年翻台率
+    company: 海底捞
+    expected:
+      year: 2025
+      sources:
+        - file: "海底捞研报-国信-202502"
+          page: 19
+          required: true
+

@@ -23,12 +23,12 @@ description: 使用 stock-kb 财报知识库生成可发布的中文股票分析
 
 ## 工作流
 
-1. **确认公司与报告**：调用 `list_reports`，确认最新年报/中报和研报是否已入库。
+1. **确认公司与报告**：调用 `list_reports`，确认最新年报/中报和研报是否已入库。不确定工具时先 `route_query(question, company)`。
 2. **科目数字（禁止先 `search_reports`）**
    - 收入 / 归母净利 / 毛利 / 总资产 / 净资产 / 经营现金流 → `get_indicators`
      （`metrics`：`revenue` `net_profit` `gross_profit` `total_assets` `total_equity` `operating_cashflow`），最近 3–5 年。
    - 已付股息、资本开支、以及指标里没有的行项目 → `get_financial_statements`
-     （`keyword` 如「已付股息」「资本开支」，并加 `year`。资本开支会匹配「购买物业」行）。
+     （`keyword` 如「已付股息」「资本开支」，并加 `year`。默认只要当年年报正文，不要次年比较列。资本开支会匹配「购买物业」行）。
    - 减值等多在附注、三表常无此行：先 `keyword=减值` 试三表，空则再 `search_reports`「减值评估」，并写明来自附注。
    - 其它科目三表/指标都没有，再 `search_reports`，并写明这是叙述补充，不是科目权威。
 3. **经营叙述**：只用 `search_reports` 查翻台率、同店销售、客单价、师徒制、门店扩张叙事、品牌/咖啡等；英文年报再用英文关键词搜一次。

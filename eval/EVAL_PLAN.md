@@ -5,7 +5,7 @@
 日常回归：
 
 ```powershell
-python tools/run_eval_regression.py          # freeze + FTS/hybrid diag（指标/无答案）
+python tools/run_eval_regression.py          # freeze + FTS/hybrid diag + audit_notes
 python -m stock_kb eval --split freeze
 python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5 --split freeze
 python tools/audit_notes.py
@@ -18,13 +18,16 @@ python tools/audit_notes.py
 | 检查 | 门槛 | 最近实测 |
 |---|---|---|
 | FTS keyword Recall@5 | ≥ 0.75 | 0.80 |
-| FTS keyword Neg@5 | ≤ 0.65 | 0.60 |
+| FTS keyword Neg@5 | ≤ 0.65 | 0.55 |
 | hybrid semantic Recall@5 | ≥ 0.10 | 0.15 |
 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 |
 | 结构化 hit / parse_hit | 26/26 | 26/26 |
 | FTS diag `indicators` | 12/12 | 12/12 |
 | FTS diag no_answer empty_rate | ≥ 0.75 | 1.00 |
 | hybrid diag no_answer empty_rate | ≥ 0.75 | 1.00 |
+| route accuracy | = 1.0（24 题） | 1.00 |
+| year_filter precision_mean | ≥ 0.60（4 题） | 1.00 |
+| generation_compose | fail_count = 0 | 1.00 faithful |
 
 题集：`eval/questions.yaml`。结构化 26 题已 `golden_source: pdf`。`split: diag` 的真语义 / 跨语言仍不进 freeze 检索门槛。
 
@@ -88,7 +91,7 @@ freeze 语义 20 题补了难负样本后，Neg@5 从 0 变成 0.10。去泄漏�
 
 `indicators.net_profit` 原先吃「年内溢利」合计。损益表续页常有两行都叫 `Owners of the Company`：一行是归母净利，一行是归母综合收益，数值差约 1%。只把 `ownersofthecompany` 提前仍可能抽到综合收益行。
 
-现行规则：归母词优先于合计；有多行归母时，取与「年内溢利」合计最接近的那一行；同年年报正文页加分。海底捞 2023=4,499,080、2024=4,708,084。百胜中国仍走 `Net income — Yum China Holdings`。派生净利率 / ROE 随之用归母。指标题容差 0.01%（`0.0001`），2% 会把合计和归母当成同一个数。
+现行规则：归母词优先于合计；有多行归母时，取与「年内溢利」合计最接近的那一行；同年年报正文页加分。海底捞 2023=4,499,080、2024=4,708,084。百胜中国仍走 `Net income — Yum China Holdings`。派生净利率 / ROE 随之用归母。指标与结构化三表题容差均为 0.01%（`0.0001`），2% 会把合计和归母当成同一个数。
 
 FTS 长句曾用 trigram OR 硬填 top-k，无答案 empty_rate=0。已去掉这条兜底；多词改为 AND（丢掉「是多少」等虚词）。MCP 默认 engine 是 FTS，8 道 no_answer 全部空。hybrid / 向量在 FTS 为空时不再无条件填满：年份超出该公司入库年报区间，或问句里的非常见实体未出现在命中页，则返回空。8 道 no_answer 的 hybrid empty_rate=1.0。
 
@@ -99,8 +102,8 @@ FTS 长句曾用 trigram OR 硬填 top-k，无答案 empty_rate=0。已去掉这
 ## 3. 评测已经看见、产品还没改的
 
 1. **真语义 / 跨语言**：证据清单之后仍有约 11 道页不在向量 top-50。英文问中文页、附注减值。不要用整句语言 ID 分流。见 `EVAL_SYSTEM.md` §8。
-2. 46 道 freeze 检索 GT 没有逐页通读。
-3. 三表 `--year` 会同时返回当年正文和次年比较列。
+2. freeze 46 道检索 GT 已于 2026-08-30 按页文本通读，见 §5.3。
+3. 三表 `--year` 默认只要当年年报正文（2026-08-30）；比较列需 `--include-comparatives`。
 4. hybrid 无答案已按年份/实体约束清空（8/8），见 §2.8。
 
 ---
@@ -174,3 +177,36 @@ diag 的 semantic / cross 从「唯一文件+唯一页」改成证据清单：`s
 | 召不回 | 13 | 11 |
 
 年报/中报进 top-5 的只有 cross-022（2025 中报 p11 翻台率）和 cross-020（年报资本开支，FTS）。024「座位转得快」清单里已有同一页中报，向量仍召不回——那是问句，不是 GT。021 / 023 / 013 等仍是检索问题。
+
+### 5.3 freeze 46 道检索 GT 通读（2026-08-30）
+
+对照 `pages.content`，不按检索是否变绿改页。keyword 20 道 required 页均含主题词，未改 required。改了答非所问的 required 页，以及检索带 `company` 时永远进不了 top-5 的跨公司负样本。
+
+| 题 | 原 required / 问题 | 改成 |
+|---|---|---|
+| semantic-001 | 阿米巴 p41，图注，正文在 p40 | required → p40 |
+| semantic-002 | 降本增效 p3，2022 业绩与保守扩张 | 阿米巴 p33（2000–2500 家天花板） |
+| semantic-005 | 浦银 p5，估值情景，翻台=0 | 国信 202502 p19（翻台/客单价） |
+| semantic-006 | 阿米巴 p27，晋升通道/离职率 | p26（店长工资/师傅分享徒弟） |
+| semantic-012 | 费用管控 p3，肯德基分部「一次性费用减免」 | 同文件 p4「费用管控良好」 |
+| semantic-015 | 2024Q4 p2，净增/加盟，不是开在哪 | 海通投资者日 p1（小镇店/下沉） |
+| semantic-016 | 可选 2022 年报 p92，Lavazza ESOP 不是咖啡业务 | 删掉该可选页 |
+| semantic-017 | 快餐 p10，到店数字化，外卖=0 | 招股书 p184「外卖业务」 |
+| semantic-019 | 可选正样本与负样本同为 2025 年报 p62 | 负样本改为同店点评 p1 |
+| cross-011 | 快餐 p4，只有 15022 家时点 | 招股书 p15「餐厅总数及其变动」表 |
+| 跨公司 negatives | 7 道负样本是另一家公司的报告 | 改为本公司难负页 |
+
+keyword-017 负样本「研报参考清单」是下载目录，改为招股书 p134。
+
+### 5.4 embedding 筛选套件（2026-08-30）
+
+freeze keyword 测不到向量。新增 `python -m stock_kb eval-embed`：44 道会长句（freeze semantic/cross 检索 + diag semantic/cross），主看 vector@5/@50 分桶。不进 `run_eval_regression.py`。Wilson 重叠或只差 1 题判定 `indistinguishable`，不能改默认模型。见 `EVAL_SYSTEM.md` §5.1。
+
+### 5.5 生成闭环、年份过滤、工具路由（2026-08-30）
+
+按「先稳住评测再改 RAG」的下一刀：
+
+1. **组稿生成**：`stock_kb/note_builder.py` 按 skill 顺序取数填模板（无 LLM）。`eval-generation` 检查财务摘要每个数字是否出现在引用页。手写 `audit_notes.py` 仍保留。二者进回归。
+2. **问句带年份**：FTS/向量把年份从 MATCH 里拿掉，改为过滤 `reports.year`；超出入库年则空（与无答案 2026 题一致）。无年份问句不按新近排序，freeze keyword 0.80 不变。4 道 `year_filter` precision_mean=1.0。
+3. **三表正文**：`query_statements(year=)` 默认 `r.year = s.year`。2023 经营现金流不再带回 2024 年报比较列。
+4. **路由**：`stock_kb.route` + freeze 24 道 `route`，accuracy=1.0。MCP `route_query`。减值主走三表，可 fallback 到 search。

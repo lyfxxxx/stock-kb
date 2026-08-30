@@ -1,0 +1,1262 @@
+{
+  "version": 1,
+  "questions_sha256": "38d608a2e512e10b71fa29e8af75639d327d7eecf9b51458715acc3bca170995",
+  "runs": {
+    "fts:freeze": {
+      "engine": "fts",
+      "split": "freeze",
+      "questions_sha256": "38d608a2e512e10b71fa29e8af75639d327d7eecf9b51458715acc3bca170995",
+      "questions": {
+        "exact-001": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-002": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-003": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-004": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-005": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-006": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-007": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-008": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-009": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-010": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-011": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-012": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-013": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-014": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-015": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-016": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-017": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-018": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-019": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-020": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "keyword-001": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-002": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-003": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-004": {
+          "type": "keyword",
+          "hit": false
+        },
+        "keyword-005": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-006": {
+          "type": "keyword",
+          "hit": false
+        },
+        "keyword-007": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-008": {
+          "type": "keyword",
+          "hit": false
+        },
+        "keyword-009": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-010": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-011": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-012": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-013": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-014": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-015": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-016": {
+          "type": "keyword",
+          "hit": false
+        },
+        "keyword-017": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-018": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-019": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-020": {
+          "type": "keyword",
+          "hit": true
+        },
+        "semantic-001": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-002": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-003": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-004": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-005": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-006": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-007": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-008": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-009": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-010": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-011": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-012": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-013": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-014": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-015": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-016": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-017": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-018": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-019": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-020": {
+          "type": "semantic",
+          "hit": false
+        },
+        "cross-001": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-002": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-003": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-004": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-005": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-006": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-007": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-008": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-009": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-010": {
+          "type": "cross",
+          "hit": true
+        },
+        "cross-011": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-012": {
+          "type": "cross",
+          "hit": false
+        },
+        "end2end-001": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-002": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-003": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-004": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-005": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-006": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-007": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-008": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "route-001": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-002": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-003": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-004": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-005": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-006": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-007": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-008": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-009": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-010": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-011": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-012": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-013": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-014": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-015": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-016": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-017": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-018": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-019": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-020": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-021": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-022": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-023": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-024": {
+          "type": "route",
+          "route_hit": true
+        },
+        "year-001": {
+          "type": "year_filter",
+          "year_precision": 1.0,
+          "hit": false
+        },
+        "year-002": {
+          "type": "year_filter",
+          "year_precision": 1.0,
+          "hit": false
+        },
+        "year-003": {
+          "type": "year_filter",
+          "year_precision": 1.0,
+          "hit": false
+        },
+        "year-004": {
+          "type": "year_filter",
+          "year_precision": 1.0,
+          "hit": true
+        }
+      }
+    },
+    "hybrid:freeze": {
+      "engine": "hybrid",
+      "split": "freeze",
+      "questions_sha256": "38d608a2e512e10b71fa29e8af75639d327d7eecf9b51458715acc3bca170995",
+      "questions": {
+        "exact-001": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-002": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-003": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-004": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-005": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-006": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-007": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-008": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-009": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-010": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-011": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-012": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-013": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-014": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-015": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-016": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-017": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-018": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-019": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "exact-020": {
+          "type": "exact",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "keyword-001": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-002": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-003": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-004": {
+          "type": "keyword",
+          "hit": false
+        },
+        "keyword-005": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-006": {
+          "type": "keyword",
+          "hit": false
+        },
+        "keyword-007": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-008": {
+          "type": "keyword",
+          "hit": false
+        },
+        "keyword-009": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-010": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-011": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-012": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-013": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-014": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-015": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-016": {
+          "type": "keyword",
+          "hit": false
+        },
+        "keyword-017": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-018": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-019": {
+          "type": "keyword",
+          "hit": true
+        },
+        "keyword-020": {
+          "type": "keyword",
+          "hit": true
+        },
+        "semantic-001": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-002": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-003": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-004": {
+          "type": "semantic",
+          "hit": true
+        },
+        "semantic-005": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-006": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-007": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-008": {
+          "type": "semantic",
+          "hit": true
+        },
+        "semantic-009": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-010": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-011": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-012": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-013": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-014": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-015": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-016": {
+          "type": "semantic",
+          "hit": true
+        },
+        "semantic-017": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-018": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-019": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-020": {
+          "type": "semantic",
+          "hit": false
+        },
+        "cross-001": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-002": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-003": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-004": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-005": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-006": {
+          "type": "cross",
+          "structured_hit": true,
+          "parse_hit": true
+        },
+        "cross-007": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-008": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-009": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-010": {
+          "type": "cross",
+          "hit": true
+        },
+        "cross-011": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-012": {
+          "type": "cross",
+          "hit": false
+        },
+        "end2end-001": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-002": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-003": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-004": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-005": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-006": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-007": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "end2end-008": {
+          "type": "end2end",
+          "material_complete": true
+        },
+        "route-001": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-002": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-003": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-004": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-005": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-006": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-007": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-008": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-009": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-010": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-011": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-012": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-013": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-014": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-015": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-016": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-017": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-018": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-019": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-020": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-021": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-022": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-023": {
+          "type": "route",
+          "route_hit": true
+        },
+        "route-024": {
+          "type": "route",
+          "route_hit": true
+        },
+        "year-001": {
+          "type": "year_filter",
+          "year_precision": 1.0,
+          "hit": false
+        },
+        "year-002": {
+          "type": "year_filter",
+          "year_precision": 1.0,
+          "hit": false
+        },
+        "year-003": {
+          "type": "year_filter",
+          "year_precision": 1.0,
+          "hit": false
+        },
+        "year-004": {
+          "type": "year_filter",
+          "year_precision": 1.0,
+          "hit": true
+        }
+      }
+    },
+    "fts:diag": {
+      "engine": "fts",
+      "split": "diag",
+      "questions_sha256": "38d608a2e512e10b71fa29e8af75639d327d7eecf9b51458715acc3bca170995",
+      "questions": {
+        "indicator-001": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-002": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-003": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-004": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-005": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-006": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-007": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-008": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-009": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-010": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-011": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-012": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "noans-001": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-002": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-003": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-004": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-005": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-006": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-007": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-008": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "semantic-021": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-022": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-023": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-024": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-025": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-026": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-027": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-028": {
+          "type": "semantic",
+          "hit": false
+        },
+        "cross-013": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-014": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-015": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-016": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-017": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-018": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-019": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-020": {
+          "type": "cross",
+          "hit": true
+        },
+        "cross-021": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-022": {
+          "type": "cross",
+          "hit": false
+        }
+      }
+    },
+    "hybrid:diag": {
+      "engine": "hybrid",
+      "split": "diag",
+      "questions_sha256": "38d608a2e512e10b71fa29e8af75639d327d7eecf9b51458715acc3bca170995",
+      "questions": {
+        "indicator-001": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-002": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-003": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-004": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-005": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-006": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-007": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-008": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-009": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-010": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-011": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "indicator-012": {
+          "type": "indicator",
+          "indicator_hit": true
+        },
+        "noans-001": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-002": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-003": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-004": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-005": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-006": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-007": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "noans-008": {
+          "type": "no_answer",
+          "empty": true
+        },
+        "semantic-021": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-022": {
+          "type": "semantic",
+          "hit": true
+        },
+        "semantic-023": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-024": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-025": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-026": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-027": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-028": {
+          "type": "semantic",
+          "hit": true
+        },
+        "cross-013": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-014": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-015": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-016": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-017": {
+          "type": "cross",
+          "hit": true
+        },
+        "cross-018": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-019": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-020": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-021": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-022": {
+          "type": "cross",
+          "hit": true
+        }
+      }
+    }
+  }
+}

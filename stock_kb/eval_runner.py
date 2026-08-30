@@ -13,11 +13,14 @@ import yaml
 
 from stock_kb import db, search
 from stock_kb.eval_stats import wilson_ci
+from stock_kb.route import route as route_query
 
 
 RETRIEVAL_TYPES = {"exact", "keyword", "semantic", "cross"}
 NO_ANSWER_TYPE = "no_answer"
 INDICATOR_TYPE = "indicator"
+ROUTE_TYPE = "route"
+YEAR_FILTER_TYPE = "year_filter"
 SEARCH_ENGINES = {"fts", "vector", "hybrid"}
 SEARCH_PATHS = {"mcp_compat", "eval_rrf_keywords"}
 _DASHES = (" ", "\t", "\n", "\r", "\u2014", "\u2013", "-", "\uff0d")
@@ -56,6 +59,28 @@ def run_eval(
 
     results: list[dict[str, Any]] = []
     for q in questions:
+        qtype = q.get("type") or ""
+        if qtype == ROUTE_TYPE:
+            expected = q.get("expected") or {}
+            decision = route_query(q.get("question") or "", company=q.get("company"))
+            predicted = decision.get("tool")
+            want = expected.get("tool")
+            results.append(
+                {
+                    "id": q["id"],
+                    "type": ROUTE_TYPE,
+                    "question": q["question"],
+                    "company": q.get("company"),
+                    "split": q.get("split") or "freeze",
+                    "route": {
+                        "predicted": predicted,
+                        "expected": want,
+                        "hit": predicted == want,
+                        "decision": decision,
+                    },
+                }
+            )
+            continue
         hits, query, hybrid_fused = _search_hits(
             cfg, conn, q, top_k, model, engine, search_path
         )
@@ -65,7 +90,7 @@ def run_eval(
         retrieval["hybrid_fused"] = hybrid_fused
         retrieval["error_tags"] = classify_retrieval_errors(
             query=query,
-            qtype=q.get("type") or "",
+            qtype=qtype,
             hits=hits,
             norm=norm,
         )
@@ -77,13 +102,26 @@ def run_eval(
             "split": q.get("split") or "freeze",
             "retrieval": retrieval,
         }
+        if qtype == YEAR_FILTER_TYPE:
+            expected_year = (q.get("expected") or {}).get("year")
+            q_years = set(search.query_years(query))
+            if expected_year is not None:
+                q_years.add(int(expected_year))
+            n_hits = len(hits)
+            matched = sum(1 for h in hits if h.get("year") in q_years)
+            item["year_filter"] = {
+                "query_years": sorted(q_years),
+                "n_hits": n_hits,
+                "year_matched": matched,
+                "precision": round(matched / n_hits, 3) if n_hits else None,
+            }
         structured = _statement_match(conn, q, norm)
         if structured is not None:
             item["structured"] = structured
         indicator = _indicator_match(conn, q)
         if indicator is not None:
             item["indicator"] = indicator
-        if q.get("type") == "end2end" or q.get("rubric") is not None:
+        if qtype == "end2end" or q.get("rubric") is not None:
             item["generation"] = _material_coverage(conn, q, norm)
         results.append(item)
 
@@ -482,7 +520,7 @@ def _statement_match(conn, q: dict[str, Any], norm: dict[str, Any]) -> dict[str,
     expected_value = stmt.get("expected_value")
     expected_unit = stmt.get("expected_unit")
     expected_currency = stmt.get("expected_currency")
-    tolerance = float(stmt.get("tolerance_ratio", 0.01))
+    tolerance = float(stmt.get("tolerance_ratio", 0.0001))
 
     field_rows: list[dict[str, Any]] = []
     for r in rows:
@@ -689,7 +727,7 @@ def _indicator_match(conn, q: dict[str, Any]) -> dict[str, Any] | None:
     year = spec.get("year")
     period_type = spec.get("period_type") or "annual"
     expected = spec.get("expected_value")
-    tolerance = float(spec.get("tolerance_ratio", 0.02))
+    tolerance = float(spec.get("tolerance_ratio", 0.0001))
     sql = (
         "SELECT name, value, unit, currency, year, period_type, page_no "
         "FROM indicators WHERE company=? AND name=? AND year=?"
@@ -924,6 +962,35 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
         == item["generation"].get("material_n")
     )
 
+    route = {"n": 0, "hit": 0}
+    for item in results:
+        rt = item.get("route")
+        if rt is None:
+            continue
+        route["n"] += 1
+        if rt.get("hit"):
+            route["hit"] += 1
+    if route["n"]:
+        route["accuracy"] = round(route["hit"] / route["n"], 3)
+        route["wrong_tool_rate"] = round(1.0 - route["hit"] / route["n"], 3)
+
+    year_filter = {"n": 0, "precision_sum": 0.0, "empty": 0}
+    for item in results:
+        yf = item.get("year_filter")
+        if yf is None:
+            continue
+        year_filter["n"] += 1
+        prec = yf.get("precision")
+        if prec is None:
+            year_filter["empty"] += 1
+        else:
+            year_filter["precision_sum"] += float(prec)
+    if year_filter["n"]:
+        scored = year_filter["n"] - year_filter["empty"]
+        year_filter["precision_mean"] = (
+            round(year_filter["precision_sum"] / scored, 3) if scored else None
+        )
+
     return {
         "retrieval": retrieval,
         "retrieval_diag": retrieval_diag,
@@ -931,6 +998,8 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
         "indicator": indicator,
         "no_answer": no_answer,
         "generation": generation,
+        "route": route,
+        "year_filter": year_filter,
     }
 
 
@@ -1104,6 +1173,25 @@ def save_report(cfg: dict[str, Any], data: dict[str, Any]) -> Path:
         lines.append(
             f"- n={na.get('n')} empty={na.get('empty')} nonempty={na.get('nonempty')} "
             f"empty_rate={na.get('empty_rate')}"
+        )
+        lines.append("")
+    route = data["summary"].get("route") or {}
+    if route.get("n"):
+        lines.append("## 工具路由（route）")
+        lines.append("")
+        lines.append(
+            f"- n={route.get('n')} hit={route.get('hit')} "
+            f"accuracy={route.get('accuracy')} "
+            f"wrong_tool_rate={route.get('wrong_tool_rate')}"
+        )
+        lines.append("")
+    yf = data["summary"].get("year_filter") or {}
+    if yf.get("n"):
+        lines.append("## 年份过滤（year_filter）")
+        lines.append("")
+        lines.append(
+            f"- n={yf.get('n')} precision_mean={yf.get('precision_mean')} "
+            f"empty={yf.get('empty')}"
         )
         lines.append("")
     diag = data["summary"].get("retrieval_diag") or {}

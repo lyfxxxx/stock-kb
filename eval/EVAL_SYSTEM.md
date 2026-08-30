@@ -7,7 +7,7 @@
 
 ---
 
-## 1. 四层，不混成一个 hit
+## 1. 分层，不混成一个 hit
 
 | 层 | 测什么 | 主要题型 | 通道 |
 |---|---|---|---|
@@ -15,11 +15,12 @@
 | 指标 | `indicators` 口径（归母净利等） | diag `indicator` | `indicators` 表 |
 | 检索 | 问句能否在 top-5 拿到可用出处 | freeze `keyword` / `semantic` / `cross`；diag 真语义 / 跨语言 | FTS / 向量 / hybrid |
 | 无答案 | 库里没有时是否空 | diag `no_answer` | 同上，期望 0 条 |
-| 生成 | 笔记数字与引用 | freeze `end2end` | `audit_notes.py` + 材料覆盖 |
+| 生成 | 笔记数字与引用 | freeze `end2end` | 组稿 `eval-generation` + `audit_notes.py` + 材料覆盖 |
+| 路由 | 问句该走哪把工具 | freeze `route` | `stock_kb.route`（不检索） |
 
 不要用「总 Recall」概括所有层。keyword 高不代表语义强；结构化 26/26 只说明三表查询和 PDF golden 一致。
 
-当前题集 **118 道**：
+当前题集 **146 道**：
 
 | split | type | n | 进回归门禁 |
 |---|---|---:|---|
@@ -28,6 +29,8 @@
 | freeze | semantic | 20 | hybrid Recall / Neg@5 |
 | freeze | cross | 12 | 其中检索约 6 道，其余走结构化 |
 | freeze | end2end | 8 | 材料覆盖自动分，不挡回归 |
+| freeze | route | 24 | accuracy = 1.0（wrong-tool rate = 0） |
+| freeze | year_filter | 4 | 命中页 `reports.year` 与问句年份一致 |
 | diag | indicator | 12 | 12/12 |
 | diag | no_answer | 8 | FTS / hybrid empty_rate |
 | diag | semantic | 8 | 否（对照脚本） |
@@ -46,7 +49,7 @@ GT 是 yaml 里「怎样算对」的标注，不是模型输出。
 - 数字必须 `golden_source: pdf`，禁止从 `statements.value` / `indicators` 抄回 yaml。
 - 净利润 = 归母（港股「本公司拥有人应占」，美国 `Net income — Yum China Holdings`），不是年内溢利合计。
 - 比较数字优先**当年年报正文页**，不用次年报比较列当正样本。
-- 指标容差 `0.0001`（0.01%）。2% 会把合计和归母当成同一个数。
+- 指标与结构化三表题容差均为 `0.0001`（0.01%）。2% 会把合计和归母当成同一个数。
 
 **检索**
 
@@ -101,7 +104,22 @@ diag 对照脚本 `tools/diag_retrieval.py`：同一题跑 FTS@5、vector@50、h
 
 ### 3.5 生成
 
-`end2end` 看检索材料是否覆盖要点；笔记成品用 `python tools/audit_notes.py`（数字准确率、引用精度、孤儿数字）。不挡 `run_eval_regression.py`。
+`end2end` 看检索材料是否覆盖要点。
+
+组稿路径（无 LLM）：`python -m stock_kb compose-note` / `eval-generation` 按 skill 顺序调 indicators → 三表 → 检索，填模板，每条数字带 `《文件》第N页`。审计要求财务摘要表里的数字出现在引用页的 `pages.content` / `content_orig` 上。手写试点笔记仍用 `python tools/audit_notes.py`。二者都进 `run_eval_regression.py`。组稿不写估值/观点，空着那些节，避免无出处判断。
+
+### 3.6 工具路由
+
+`type: route` 不跑检索。`stock_kb.route.route(question, company)` 对照 `expected.tool`：
+
+| tool | 何时 |
+|---|---|
+| `get_indicators` | 收入 / 归母净利 / 毛利 / 总资产 / 净资产 / 经营现金流 |
+| `get_financial_statements` | 已付股息、资本开支、减值（减值可 fallback 到 search） |
+| `search_reports` | 翻台率、同店、师徒、客单价等经营叙述 |
+| `no_answer` | 库外实体、公司错配、年份超出入库区间 |
+
+wrong-tool rate = 1 − accuracy。MCP 工具 `route_query` 与 CLI `python -m stock_kb route` 用同一函数。
 
 ---
 
@@ -109,8 +127,8 @@ diag 对照脚本 `tools/diag_retrieval.py`：同一题跑 FTS@5、vector@50、h
 
 | engine | 行为 |
 |---|---|
-| fts | FTS5 trigram；短于 3 字走 LIKE（按词频）；多词 AND，丢掉「是多少」等虚词；无 trigram OR 硬填 |
-| vector | sqlite-vec；问句年份超出该公司 `reports.year` 区间则空；剥掉财报常用词后的实体必须出现在命中页 |
+| fts | FTS5 trigram；短于 3 字走 LIKE（按词频）；多词 AND，丢掉「是多少」等虚词；无 trigram OR 硬填。问句里的年份不参与 MATCH：超出该公司入库年则空，否则 **硬过滤** `reports.year`。无年份的问句不按新近排序（freeze keyword 多为旧研报） |
+| vector | sqlite-vec；问句年份超出该公司 `reports.year` 区间则空，否则同样按报告年过滤；剥掉财报常用词后的实体必须出现在命中页 |
 | hybrid | query 短于 6 字 → 只 FTS；否则 RRF。FTS 为空且向量也被年份/实体约束清空 → 空 |
 
 默认嵌入：`BAAI/bge-small-zh-v1.5`，分块约 **800 字**（`embedding.chunk_size`）。命中聚合成**页**（引用单位）。
@@ -123,28 +141,67 @@ diag 对照脚本 `tools/diag_retrieval.py`：同一题跑 FTS@5、vector@50、h
 
 ```powershell
 python tools/run_eval_regression.py
+python tools/run_eval_regression.py --write-baseline   # 门槛通过后更新每题 hit 快照
 python -m stock_kb eval --split freeze
 python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5 --split freeze
+python -m stock_kb eval-generation
+python -m stock_kb route "海底捞 2024 年营业收入是多少" --company 海底捞
+python -m stock_kb compose-note --company 海底捞
 python tools/diag_retrieval.py
 python tools/audit_notes.py
 ```
 
-回归脚本现测：freeze FTS、freeze hybrid、FTS diag、hybrid diag（无答案）。
+回归脚本现测：freeze FTS、freeze hybrid、FTS diag、hybrid diag（无答案）、路由、年份过滤、组稿生成、`audit_notes.py`。  
+对照 `eval/regression_baseline.json` 打印每题翻红/翻绿（lost/gained）；翻题默认只打印，不单独当失败。改 GT 或题集后门槛通过再用 `--write-baseline`。
 
-| 检查 | 门槛 | 最近实测（2026-08-23） |
+| 检查 | 门槛 | 最近实测（2026-08-30） |
 |---|---|---|
 | FTS keyword Recall@5 | ≥ 0.75 | 0.80 |
-| FTS keyword Neg@5 | ≤ 0.65 | 0.60 |
+| FTS keyword Neg@5 | ≤ 0.65 | 0.55 |
 | hybrid semantic Recall@5 | ≥ 0.10 | 0.15 |
 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 |
 | 结构化 hit / parse_hit | 26/26 | 26/26 |
 | FTS diag indicators | 12/12 | 12/12 |
 | FTS diag no_answer empty_rate | ≥ 0.75 | 1.00 |
 | hybrid diag no_answer empty_rate | ≥ 0.75 | 1.00 |
+| route accuracy | = 1.0（24 题） | 1.00 |
+| year_filter precision_mean | ≥ 0.60（4 题） | 1.00 |
+| generation_compose | fail_count = 0；引用页含该数 | 1.00 faithful |
+| audit_notes | 0 项失败；净利走归母 | 见脚本 |
 
 Wilson 区间会打在报告里。n=20 时点估计很跳，门禁钉的是下限，不是「再抬到 0.9」。
 
 报告目录：`eval/reports/`。`diag_retrieval.json` 为最近一次对照；`diag_retrieval_chunk800.json` / `chunk400.json` 为分块实验。
+
+### 5.1 embedding 模型筛选（不进 freeze 门禁）
+
+freeze keyword 测不到向量（短句 hybrid 短路回 FTS）。要挑 embedding，用单独套件，只含**会长句、真走向量**的题：
+
+- freeze `semantic` 20 + freeze 无三表 `cross` 6
+- diag `semantic` 8 + diag `cross` 10
+- 共 44 道；问句归一化后短于 6 字的排除
+
+主指标是 **vector Recall@5 / Recall@50 分桶**（top5 / 6–50 / miss），不是 FTS，也不是「总 Recall」。
+
+```powershell
+python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger BAAI/bge-m3
+python -m stock_kb eval-embed --models BAAI/bge-small-zh-v1.5,BAAI/bge-m3,sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+```
+
+未建索引会报错，先 `python -m stock_kb index --model <ID>`。
+
+判定：
+
+| 标签 | 含义 | 能否改 `embedding.model` |
+|---|---|---|
+| `better` | Recall@50 的 Wilson 区间与基线分开且更高 | 可以考虑；仍须 hybrid freeze 过门禁 |
+| `better_at_5_only` | 只把已进 50 名的题推上 top-5 | 否 |
+| `lean_better` / `indistinguishable` | 区间重叠或只差一两题 | 否 |
+| `worse` / `lean_worse` | 更差或更差倾向 | 否 |
+
+n=44 时点估计仍跳。差 1 题不当作赢。keyword、结构化、无答案不参与选模。
+
+换模落地顺序：`eval-embed` 得 `better` → `eval --engine hybrid --model <候选> --split freeze` 过 hybrid semantic 门槛 → `run_eval_regression.py` → 改 `config.yaml` 的 `embedding.model`。
 
 ---
 
@@ -166,8 +223,10 @@ Wilson 区间会打在报告里。n=20 时点估计很跳，门禁钉的是下�
 3. 减值等多在附注、三表常空 → 再 `search_reports`
 4. 翻台率、同店、师徒、品牌 → `search_reports`
 
+不确定走哪把工具时先 `route_query`。`get_financial_statements(year=)` 默认只要 **当年年报正文**（`r.year = s.year`）；次年报比较列需 `include_comparatives=True`。
+
 CLI：`python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json`。  
-`--year 2024` 仍可能带出次年报比较列，引用优先 `reports.year` 与科目年份相同的当年正文。
+`--year 2024` 默认只要当年年报正文；比较列加 `--include-comparatives`。
 
 ---
 
@@ -175,9 +234,9 @@ CLI：`python -m stock_kb statements --company 海底捞 --keyword 已付股息 
 
 **评测债**
 
-- freeze 46 道检索 GT 未逐页通读。
+- freeze 46 道检索 GT 已于 2026-08-30 按 `pages.content` 通读；8 道改了 required 页，另有跨公司/同页负样本替换（见 `EVAL_PLAN.md` §5.3）。keyword 20 道 required 页主题词均在页上，未改。
 - diag 真语义 / 跨语言：证据清单后仍有约 11 道向量 50 名内没有；英文问中文页、附注减值仍是检索问题。
-- 三表 `year` 过滤不区分当年正文与次年比较列。
+- 组稿评测覆盖「工具顺序 + 数字在引用页上」，不覆盖 LLM 是否遵守 skill。无年份的 keyword 题 `year_mismatch` 仍高，那是排序不是过滤。
 
 **不要当下一刀**
 

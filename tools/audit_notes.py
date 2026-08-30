@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 EXPECTED_TEXT = {
     "海底捞": [
-        "43,225,355", "432.3", "4,041,885", "40.4", "5,664,189",
+        "43,225,355", "432.3", "4,049,824", "40.4", "5,664,189",
         "1,383", "3.9", "95.7", "0.75", "6,602,348", "10,005,135",
         "2,028,881", "4,133,303",
     ],
@@ -29,11 +29,17 @@ EXPECTED_TEXT = {
 
 DB_CHECKS = [
     ("海底捞", "income", 2025, ["收入", "revenue"], 43225355.0),
-    ("海底捞", "income", 2025, ["年内溢利", "profit for the year"], 4041885.0),
+    ("海底捞", "income", 2025, ["Owners of the Company", "本公司拥有人"], 4049824.0),
     ("海底捞", "cashflow", 2025, ["经营活动所得现金", "operating activities"], 5664189.0),
     ("百胜中国", "income", 2025, ["totalrevenues", "总收入"], 11797.0),
     ("百胜中国", "income", 2025, ["netincome—yumchina", "归母净利润"], 929.0),
     ("百胜中国", "cashflow", 2025, ["netcashprovidedbyoperating"], 1466.0),
+]
+
+# 科目数字走 indicators；净利必须是归母，禁止用年内溢利合计。
+INDICATOR_CHECKS = [
+    ("海底捞", "net_profit", 2025, 4049824.0),
+    ("百胜中国", "net_profit", 2025, 929.0),
 ]
 
 _NUM = re.compile(
@@ -153,10 +159,15 @@ def audit_one(conn: sqlite3.Connection, company: str, text: str) -> dict:
     }
 
 
-def main() -> int:
-    cfg = load_config()
+def _norm_name(text: str) -> str:
+    return (text or "").casefold().replace(" ", "").replace("—", "").replace("–", "")
+
+
+def run_audit(cfg: dict | None = None) -> tuple[int, dict]:
+    """Audit pilot notes. Returns (fail_count, report). Prints as it goes."""
+    cfg = cfg or load_config()
     failed = 0
-    report: dict = {"notes": {}}
+    report: dict = {"notes": {}, "db_checks": [], "indicator_checks": []}
     notes = _note_paths()
     conn = sqlite3.connect(f"file:{Path(cfg['db_path']).as_posix()}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
@@ -194,12 +205,22 @@ def main() -> int:
         ).fetchall()
         match = None
         for r in rows:
-            name = (r["line_name_norm"] or "").casefold().replace(" ", "").replace("—", "")
-            if any(k.casefold().replace(" ", "").replace("—", "") in name for k in keywords):
+            name = _norm_name(r["line_name_norm"])
+            if any(_norm_name(k) in name for k in keywords):
                 if abs(r["value"] - expected) < 0.01:
                     match = r
                     break
+        entry = {
+            "company": company,
+            "statement_type": stmt,
+            "year": year,
+            "expected": expected,
+            "ok": match is not None,
+        }
         if match:
+            entry["line_name_norm"] = match["line_name_norm"]
+            entry["value"] = match["value"]
+            entry["page_no"] = match["page_no"]
             print(
                 f"  OK  {company} {stmt} {year}: {match['line_name_norm'][:40]} = "
                 f"{match['value']} (p{match['page_no']} {match['title']})"
@@ -207,6 +228,39 @@ def main() -> int:
         else:
             print(f"  FAIL {company} {stmt} {year}: 未找到期望值 {expected}")
             failed += 1
+        report["db_checks"].append(entry)
+
+    print("===== indicators 归母净利 =====")
+    for company, name, year, expected in INDICATOR_CHECKS:
+        row = conn.execute(
+            """
+            SELECT value, page_no, line_name FROM indicators
+            WHERE company=? AND name=? AND year=? AND period_type='annual'
+            """,
+            (company, name, year),
+        ).fetchone()
+        ok = row is not None and abs(float(row["value"]) - expected) < 0.01
+        entry = {
+            "company": company,
+            "name": name,
+            "year": year,
+            "expected": expected,
+            "ok": ok,
+        }
+        if ok:
+            entry["value"] = row["value"]
+            entry["page_no"] = row["page_no"]
+            print(
+                f"  OK  {company} {name} {year}: {row['value']} "
+                f"(p{row['page_no']} {row['line_name']})"
+            )
+        else:
+            actual = None if row is None else row["value"]
+            print(
+                f"  FAIL {company} {name} {year}: 期望归母 {expected}，实际 {actual}"
+            )
+            failed += 1
+        report["indicator_checks"].append(entry)
 
     accs = [
         n["number_accuracy"]
@@ -226,6 +280,12 @@ def main() -> int:
     print("=====")
     print("结果:", "通过" if failed == 0 else f"{failed} 项未通过")
     conn.close()
+    report["summary"]["report_path"] = str(out)
+    return failed, report
+
+
+def main() -> int:
+    failed, _report = run_audit()
     return 0 if failed == 0 else 1
 
 
