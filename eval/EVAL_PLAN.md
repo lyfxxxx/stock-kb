@@ -19,7 +19,7 @@ python tools/audit_notes.py
 |---|---|---|
 | FTS keyword Recall@5 | ≥ 0.75 | 0.80 |
 | FTS keyword Neg@5 | ≤ 0.65 | 0.55 |
-| hybrid semantic Recall@5 | ≥ 0.10 | 0.15 |
+| hybrid semantic Recall@5 | ≥ 0.20 | 0.15（2026-09-04 复测 0.30） |
 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 |
 | 结构化 hit / parse_hit | 26/26 | 26/26 |
 | FTS diag `indicators` | 12/12 | 12/12 |

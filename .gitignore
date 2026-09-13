@@ -20,3 +20,8 @@ eval/generated_notes/
 .env
 .env.*
 .grok/
+
+# 工具会话状态与验收截图（过程产物）
+.zcode/
+.playwright-cli/
+eval/reports/visual/

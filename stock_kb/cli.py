@@ -127,6 +127,13 @@ def main(argv: list[str] | None = None) -> int:
         help="包含次年报比较列（默认只要当年年报正文）",
     )
 
+    p_quote = sub.add_parser(
+        "quote",
+        help="最新收盘价/市值与 TTM PE（yfinance 优先，akshare 兜底；失败则非零退出）",
+    )
+    p_quote.add_argument("--company", required=True)
+    p_quote.add_argument("--json", action="store_true")
+
     p_route = sub.add_parser("route", help="按 skill 规则判断该走哪把工具")
     p_route.add_argument("question")
     p_route.add_argument("--company")
@@ -204,6 +211,23 @@ def main(argv: list[str] | None = None) -> int:
         report = run_generation_eval(cfg)
         print(json.dumps(report["summary"], ensure_ascii=False, indent=2))
         return 0 if report["summary"]["fail_count"] == 0 else 1
+
+    if args.cmd == "quote":
+        from stock_kb import quotes
+
+        conn = db.connect(cfg["db_path"])
+        try:
+            q = quotes.fetch_quote(args.company, cfg)
+            ttm = quotes.ttm_net_profit(conn, args.company)
+            pe = quotes.pe_ttm(q, ttm["ttm_profit"], ttm["currency"])
+            payload = {**q, "ttm": ttm, "valuation": pe}
+        except quotes.QuoteError as exc:
+            print(json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False, indent=2))
+            return 1
+        finally:
+            conn.close()
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 0
 
     if args.cmd == "route":
         from stock_kb.route import route

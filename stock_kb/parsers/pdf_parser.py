@@ -47,6 +47,14 @@ STATEMENT_KEYWORDS = {
 
 NUMBER_RE = re.compile(r"\(?\s*-?\s*[\d,]+(?:\.\d+)?\s*\)?")
 YEAR_RE = re.compile(r"(19|20)\d{2}")
+
+# 港股/双语年报用独立短横「–」表示零值列（如「Dividends paid 已付股息 – (92,781)」）。
+# 只按数字找单元格会让这类整行因列数不足被丢弃，把短横当作空值单元格参与对齐。
+_DASH_CHARS = "–—‒―−-"
+CELL_RE = re.compile(
+    r"\(?\s*-?\s*[\d,]+(?:\.\d+)?\s*\)?"
+    rf"|(?<![\w.,])[{_DASH_CHARS}](?![\w.,])"
+)
 JUNK_NAMES = {
     "rmb'000",
     "rmb000",
@@ -200,7 +208,7 @@ def extract_statements_from_pages(
                 break
             if _is_header_or_junk_line(line):
                 continue
-            matches = list(NUMBER_RE.finditer(line))
+            matches = list(CELL_RE.finditer(line))
             if not matches:
                 continue
             k = len(years) if years else 1
@@ -212,7 +220,10 @@ def extract_statements_from_pages(
             if _is_junk_name(label):
                 continue
             for idx, m in enumerate(value_matches):
-                value = _parse_number(m.group(0))
+                cell = m.group(0)
+                if not re.search(r"\d", cell):
+                    continue  # 「–」零值列：不产生行项目
+                value = _parse_number(cell)
                 if value is None:
                     continue
                 year = years[idx] if idx < len(years) else None

@@ -22,6 +22,7 @@ dependencies = [
 mcp = ["mcp>=1.0"]
 ml = ["sentence-transformers>=3.0", "onnxruntime>=1.18", "sqlite-vec>=0.1.6"]
 gpu = ["torch>=2.6", "sentence-transformers>=3.0"]
+quotes = ["yfinance>=0.2", "akshare>=1.14"]
 
 [project.scripts]
 stock-kb = "stock_kb.cli:main"

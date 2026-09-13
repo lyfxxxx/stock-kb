@@ -11,10 +11,21 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from stock_kb import db, search
+from stock_kb import db, humanfmt, search
+from stock_kb.report_html import render_html
 from stock_kb.route import TOOL_INDICATORS, TOOL_SEARCH, TOOL_STATEMENTS, route
 
 INDICATOR_ORDER = (
+    "revenue",
+    "net_profit",
+    "gross_profit",
+    "gross_margin",
+    "net_margin",
+    "total_assets",
+    "total_equity",
+    "operating_cashflow",
+)
+CITE_TABLE_NAMES = (
     "revenue",
     "net_profit",
     "gross_profit",
@@ -26,12 +37,17 @@ INDICATOR_LABELS = {
     "revenue": "营业收入",
     "net_profit": "归母净利润",
     "gross_profit": "毛利",
+    "gross_margin": "毛利率",
+    "net_margin": "净利率",
     "total_assets": "总资产",
     "total_equity": "净资产",
     "operating_cashflow": "经营现金流",
 }
-STATEMENT_KEYWORDS = ("已付股息", "资本开支")
-SEARCH_TERMS = ("翻台率", "同店销售", "客单价")
+STATEMENT_KEYWORDS = ("已付股息", "资本开支", "减值")
+# 经营检索词（分产品/分地区节）；行业检索词（行业与同行节）。每词只取 top1。
+OPERATING_TERMS = ("翻台率", "同店销售额", "客单价", "门店数", "新开餐厅")
+INDUSTRY_TERMS = ("市场规模", "市场集中度", "市占率")
+SHAREHOLDER_TERMS = ("实际控制人", "股东", "股权激励")
 
 
 def format_locator(title: str | None, page: int | None) -> str:
@@ -51,6 +67,17 @@ def format_value(value: Any) -> str:
     if abs(v - round(v)) < 1e-6:
         return f"{int(round(v)):,}"
     return f"{v:,.2f}"
+
+
+def format_metric(name: str, value: Any) -> str:
+    if value is None:
+        return ""
+    if name in {"gross_margin", "net_margin", "roe"}:
+        try:
+            return f"{float(value) * 100:.1f}%"
+        except (TypeError, ValueError):
+            return str(value)
+    return format_value(value)
 
 
 def _title_for_report(conn: sqlite3.Connection, report_id: Any) -> str:
@@ -107,35 +134,38 @@ def fetch_indicators(
 def fetch_statement_lines(
     conn: sqlite3.Connection,
     company: str,
-    year: int | None,
+    years: list[int] | None,
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
-    for keyword in STATEMENT_KEYWORDS:
-        rows = db.query_statements(
-            conn,
-            company,
-            year=year,
-            period_type="annual",
-            keyword=keyword,
-            limit=3,
-            include_comparatives=False,
-        )
-        for row in rows:
-            item = dict(row)
-            item["keyword"] = keyword
-            item["locator"] = format_locator(item.get("title"), item.get("page_no"))
-            item["tool"] = TOOL_STATEMENTS
-            out.append(item)
-            break
+    year_list = years or [None]
+    for year in year_list:
+        for keyword in STATEMENT_KEYWORDS:
+            rows = db.query_statements(
+                conn,
+                company,
+                year=year,
+                period_type="annual",
+                keyword=keyword,
+                limit=3,
+                include_comparatives=False,
+            )
+            for row in rows:
+                item = dict(row)
+                item["keyword"] = keyword
+                item["locator"] = format_locator(item.get("title"), item.get("page_no"))
+                item["tool"] = TOOL_STATEMENTS
+                out.append(item)
+                break
     return out
 
 
-def fetch_operating_hits(
+def _search_hits(
     conn: sqlite3.Connection,
     company: str,
+    terms: tuple[str, ...],
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
-    for term in SEARCH_TERMS:
+    for term in terms:
         hits = search.fts_search(conn, term, company=company, top_k=1)
         if not hits:
             continue
@@ -146,12 +176,98 @@ def fetch_operating_hits(
                 "title": h.get("title"),
                 "page_no": h.get("page_no"),
                 "year": h.get("year"),
-                "snippet": (h.get("snippet") or "")[:160],
+                "snippet": humanfmt.clean_snippet(h.get("snippet"), 160),
                 "locator": format_locator(h.get("title"), h.get("page_no")),
                 "tool": TOOL_SEARCH,
             }
         )
     return out
+
+
+def fetch_operating_hits(
+    conn: sqlite3.Connection,
+    company: str,
+) -> list[dict[str, Any]]:
+    return _search_hits(conn, company, OPERATING_TERMS)
+
+
+def fetch_industry_hits(
+    conn: sqlite3.Connection,
+    company: str,
+) -> list[dict[str, Any]]:
+    return _search_hits(conn, company, INDUSTRY_TERMS)
+
+
+def fetch_shareholder_hits(
+    conn: sqlite3.Connection,
+    company: str,
+) -> list[dict[str, Any]]:
+    return _search_hits(conn, company, SHAREHOLDER_TERMS)
+
+
+def company_code(conn: sqlite3.Connection, company: str) -> str | None:
+    row = conn.execute(
+        "SELECT code FROM companies WHERE name=?", (company,)
+    ).fetchone()
+    if not row:
+        return None
+    code = row["code"] if "code" in row.keys() else None
+    return str(code) if code else None
+
+
+def _cite_table_rows(
+    indicators: list[dict[str, Any]],
+    statements: list[dict[str, Any]],
+) -> list[str]:
+    lines: list[str] = [
+        "| 指标 | 年份 | 数值 | 单位 | 来源 |",
+        "|---|---|---|---|---|",
+    ]
+    by_name: dict[str, list[dict[str, Any]]] = {name: [] for name in CITE_TABLE_NAMES}
+    for r in indicators:
+        if r.get("name") in CITE_TABLE_NAMES:
+            by_name[r["name"]].append(r)
+    n = 0
+    for name in CITE_TABLE_NAMES:
+        for r in by_name.get(name) or []:
+            loc = r.get("locator") or ""
+            if not loc or r.get("value") is None:
+                continue
+            label = INDICATOR_LABELS.get(name, name)
+            lines.append(
+                f"| {label} | {r.get('year')} | {format_value(r.get('value'))} "
+                f"| {r.get('unit') or ''} | {loc} |"
+            )
+            n += 1
+    for s in statements:
+        loc = s.get("locator") or ""
+        if not loc or s.get("value") is None:
+            continue
+        if s.get("keyword") == "减值":
+            continue
+        lines.append(
+            f"| {s.get('keyword')} | {s.get('year')} | {format_value(s.get('value'))} "
+            f"| {s.get('unit') or ''} | {loc} |"
+        )
+        n += 1
+    if n == 0:
+        return ["暂无数据"]
+    return lines
+
+
+def _bullet_hits(items: list[dict[str, Any]]) -> list[str]:
+    if not items:
+        return ["暂无数据"]
+    out: list[str] = []
+    for h in items:
+        loc = h.get("locator") or ""
+        snip = (h.get("snippet") or "").strip()
+        out.append(f"- {h.get('term')}：{loc} {snip}".strip())
+    return out
+
+
+def _trend_line(rows: list[dict[str, Any]], name: str, label: str) -> str | None:
+    return humanfmt.trend_sentence(label, [r for r in rows if r.get("name") == name])
 
 
 def render_note(
@@ -161,118 +277,109 @@ def render_note(
     indicators: list[dict[str, Any]],
     statements: list[dict[str, Any]],
     operating: list[dict[str, Any]],
+    shareholders: list[dict[str, Any]] | None = None,
+    industry: list[dict[str, Any]] | None = None,
+    code: str | None = None,
+    peers: list[str] | None = None,
 ) -> str:
     period = f"{as_of_year}年报" if as_of_year else "未知期间"
-    lines: list[str] = [
-        f"# {company} 笔记",
-        "",
-        f"> 数据截至：{period}｜来源：stock-kb（财报/研报库；组稿路径，不含模型判断）",
-        "",
-        "## 一句话结论",
-        "",
-        "以下关键数字均来自 indicators / 三表 / 检索命中页，不生成估值或观点。",
-        "",
-        "## 公司概况与最新业绩",
-        "",
-    ]
-    latest = [r for r in indicators if r.get("year") == as_of_year]
-    if latest:
-        bits = []
-        for r in latest:
-            label = INDICATOR_LABELS.get(r["name"], r["name"])
-            cite = r.get("locator") or ""
-            bits.append(f"{label} {format_value(r.get('value'))} {cite}".strip())
-        lines.append("；".join(bits) + "。")
-    else:
-        lines.append("暂无数据")
-    lines.extend(["", "## 经营/销售情况", ""])
-    if operating:
-        for h in operating:
-            loc = h.get("locator") or ""
-            lines.append(f"- {h['term']}：{loc} {h.get('snippet') or ''}".strip())
-    else:
-        lines.append("暂无数据")
-    lines.extend(
-        [
-            "",
-            "## 利润表情况",
-            "",
-            "见财务摘要表（归母净利润走 indicators.net_profit）。",
-            "",
-            "## 财务摘要",
-            "",
-            "| 指标 | 年份 | 数值 | 来源 |",
-            "|---|---|---|---|",
-        ]
-    )
-    by_name = {name: [] for name in INDICATOR_ORDER}
-    for r in indicators:
-        by_name.setdefault(r["name"], []).append(r)
-    for name in INDICATOR_ORDER:
-        for r in by_name.get(name) or []:
-            label = INDICATOR_LABELS.get(name, name)
-            loc = r.get("locator") or ""
-            lines.append(
-                f"| {label} | {r.get('year')} | {format_value(r.get('value'))} | {loc} |"
-            )
-    lines.extend(["", "## 资产负债情况", ""])
-    asset_rows = [
-        r
-        for r in latest
-        if r["name"] in {"total_assets", "total_equity"}
-    ]
-    if asset_rows:
-        for r in asset_rows:
-            label = INDICATOR_LABELS.get(r["name"], r["name"])
-            lines.append(
-                f"- {label} {format_value(r.get('value'))} {r.get('locator') or ''}".strip()
-            )
-    else:
-        lines.append("暂无数据")
-    lines.extend(["", "## 现金流与分红", ""])
-    ocf = [r for r in latest if r["name"] == "operating_cashflow"]
-    if ocf:
-        r = ocf[0]
-        lines.append(
-            f"- 经营现金流 {format_value(r.get('value'))} {r.get('locator') or ''}".strip()
+    tags = [f"${company}" + (f"({code})" if code else "") + "$"]
+    for p in peers or []:
+        if p and p != company:
+            tags.append(f"${p}$")
+    named_stmts = [{**s, "name": s.get("keyword")} for s in statements]
+    trend_profit = "；".join(
+        filter(
+            None,
+            [
+                _trend_line(indicators, "revenue", "营业收入"),
+                _trend_line(indicators, "net_profit", "归母净利润"),
+            ],
         )
-    if statements:
-        for s in statements:
-            lines.append(
-                f"- {s.get('keyword')} {format_value(s.get('value'))} "
-                f"{s.get('locator') or ''}".strip()
-            )
-    if not ocf and not statements:
-        lines.append("暂无数据")
-    lines.extend(
-        [
-            "",
-            "## 研报观点",
-            "",
-            "暂无数据（组稿路径不摘录研报判断）",
-            "",
-            "## 行业环境",
-            "",
-            "暂无数据",
-            "",
-            "## 同行对比",
-            "",
-            "暂无数据（组稿路径单公司）",
-            "",
-            "## 估值推演",
-            "",
-            "暂无数据（组稿路径不生成判断）",
-            "",
-            "## 风险",
-            "",
-            "暂无数据",
-            "",
-            "## 总结",
-            "",
-            "数字与引用已按 skill 工具顺序从库中取出；观点章节留空，避免无出处判断。",
-            "",
-        ]
     )
+    trend_bs = "；".join(
+        filter(
+            None,
+            [
+                _trend_line(indicators, "total_equity", "净资产"),
+                _trend_line(indicators, "total_assets", "总资产"),
+            ],
+        )
+    )
+    trend_cf = "；".join(
+        filter(
+            None,
+            [
+                _trend_line(indicators, "operating_cashflow", "经营现金流"),
+                _trend_line(named_stmts, "已付股息", "已付股息"),
+            ],
+        )
+    )
+    recap = humanfmt.summary_quality(indicators, named_stmts)
+    risk = humanfmt.summary_risk(named_stmts)
+    lines: list[str] = [
+        f"# {company}扫描",
+        "",
+        f"> 数据截至：{period}｜来源：stock-kb 财报/研报库（组稿底稿，无模型判断；关键数字均标注《文件》页码）",
+        "",
+        " ".join(tags),
+        "",
+        "## 股东及高管",
+        "",
+        *_bullet_hits(shareholders or []),
+        "",
+        "## 利润表",
+        "",
+        f"趋势：{trend_profit}" if trend_profit else "暂无带出处的收入/净利年度序列。",
+        "",
+        "图见 HTML 扫描稿；下表为强制出处明细。",
+        "",
+        *_cite_table_rows(
+            [r for r in indicators if r.get("name") in {"revenue", "net_profit", "gross_profit"}],
+            [],
+        ),
+        "",
+        "## 分产品或分地区",
+        "",
+        *_bullet_hits(operating),
+        "",
+        "## 资产负债",
+        "",
+        "净现金公式（与华域扫描同口径）：货币资金 − 短期借款 − 一年内到期非流动负债 − 长期借款。库内无借款明细时不计算净现金。",
+        "",
+        *( [f"趋势：{trend_bs}", ""] if trend_bs else [] ),
+        *_cite_table_rows(
+            [r for r in indicators if r.get("name") in {"total_assets", "total_equity"}],
+            [],
+        ),
+        "",
+        "## 现金流与分红",
+        "",
+        *( [f"趋势：{trend_cf}", ""] if trend_cf else [] ),
+        *_cite_table_rows(
+            [r for r in indicators if r.get("name") == "operating_cashflow"],
+            [s for s in statements if s.get("keyword") in {"已付股息", "资本开支"}],
+        ),
+        "",
+        "## 行业与同行",
+        "",
+        *_bullet_hits(industry or []),
+        "",
+        "## 未来看点",
+        "",
+        "暂无数据",
+        "",
+        "## 总结",
+        "",
+        f"1. 生意质量：{recap or '暂无带出处的年度事实。'}",
+        "2. 估值：库内无市价，不计算 PE / 股息率。派息见已付股息行（须有出处）。",
+        f"3. 风险：{risk or '暂无带出处的减值/借款明细。'}",
+        "",
+        "## 引用明细",
+        "",
+        *_cite_table_rows(indicators, statements),
+        "",
+    ]
     return "\n".join(lines)
 
 
@@ -291,14 +398,40 @@ def compose_note(
         if as_of is not None:
             years = [as_of - i for i in range(max(year_count, 1))]
         indicators = fetch_indicators(conn, company, years)
-        statements = fetch_statement_lines(conn, company, as_of)
+        statements = fetch_statement_lines(conn, company, years)
         operating = fetch_operating_hits(conn, company)
+        shareholders = fetch_shareholder_hits(conn, company)
+        industry = fetch_industry_hits(conn, company)
+        code = company_code(conn, company)
+        peers = [
+            n
+            for n in ((cfg.get("nas") or {}).get("companies") or [])
+            if n and n != company
+        ]
         markdown = render_note(
             company,
             as_of_year=as_of,
             indicators=indicators,
             statements=statements,
             operating=operating,
+            shareholders=shareholders,
+            industry=industry,
+            code=code,
+            peers=peers,
+        )
+        html = render_html(
+            company,
+            as_of_year=as_of,
+            code=code,
+            peers=peers,
+            indicators=indicators,
+            statements=statements,
+            operating=operating,
+            shareholders=shareholders,
+            industry=industry,
+            format_value=format_value,
+            format_metric=format_metric,
+            indicator_labels=INDICATOR_LABELS,
         )
     finally:
         conn.close()
@@ -307,11 +440,15 @@ def compose_note(
     dest_dir = out_dir or (root / "eval" / "generated_notes" / company)
     dest_dir.mkdir(parents=True, exist_ok=True)
     today = date.today().isoformat()
-    path = dest_dir / f"{today}-{company}-笔记.md"
+    path = dest_dir / f"{today}-{company}-扫描.md"
+    # 组稿 HTML 与 skill 正式稿错开：后者是 YYYY-MM-DD-<公司>-扫描.html
+    html_path = dest_dir / f"{today}-{company}-扫描-组稿.html"
     path.write_text(markdown, encoding="utf-8")
+    html_path.write_text(html, encoding="utf-8")
     return {
         "company": company,
         "path": str(path),
+        "html_path": str(html_path),
         "as_of_year": as_of,
         "n_indicators": len(indicators),
         "n_statements": len(statements),

@@ -247,13 +247,34 @@ def upsert_company(conn: sqlite3.Connection, name: str, code: str | None = None)
     return int(row["id"])
 
 
-# 笔记/MCP 常用说法 → 三表行名片段（简体或原文）
+# 笔记/MCP 常用说法 → 三表行名片段（简体或原文）。
+# 注意大小写：needle 'Capitalspending' 命中 line_name_norm（instr 区分大小写），
+# 'capital spending' 命中 lower(line_name_orig)，两者各覆盖一条路径。
 _STATEMENT_ALIASES = {
-    "资本开支": ["购买物业", "購買物業", "purchase of property"],
-    "资本支出": ["购买物业", "購買物業", "purchase of property"],
-    "capex": ["purchase of property", "购买物业"],
-    "已付股息": ["dividends paid", "已付股息"],
-    "股息": ["dividends paid", "已付股息"],
+    "资本开支": [
+        "购买物业",
+        "購買物業",
+        "purchase of property",
+        "Capitalspending",
+        "capital spending",
+    ],
+    "资本支出": [
+        "购买物业",
+        "購買物業",
+        "purchase of property",
+        "Capitalspending",
+        "capital spending",
+    ],
+    "capex": [
+        "purchase of property",
+        "购买物业",
+        "Capitalspending",
+        "capital spending",
+    ],
+    # 美版年报行名常无空格（Cashdividendspaidoncommonstock），
+    # 'dividends paid' 只能命中港版有空格原文，'dividendspaid' 补 norm 路径。
+    "已付股息": ["dividends paid", "dividendspaid", "已付股息"],
+    "股息": ["dividends paid", "dividendspaid", "已付股息"],
 }
 
 

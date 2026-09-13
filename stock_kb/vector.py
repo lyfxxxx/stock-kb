@@ -22,6 +22,78 @@ MODEL_DIMS: dict[str, int] = {
 CHUNK_SIZE = 800
 _EMBEDDER_CACHE: dict[tuple[str, str], object] = {}
 
+_BILINGUAL = (
+    ("翻台率", "table turnover"),
+    ("同店", "same-store"),
+    ("客单价", "average spend"),
+    ("减值", "impairment"),
+    ("已付股息", "dividends paid"),
+    ("资本开支", "capital expenditure"),
+    ("师徒", "apprentice"),
+    ("外卖", "delivery"),
+    ("归母", "attributable to owners"),
+)
+# 口语改写 → 财报/研报用词。只拼进 embedding 查询，不改 FTS、不改 needles。
+_EMBED_ALIASES = (
+    ("真金白银", "经营现金流 现金流质量"),
+    ("座位周转", "翻台率"),
+    ("坐得转", "翻台率"),
+    ("转不转", "翻台率"),
+    ("来得勤", "翻台率 同店"),
+    ("勤不勤", "翻台率"),
+    ("来得频", "翻台率 同店"),
+    ("频不频", "翻台率"),
+    ("一餐花", "客单价"),
+    ("打下去", "降本增效 费用"),
+    ("按住", "费用管控"),
+    ("撑场面", "多品牌"),
+    ("送到家", "外卖 delivery"),
+    ("不到店", "外卖 外送"),
+    ("店点单", "外卖 数字化"),
+    ("热饮", "咖啡 KCOFFEE"),
+    ("薄不薄", "利润率 经营利润"),
+    ("好转", "改善 经营利润"),
+    ("赚一块钱能剩", "净利率"),
+    ("店铺到", "门店数量 天花板"),
+    ("带出店", "师徒制"),
+    ("再来", "同店销售"),
+    ("快餐店", "同店"),
+    ("竞争格局", "市场份额"),
+    ("拿回现金", "股息 回购 分红"),
+)
+
+
+def _expand_bilingual(query: str) -> str:
+    """Add aliases for embedding only; FTS/needles stay original."""
+    extra: list[str] = []
+    qlow = query.lower()
+    seen = {query, qlow}
+
+    def _add(token: str) -> None:
+        tok = token.strip()
+        if not tok:
+            return
+        key = tok.lower()
+        if key in seen or tok in seen:
+            return
+        extra.append(tok)
+        seen.add(key)
+        seen.add(tok)
+
+    for zh, en in _BILINGUAL:
+        en_l = en.lower()
+        if zh in query and en_l not in qlow:
+            _add(en)
+        elif en_l in qlow and zh not in query:
+            _add(zh)
+    for src, dst in _EMBED_ALIASES:
+        if src in query or src.lower() in qlow:
+            for tok in dst.split():
+                _add(tok)
+    if not extra:
+        return query
+    return query + " " + " ".join(extra)
+
 
 def _chunk_size(cfg: dict[str, Any] | None = None) -> int:
     if cfg:
@@ -357,6 +429,7 @@ def vector_search(
     query = search.normalize_query(query)
     if not query:
         return []
+    embed_query = _expand_bilingual(query)
     implied_years = search.query_years(query) if year is None else []
     if implied_years and search.years_out_of_corpus(conn, query, company):
         return []
@@ -373,7 +446,7 @@ def vector_search(
     if not cache_dir:
         return []
     embedder = get_embedder(model, cache_dir, backend=backend)
-    vec = next(embedder.embed([query]))
+    vec = next(embedder.embed([embed_query]))
     has_filters = any(
         v is not None for v in (company, year, report_type, language)
     ) or bool(allowed_years)

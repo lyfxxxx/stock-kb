@@ -278,14 +278,49 @@
 - 解决：`get_financial_statements` 增加 `keyword`；CLI `statements --keyword`；stock-note 规定收入/净利等先 `get_indicators`，减值/股息/资本开支先三表，全文只补叙述。
 - 教训：结构化通道和页检索不要混用。评测 cross 题仍走检索，产品调用要改顺序。
 
+### 40. 扫描稿：行情独立工具、改写问句不当 needles、组稿别盖正式 HTML
+
+- 现象：1）组稿总结写「无市价不算 PE」，skill 要 PE_TTM；Yahoo `06862.HK` 404。2）G3 上抬到 ≥0.20 后 freeze hybrid semantic 仍是 0.15（20 题里约 17 题 top-5 空或打偏）。3）`eval-generation` 把 `YYYY-MM-DD-<公司>-扫描.html` 覆盖成无判断底稿。
+- 原因：1）市价不在 `stock_kb.db`；港股 Yahoo 代码不带前置 0（`6862.HK`）；akshare `stock_hk_daily` 是港元且无市值。2）`claim_needles` 把「真金白银 / 勤不勤 / 转不转」当成必须出现在页上的实体，研报写的是「经营现金流 / 翻台率」，向量命中被滤掉。3）组稿和 skill 正式稿共用同一文件名。
+- 解决：`python -m stock_kb quote`（yfinance 优先，akshare 兜底；缺价格/市值/汇率整篇失败）。`python -m stock_kb` 原先 `main()` 返回码被丢掉，失败时仍退出 0；`__main__.py` 改为 `SystemExit(main())`。PE = 最新市值 / TTM 归母（年报或中报+stub，按 `unit` 换算到元），再按实时汇率给人民币。口语碎片进 `_GENERIC_CLAIM`，embedding 查询补领域同义，FTS 与 MCP `search_reports` 默认仍是原文 / `engine=fts`。组稿 HTML 改写 `扫描-组稿.html`。2026-09-04 freeze hybrid semantic Recall@5 **0.15→0.30**，keyword 0.80、结构化 26/26、Neg@5 0.00；`run_eval_regression.py` RESULT: PASS。人工 rubric 见 `eval/HUMAN_RUBRIC.md`，挡发布、不挡回归。
+- 教训：无答案靠实体落地，真语义不能把改写词当 needles。产品默认引擎和评测引擎可以分开。正式稿和组稿底稿不要抢同一个路径。
+
+### 41. 扫描报告对照雪球样稿改版：英文行名两套形态、「–」零值列、ECharts 内嵌、口径统一
+
+- 现象：2026-09-04 两份扫描稿对照 `eval/style-canon/xueqiu-407721579.md` 差距明显——1）同一收入数字三种口径（图轴「43.2M」=千元、表格 43,225,355、正文 432.3 亿元）；2）出处三重冗余（figcaption 逐点罗列与出处表 100% 重复）；3）图例有「毛利率/总资产」却无数据（幻影系列）；4）百胜资本开支五年全缺、海底捞 2023 股息缺；5）meta 行泄漏指令原文「关键数字须带来源」；6）「未来看点/总结」是模板规则文字。
+- 原因：1）图表手绘 SVG 按 k/M/B 缩写千元。2）caption 与表格同源重复。3）`indicators` 里两家都无 gross_profit（损益表按性质列支，无「毛利」行），海底捞无 total_assets（英式资产负债表只有「資產總額減流動負債」）——属报表格式，不是解析 bug。4）`_STATEMENT_ALIASES` 的 needle 没覆盖美版无空格行名（`Capitalspending`、`Cashdividendspaidoncommonstock`）：instr 在 `line_name_norm` 上区分大小写、在 `lower(line_name_orig)` 上要求带空格，两条路径各需一个 needle；港股用「–」表示零值列，「Dividends paid 已付股息 (553,798) –」因列数不足被整行丢弃。5）模板文案把生成指令写进成品。6）组稿把「写作规则」当占位内容。
+- 解决：`db._STATEMENT_ALIASES` 补 `Capitalspending`/`capital spending`/`dividendspaid`；`pdf_parser` 改 `CELL_RE`（数字或独立短横），短横列不产出行、数字列照常对齐年份，`reparse-statements` 全量重算（5,570→5,809 行，indicators 117 条零漂移，改前已备份 DB）。图表组件化：`charts.py` 重构为「序列→ECharts spec」（每点带人读 label 与 locator），`report_html.py` 内嵌 `assets/vendor/echarts-5.6.0.min.js`（5.6.0，Apache-2.0，单文件仍离线可开），SVG renderer 保持 `<svg>`；空序列不进图例，悬停 tooltip 显示「数值+单位+《文件》页码」，柱顶/点标末年+峰值。新增 `stock_kb/humanfmt.py` 统一人读口径（千元→亿元、百万美元→亿美元、ratio→%）与确定性趋势句（触底回升/见顶回落/复合增速，每个数字带出处；负值对用「扩大/收窄」）；出处表改五列（+单位，HTML 另加同比）；`generation_eval` 对「趋势：」句做口径一致性自检（mismatch>0 即 fail）；总结改为公司级事实复述（末年收入/归母/现金流/资本开支 + 最新减值）。检索词表扩到翻台率/同店销售额/客单价/门店数/新开餐厅 + 市场规模/市场集中度/市占率，两家「行业与同行」节首次有带出处命中。`eval-generation` faithful_rate=1.0、趋势口径 22/22 一致；`run_eval_regression.py` PASS；judge 视觉验收两轮（第一轮 fail 于过程文字残留，改总结/未来看点后 pass）。
+- 教训：1）三表行名要先查库再补别名，norm（无空格、大小写敏感）与 orig（lower）是两条匹配路径，一个 needle 通吃不了。2）「–」是港股报表的零值语义，解析器把它当噪声会连坐整行。3）数据缺的一类根因是报表格式（无毛利行、英式 BS），按「不编」留白比自造口径安全，缺口结论沉淀在 `eval/data_gaps.md`。4）占位文字也会泄漏：任何「写给生成者看的规则」都可能被原样带进成品，成品里只该有内容。5）换图表组件时 SVG renderer 能同时保住「单文件、离线、R4 有 `<svg>`」三个约束。
+
+### 42. 雪球专栏批量抓取：时间线 API 页内 fetch 可通、响应键是 list
+
+- 现象：按 09-04 经验用有头真 Chrome 抓 modest_ 专栏（234 篇原创），首页偶发「滑动验证页面」；`/statuses/original/timeline.json` 在未过验证的会话里返回 WAF HTML（`<textarea…`，导致 `page.evaluate` 报 JSON SyntaxError）；脚本误把响应体当 `statuses` 键解析，永远为空而回退 DOM 只拿到第一屏 21 个候选（多为短帖/转发）。
+- 原因：1）阿里云盾验证与 cookie 状态绑定，匿名新会话易触发。2）该接口 200 JSON 的列表键是 **`list`**（v4/user_timeline.json 才是 `statuses`）。3）无持久 profile 时每次都是新指纹，验证结果不可复用。
+- 解决：`tools/fetch_xueqiu_column.py`——`launch_persistent_context(data/xueqiu-profile, channel=chrome, headed)` + 隐藏 `navigator.webdriver` 的 init script；未过验证时自动找 `#nc_1_n1z`/`.btn_slide` 滑块按拟人轨迹拖到轨道最右（阿里盾滑块无缺口，拖到底即可），失败留窗 120s 供人工；时间线解析 `list` 键并按「扫描|笔记」标题优先排队；逐篇 `article.innerText` 落盘 `eval/style-canon/column/`。28 篇一次跑通（13:52–13:55），产出 [column/index.md](../eval/style-canon/column/index.md)。
+- 教训：1）同一站点「页内同源 fetch」与「外部 HTTP」待遇完全不同，取数优先在真浏览器上下文里做。2）对接未知 API 先打一条诊断看真实响应结构，不要按文档/记忆猜键名。3）持久化 profile 是过风控类抓取的钥匙，验证一次反复受益。
+
+### 43. skill 换新模版出正式稿：复用组稿样式会丢判断样式、行情兜底要走「明示估算」
+
+- 现象：1）skill 正式稿切到 28 篇语料模版（`note_template.md`）后，judge 验收发现独立判断段没有橙色左边框——`.judge` 样式在 09-12 重写 `report_html.py` 时随组稿一起被删了（组稿无判断），而正式稿 HTML 是复用组稿 `<style>` 装配的。2）行情工具三路全断（yfinance 限流、东财接口被代理拦、百度估值接口失效），正式稿的估值收束无法按 R5 走 quote。3）judge 对整页截图（1 万+px）只认得出章节结构，正文级验收全部 Unverified。
+- 解决：1）`tools/assemble_note_html.py` 装配正式稿时补 `.judge`（米色底+橙左边框）、h3、单位列 nowrap 样式；正式稿 Markdown 里判断必须写成独立段（段首「判断：」），段中内联的判断要拆开。2）行情走明示估算口径并全程标注：股价取新浪港股/美股日线收盘、股本取年报已发行股份或由每股盈利反推、汇率取中行折算价（akshare `currency_boc_sina`），PE/股息率算式在正文写明「估算口径」；quote 恢复后应回归 quote 工具口径。3）图表数据标签加 `textBorderColor:#fbfaf7, textBorderWidth:2` 浅色描边，解决短柱标签压深色柱不可读；judge 验收改用 1,500px 分段截图并保证覆盖到页底。
+- 教训：1）「正式稿复用底稿样式」时，底稿没有的特性（判断段）样式也会一起缺，装配层要显式补齐并写明原因。2）外部行情不可用不等于停笔——把每个估算的输入（价格/股本/汇率）各自落到出处，口径写成读者可见的算式，纪律从「禁止估算」细化为「禁止无出处估算」。3）长页面的视觉验收必须分段且覆盖到底，整页缩略图会让 judge 把「看不清」误报成「有问题/没问题」。
+
+### 44. 出处改财报注释式：[n] 锚点方案的三次翻车与修法
+
+- 现象：按用户反馈把正式稿出处从行内《文件》第N页改为文末注释区后，judge 连续三轮打出新缺陷：1）图 caption 残留「悬停…《文件》页码」旧话术；2）相邻上标 [5][6] 连排渲染成「56」；3）文末注释表长出处溢出右缘被裁切、数值列竖排；4）一处给「海底捞」数字标了百胜自己的注释号；5）上标孤行修了又犯。
+- 原因：1）caption 文案在 `report_html.py`，改了出处机制没同步改它。2）CSS 相邻选择器对 `sup+sup` 在上标间被 span 隔开后失效。3）给「单位列不折行」加的 `td:nth-child(4) nowrap` 规则误伤注释表的出处列（同为第 4 列）；表 `table-layout:fixed` 又被写死给了所有表格，正文表吃到注释表列宽。4）跨公司引用数字时凭惯性标了自己篇内的注释号。5）nowrap 规则重构时丢了基础款 `.nw { white-space:nowrap }`，只留下逗号分隔规则；更早一版用 `\u2060` 词连接符 + `<sup>.*?</sup>` 回溯匹配做 nowrap 包裹，`.*?` 在标点类不匹配时会回溯跨到下一个上标，把整段正文裹进不可断行。
+- 解决：出处机制整体改为——正文数字带 `[n]`，装配器转成 `<sup><a href="#note-n">`；逐个上标用 `([^<>]{0,2})(sup)(标点?)` 回调配 `<span class="nw">`（永不跨标签、nowrap 范围实测 ≤5 字符）；相邻 nw span 由 `span.nw + span.nw sup::before` 补逗号；注释表加 `cite notes` 类走固定列宽（5/18/37/40%）与 `overflow-wrap:anywhere`；caption 同步改为「数据出处见文末注释」。验收对 judge 报的数字矛盾先用源码/高清元素裁剪复核再改——本轮两处「数值矛盾」均为低分辨率误读（15,060 非 15,065；现金流图标签归位正确）。
+- 教训：1）改「展示机制」时要全文搜索旧机制的用户可见话术（caption、模板、rubric 三处一起改）。2）正则做 HTML 包装时，非贪婪 + 回溯可能跨越同类元素制造巨长匹配——逐元素 finditer + 回调构建比一条 re.sub 安全。3）judge 报的数值矛盾先做源码级核对与高清局部裁剪，再决定改文档还是改判（本轮两处均为误读）。
+
 ## 七、当前已知局限与下一步
 
-> 评测体系见 `eval/EVAL_SYSTEM.md`；过程记录见 `eval/EVAL_PLAN.md`；8-16 数据修复见 `docs/fix-record-20260816.md`。
+> 评测体系见 `eval/EVAL_SYSTEM.md`；三个产品目标到门的映射见 `eval/METRICS_CONTRACT.md`；过程记录见 `eval/EVAL_PLAN.md`；8-16 数据修复见 `docs/fix-record-20260816.md`。
 
 - `net_profit` 已是归母；FTS 无答案 empty_rate=1.0。hybrid 无答案已按年份/实体约束，不再一律填满 top-k。
 - `statements.unit/currency` 已回填；研报等单位未知项仍可能为空。
 - 两字查询 `pages_bigram_fts` 仍只作空结果兜底；LIKE 已改按词频排序。
 - 400 字分块已试过并回滚。跨语言（英文问中文页）未做；不要用整句语言 ID 分流。reranker / jina、US/HK 语义重复 canonical、Docker / Hermes、watch 真实新增文件：未做。
+- 雪球样稿 https://xueqiu.com/7305934056/407721579 ：无头 HTTP 被 WAF 挡住；Playwright 真浏览器可读。正文是《安井食品扫描》而非金茂笔记，见 `eval/style-canon/`。
 
 ## 八、可复用经验清单
 

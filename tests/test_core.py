@@ -340,6 +340,19 @@ def test_claim_needles_keep_entities_drop_paraphrase():
     assert search.claim_needles("百胜中国 store openings 门店净增", "百胜中国") == []
     assert search.claim_needles("百胜中国的利润是变厚还是变薄？", "百胜中国") == []
     assert search.claim_needles("百胜中国股东能拿回多少现金？", "百胜中国") == []
+    assert search.claim_needles("客人来得勤不勤、一桌坐得转不转？", "海底捞") == []
+    assert search.claim_needles("座位周转是在变快还是变慢？", "海底捞") == []
+    assert search.claim_needles("海底捞赚到的利润有多少能变成真金白银？", "海底捞") == []
+    assert search.claim_needles("利润薄不薄，最近是在好转吗？", "百胜中国") == []
+
+
+def test_embed_query_expands_paraphrase_only():
+    from stock_kb.vector import _expand_bilingual
+
+    expanded = _expand_bilingual("座位周转是在变快还是变慢？")
+    assert "翻台率" in expanded
+    cash = _expand_bilingual("海底捞赚到的利润有多少能变成真金白银？")
+    assert "经营现金流" in cash or "现金流" in cash
 
 
 def test_year_out_of_corpus_and_needle_grounding(conn):

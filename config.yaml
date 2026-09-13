@@ -7,6 +7,18 @@ nas:
   exclude_dirs:
     - "#recycle"
 
+listings:
+  海底捞:
+    yfinance: "6862.HK"
+    akshare_hk: "06862"
+    listing_currency: HKD
+    report_currency: CNY
+  百胜中国:
+    yfinance: "YUMC"
+    akshare_us: "YUMC"
+    listing_currency: USD
+    report_currency: USD
+
 data_dir: "data"
 db_path: "data/stock_kb.db"
 models_dir: "models"

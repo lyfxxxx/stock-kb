@@ -88,11 +88,15 @@ python -m stock_kb eval --split freeze
 python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5 --split freeze
 python -m stock_kb eval-generation
 python -m stock_kb route "海底捞 2024 年营业收入是多少" --company 海底捞
-python -m stock_kb compose-note --company 海底捞
+python -m stock_kb compose-note --company 海底捞   # 扫描体 Markdown + ECharts 单文件 HTML（内嵌 vendored 图表库）
+python -m stock_kb quote --company 海底捞 --json   # 最新价/市值/TTM PE（失败非零退出）
 
 # 评测体系与过程记录
-# eval/EVAL_SYSTEM.md （现行分层、GT、门禁）
-# eval/EVAL_PLAN.md   （过程中改掉的问题）
+# eval/EVAL_SYSTEM.md      （现行分层、GT、门禁）
+# eval/METRICS_CONTRACT.md （三个产品目标到门的映射；换模/改 skill/加数据各走哪条测量路径）
+# eval/style-canon/        （雪球样稿《安井食品扫描》全文与结构对照）
+# eval/data_gaps.md        （报告数据面缺口诊断清单：根因/修复/待办）
+# eval/EVAL_PLAN.md        （过程中改掉的问题）
 
 # 三表行项目（科目数字；不要先全文搜；--year 默认当年年报正文）
 python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json
@@ -113,9 +117,12 @@ stock-kb/
 ├── config.yaml
 ├── stock_kb/            # 核心代码（ingest/parse/index/serve）
 ├── eval/
-│   ├── questions.yaml   # 评测问题集
-│   ├── EVAL_PLAN.md     # 评测记录（过程中改掉的问题）
-│   └── reports/         # 评测报告
+│   ├── questions.yaml         # 评测问题集
+│   ├── EVAL_SYSTEM.md         # 现行分层、GT、门禁
+│   ├── METRICS_CONTRACT.md    # 三个产品目标到门的映射
+│   ├── EVAL_PLAN.md           # 评测记录（过程中改掉的问题）
+│   ├── style-canon/           # 雪球样稿《安井食品扫描》
+│   └── reports/               # 评测报告
 ├── data/                # SQLite 与日志
 ├── models/              # 嵌入模型缓存
 └── skill/stock-note/    # 可移植 agent skill（已复制到个人 skills 目录）
@@ -124,7 +131,9 @@ stock-kb/
 ## 过程复盘
 
 建库与评测中遇到的问题和解决方案见
-[docs/process-log.md](docs/process-log.md)。
+[docs/process-log.md](docs/process-log.md)（简历可讲的现象/原因/解决/教训记录）。
+三个产品目标到现行门的映射见
+[eval/METRICS_CONTRACT.md](eval/METRICS_CONTRACT.md)。
 2026-08-16 的自动修复记录见
 [docs/fix-record-20260816.md](docs/fix-record-20260816.md)。
 

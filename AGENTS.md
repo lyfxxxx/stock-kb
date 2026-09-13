@@ -12,7 +12,7 @@ NAS 财报/研报 → 解析（pdfplumber/xlrd/OCR 兜底）→ SQLite（页文�
 ```
 
 - 试点公司：海底捞（06862.HK）、百胜中国（YUMC/09987.HK），已在 `config.yaml` 配置。
-- 当前规模：60 份报告、8,128 页、5,570 条三表行项目、117 条指标（2026-08-16 解析器收紧后；评测体系见 `eval/EVAL_SYSTEM.md`，过程记录见 `eval/EVAL_PLAN.md`）。
+- 当前规模：60 份报告、8,128 页、5,809 条三表行项目、117 条指标（2026-09-12 解析器支持「–」零值列并重算后；评测体系见 `eval/EVAL_SYSTEM.md`，目标到门的映射见 `eval/METRICS_CONTRACT.md`，过程记录见 `eval/EVAL_PLAN.md`，数据缺口清单见 `eval/data_gaps.md`）。
 - 核心目标：笔记中的关键数字必须能追溯到「文件 + 页码/表名」，不允许凭记忆编数。
 
 ## 2. 环境与安装
@@ -43,7 +43,8 @@ python tools/run_eval_regression.py --write-baseline
 python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger BAAI/bge-m3
 python -m stock_kb eval-generation                  # 按 skill 组稿并审计引用页
 python -m stock_kb route "海底捞 2024 年营业收入是多少" --company 海底捞
-python -m stock_kb compose-note --company 海底捞
+python -m stock_kb compose-note --company 海底捞   # 扫描体 Markdown + ECharts 单文件 HTML
+python -m stock_kb quote --company 海底捞 --json   # 最新价/市值/TTM PE；失败则非零退出
 python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json
 python tools/check_vec.py                           # 快速检查向量索引健康度
 ```
@@ -78,14 +79,19 @@ python tools/test_mcp_http.py                       # 端到端测试
 | `stock_kb/eval_runner.py` | 评测问题集执行、评分、报告输出 |
 | `stock_kb/route.py` | skill 规则：问句 → 工具（indicators / statements / search / no_answer） |
 | `stock_kb/note_builder.py` | 按 skill 顺序组稿可审计笔记（无 LLM） |
-| `stock_kb/generation_eval.py` | 组稿产出：引用页是否含该数字 |
+| `stock_kb/charts.py` | 扫描稿图表 spec：序列 → ECharts 数据点（人读单位 + 每点出处），纯函数 |
+| `stock_kb/report_html.py` | 单文件扫描 HTML：内嵌 vendored ECharts（SVG renderer）+ 出处表 + 趋势句 |
+| `stock_kb/humanfmt.py` | 人读口径（千元→亿元、百万美元→亿美元、ratio→%）、趋势句、摘录清洗 |
+| `stock_kb/quotes.py` | 独立行情 CLI（yfinance 优先/akshare 兜底），不落库 |
+| `assets/vendor/` | vendored 前端库（echarts-5.6.0.min.js，Apache-2.0，内联进单文件 HTML） |
+| `stock_kb/generation_eval.py` | 组稿产出：引用页是否含该数字 + 趋势句口径一致性 |
 | `stock_kb/serve/mcp_server.py` | FastMCP 服务：8 个只读工具（含 `route_query`）+ HTTP Bearer 鉴权 |
 | `tools/` | 一次性/运维脚本（审计、检查、迁移、下载模型、生成人工复核底稿） |
-| `eval/` | `questions.yaml` 评测集、`reports/` 历史报告、人工审核表、人工复核工作底稿 |
+| `eval/` | `questions.yaml` 评测集、`EVAL_SYSTEM.md` 门禁、`METRICS_CONTRACT.md` 目标到门、`reports/` 历史报告、人工审核表 |
 | `data/` | SQLite 库、日志、pid 文件（运行时产物） |
 | `models/` | Hugging Face 模型缓存（运行时产物） |
 | `skill/stock-note/` | 可移植的笔记生成 skill |
-| `docs/process-log.md` | 历次踩坑记录与解法，改相关模块前必读 |
+| `docs/process-log.md` | 历次踩坑记录与解法（现象/原因/解决/教训），改相关模块前必读；简历过程记录指定此文件 |
 
 注意：`tools/*.py` 里多数脚本硬编码了 `D:\workspace\stock-kb\data\stock_kb.db`，是历史一次性脚本，**新代码不要模仿**。
 
@@ -111,7 +117,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 1. `scan` 遍历 `nas.root/<company>`，仅处理 `.pdf/.xls/.html/.htm/.csv/.txt/.md`，跳过 `nas.exclude_dirs`。
 2. `manifest` 按路径 + SHA-256 判断是否已处理；未变化则跳过，`--rebuild` 强制重解析。
 3. PDF：pdfplumber 逐页提文本；文本量低于 `ocr.min_chars` 的页走 tesseract OCR 兜底；随后繁体转简体存 `pages.content`，原文存 `pages.content_orig`。
-4. 三表：按报表页标题定位（前 10 行内），按「行标签 + 行尾数字」解析，不依赖 `extract_tables()`（港股双栏表格会错位）。
+4. 三表：按报表页标题定位（前 10 行内），按「行标签 + 行尾数字」解析（独立短横「–」视为零值列参与对齐，不产生行项目），不依赖 `extract_tables()`（港股双栏表格会错位）。
 5. 页文本同步写入 `pages_fts`（FTS5 trigram 分词，短于 3 字的查询走 `LIKE` 兜底）。
 6. 向量：`pages.content` 按行合并成约 800 字/块写入 `chunks`（`embedding.chunk_size`）；`index` 用指定模型嵌入未索引块。`--rebuild` 只删当前模型向量；`--rebuild-chunks` 重切页面并清空**所有**模型索引（chunk_id 会变）。400 字块已在 diag 试过，freeze hybrid semantic 从 0.10 掉到 0.05，未采用。
 7. `indicators` 从 `statements` 行项目关键词匹配提取收入/净利/资产等，再派生毛利率、净利率、ROE。`net_profit` 是归母（港股「本公司拥有人应占」，美国 `Net income — Yum China Holdings`），不是年内溢利合计。
@@ -128,7 +134,7 @@ python tools/test_mcp_http.py                       # 端到端测试
 | `reports` | 报告元数据，`path` 唯一，`status` 生命周期 pending/parsing/ok |
 | `pages` | 每页文本；`content` 为简体索引用，`content_orig` 为原文引用用 |
 | `pages_fts` | FTS5 虚拟表，与 `pages` 一对一镜像 |
-| `statements` | 三表行项目；数值未换算单位，`unit` 基本为 NULL |
+| `statements` | 三表行项目；数值未换算（海底捞 `千元/CNY`，百胜 `百万美元/USD`） |
 | `indicators` | 指标值，`(company, year, period_type, name)` 唯一 |
 | `sources` | 统一来源引用表，**目前未填充**（MCP 现场拼 locator） |
 | `manifest` | 扫描清单：路径 + SHA-256 + 状态 |
@@ -187,7 +193,15 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 
 ### 新增评测题
 
-在 `eval/questions.yaml` 追加。`type`：exact / keyword / semantic / cross / end2end / indicator / no_answer / route / year_filter。`split` 缺省为 freeze（进回归）；诊断题写 `split: diag`。`expected[].file` 为不含扩展名的 `reports.title` 片段。结构化题必须 `golden_source: pdf`，禁止从 DB 抄 `expected_value`。diag 分析/跨语言题可列多条 `sources`（均 `required: true`，命中任一即算）；`authority` 为 `annual` / `interim` / `research` / `prospectus`，评测另报年报/中报召回。回归：`python tools/run_eval_regression.py`（freeze 检索/结构化 + diag 指标/无答案 + `audit_notes.py`）。翻题对照 `eval/regression_baseline.json`。体系见 `eval/EVAL_SYSTEM.md`，过程见 `eval/EVAL_PLAN.md`。
+在 `eval/questions.yaml` 追加。`type`：exact / keyword / semantic / cross / end2end / indicator / no_answer / route / year_filter。`split` 缺省为 freeze（进回归）；诊断题写 `split: diag`。`expected[].file` 为不含扩展名的 `reports.title` 片段。结构化题必须 `golden_source: pdf`，禁止从 DB 抄 `expected_value`。diag 分析/跨语言题可列多条 `sources`（均 `required: true`，命中任一即算）；`authority` 为 `annual` / `interim` / `research` / `prospectus`，评测另报年报/中报召回。回归：`python tools/run_eval_regression.py`（freeze 检索/结构化 + diag 指标/无答案 + `audit_notes.py`）。翻题对照 `eval/regression_baseline.json`。体系见 `eval/EVAL_SYSTEM.md`，目标到门见 `eval/METRICS_CONTRACT.md`，过程见 `eval/EVAL_PLAN.md`。
+
+### 改扫描报告输出（note_builder / report_html / charts / note_template / SKILL）
+
+1. `python -m pytest tests/ -q` 全绿；
+2. `python -m stock_kb compose-note --company 海底捞` 与 `百胜中国` 重出底稿；
+3. `python -m stock_kb eval-generation`：faithful_rate=1.0 且趋势句口径一致性 0 mismatch 才算过；
+4. 浏览器打开（或 Playwright 截图）核对：图例与序列一致、y 轴单位、数据标签、出处表六列；
+5. 按 `eval/HUMAN_RUBRIC.md`（R1–R11）人工过一遍；改了 skill 模板时正式稿要重写样张。
 
 ### 更新文档
 
@@ -212,12 +226,16 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 - 模型缓存后仍可能联网：离线环境变量必须在相关库 import 之前设置。
 - `mcp` 锁定 1.x；`streamable_http_app()` 路径默认 `/mcp`；客户端 header 通过 `httpx.AsyncClient` 传。
 - `data/*.pid` 与 `*.log` 是历史后台任务产物，不要据 pid 文件假设进程状态。
+- 三表英文行名两套形态：美版常无空格（`Cashdividendspaidoncommonstock`/`Capitalspending`），港版有空格；`db._STATEMENT_ALIASES` 的 needle 要同时覆盖 `line_name_norm`（instr 区分大小写）与 `lower(line_name_orig)` 两条路径。
+- 港股年报用独立短横「–」表示零值列：解析器按 `CELL_RE` 对齐，短横列不产生行项目；真零值年份在图上留洞是诚实表现，不要补数。
+- 指标缺口的根因要先查三表行名再改规则：两家公司无「毛利」行、海底捞资产负债表无「资产总额」行，属报表格式而非解析 bug（详见 `eval/data_gaps.md`），不要自造口径硬算。
 
 ## 12. 当前已知局限 / 待办
 
 > 2026-08-16 自动修复后的最新状态见 `docs/fix-record-20260816.md`；以下只列仍未完成或需要人工的事项。
 
-- 评测现状见 `eval/EVAL_PLAN.md`。`indicators.net_profit` 已改为归母；FTS 无答案 empty_rate=1.0。问句带年份时检索硬过滤 `reports.year`；三表 `year=` 默认当年正文。路由 24/24；组稿 faithful_rate=1.0。hybrid 对短于 6 字的查询仍短路回 FTS。真语义 / 跨语言 diag FTS Recall 为 0。400 字分块已试过并回滚。
+- 评测现状见 `eval/EVAL_PLAN.md`。`indicators.net_profit` 已改为归母；FTS 无答案 empty_rate=1.0。问句带年份时检索硬过滤 `reports.year`；三表 `year=` 默认当年正文。路由 24/24；组稿 faithful_rate=1.0（含趋势句口径一致性自检）。hybrid 对短于 6 字的查询仍短路回 FTS。freeze hybrid semantic Recall@5 2026-09-04 为 0.30。真语义 / 跨语言 diag FTS Recall 为 0。400 字分块已试过并回滚。行情走 `python -m stock_kb quote`，不入库。
+- 扫描报告数据面缺口（两家均无毛利率序列、海底捞缺总资产、分部收入未结构化等）见 `eval/data_gaps.md`；组稿底稿图表为 vendored ECharts（SVG renderer）内嵌单文件 HTML，正式稿 skill 直接复用图块。
 - 两字查询已建 `pages_bigram_fts`，但 bigram 排序暂未启用（避免牺牲 keyword 基线），需独立评测集调权。
 - reranker / jina 对比未完成（可选）。
 - US/HK 年报等“内容不同但语义重复”的 canonical 标记未实现；SHA 完全重复已自动标记并排除。

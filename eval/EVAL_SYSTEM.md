@@ -5,6 +5,8 @@
 
 产品承诺：笔记里的关键数字必须能追溯到「文件 + 页码/表名」。评测为这件事服务，不追求学术检索榜。
 
+三个产品目标（skill 笔记 / 改动评测 / 过程记录）到这些门的映射、以及换 embedding / 改 skill / 加数据各走哪条测量路径，见 `eval/METRICS_CONTRACT.md`。雪球专栏扫描体（多篇对照）见 `eval/style-canon/TEMPLATE.md`。
+
 ---
 
 ## 1. 分层，不混成一个 hit
@@ -106,7 +108,7 @@ diag 对照脚本 `tools/diag_retrieval.py`：同一题跑 FTS@5、vector@50、h
 
 `end2end` 看检索材料是否覆盖要点。
 
-组稿路径（无 LLM）：`python -m stock_kb compose-note` / `eval-generation` 按 skill 顺序调 indicators → 三表 → 检索，填模板，每条数字带 `《文件》第N页`。审计要求财务摘要表里的数字出现在引用页的 `pages.content` / `content_orig` 上。手写试点笔记仍用 `python tools/audit_notes.py`。二者都进 `run_eval_regression.py`。组稿不写估值/观点，空着那些节，避免无出处判断。
+组稿路径（无 LLM）：`python -m stock_kb compose-note` / `eval-generation` 按扫描体顺序调 indicators → 三表 → 检索，填模板，每条数字带 `《文件》第N页`。同时写出 HTML（内嵌 SVG 图）。审计看「引用明细」表：数字须出现在引用页的 `pages.content` / `content_orig`。手写试点笔记仍用 `python tools/audit_notes.py`。二者都进 `run_eval_regression.py`。组稿不写无市价的 PE、不摘无出处行业预测。
 
 ### 3.6 工具路由
 
@@ -158,7 +160,7 @@ python tools/audit_notes.py
 |---|---|---|
 | FTS keyword Recall@5 | ≥ 0.75 | 0.80 |
 | FTS keyword Neg@5 | ≤ 0.65 | 0.55 |
-| hybrid semantic Recall@5 | ≥ 0.10 | 0.15 |
+| hybrid semantic Recall@5 | ≥ 0.20 | 0.15 |
 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 |
 | 结构化 hit / parse_hit | 26/26 | 26/26 |
 | FTS diag indicators | 12/12 | 12/12 |
@@ -169,7 +171,7 @@ python tools/audit_notes.py
 | generation_compose | fail_count = 0；引用页含该数 | 1.00 faithful |
 | audit_notes | 0 项失败；净利走归母 | 见脚本 |
 
-Wilson 区间会打在报告里。n=20 时点估计很跳，门禁钉的是下限，不是「再抬到 0.9」。
+Wilson 区间会打在报告里。n=20 时点估计很跳，门禁钉的是下限，不是「再抬到 0.9」。2026-09-04 复测 freeze hybrid semantic Recall@5 = 0.30（改写碎片不再当 needles；embedding 查询补领域同义；MCP 默认仍 FTS），见 `eval/reports/BAAI_bge-small-zh-v1.5_20260904_223823.md`。
 
 报告目录：`eval/reports/`。`diag_retrieval.json` 为最近一次对照；`diag_retrieval_chunk800.json` / `chunk400.json` 为分块实验。
 
