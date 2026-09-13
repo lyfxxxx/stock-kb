@@ -312,6 +312,26 @@
 - 解决：出处机制整体改为——正文数字带 `[n]`，装配器转成 `<sup><a href="#note-n">`；逐个上标用 `([^<>]{0,2})(sup)(标点?)` 回调配 `<span class="nw">`（永不跨标签、nowrap 范围实测 ≤5 字符）；相邻 nw span 由 `span.nw + span.nw sup::before` 补逗号；注释表加 `cite notes` 类走固定列宽（5/18/37/40%）与 `overflow-wrap:anywhere`；caption 同步改为「数据出处见文末注释」。验收对 judge 报的数字矛盾先用源码/高清元素裁剪复核再改——本轮两处「数值矛盾」均为低分辨率误读（15,060 非 15,065；现金流图标签归位正确）。
 - 教训：1）改「展示机制」时要全文搜索旧机制的用户可见话术（caption、模板、rubric 三处一起改）。2）正则做 HTML 包装时，非贪婪 + 回溯可能跨越同类元素制造巨长匹配——逐元素 finditer + 回调构建比一条 re.sub 安全。3）judge 报的数值矛盾先做源码级核对与高清局部裁剪，再决定改文档还是改判（本轮两处均为误读）。
 
+### 45. 静默数据缺口：Condensed 标题、无标签小计、折行标签三连环（2026-09-13）
+
+- 现象：海底捞 7 份中报（2019–2025）三表行全为 0、百胜 2016 年报 0 行/2018 年报只有 balance，报告 status 均为 ok，缺口完全静默；「海底捞总资产无法组合」的真正根因是港式小计行不带行名被 `_is_junk_name` 丢弃，而非页面上没有该行。
+- 原因：报表页识别靠标题**精确匹配**词典，不含中报 `Condensed Consolidated …` 前缀与百胜早期 10-K `Consolidated and Combined …` 变体；小计行 label 为空即丢；跨行标签（「…按公允值計入其他全面收益的 / other comprehensive income 金融資產」）只取本行。
+- 解决：`_normalize_title_line` 剥 `Condensed/简明` 前缀与 `(Loss)/（未经审核）` 后缀（保持整行命中语义，中报财务摘要的中英混排标题不会误命中）；无标签**纯数字**行挂最近小节标题并标 `is_subtotal=1`（statements 经 `_migrate` 重建，`line_no` 入唯一键，否则同页同名两版小计被 INSERT OR IGNORE 吞掉）；折行用 `_ends_mid_phrase`/`_starts_as_fragment` 双向启发式拼接，小节标题与折行头分开跟踪（栈恢复）。`indicators._haidilao_total_assets` 组合规则（资产总额减流动负债 + 流动负债小计含持作出售），30 期勾稽恒等式全过。
+- 教训：1）「静默丢数据」要用覆盖矩阵当天暴露（`tools/coverage_matrix.py` 已接回归），不能等下游发现图空了再倒查。2）验证报表解析修复要用**报告内恒等式**（净资+两类负债小计=总资产）而不是只看行数上涨。3）改行名提取逻辑时，「取数位置」类错误（样板行 `…388,860,534.42 shares and 383,344,835.42…` 取尾数）和 OCR 错字要分开定性。
+
+### 46. OCR 闸门：tesseract 静默失败、TESSDATA_PREFIX、OCR 行必须隔离（2026-09-13）
+
+- 现象：重扫百胜 2017 年报（146 页 cid 乱码）只花 85 秒、0 页 OCR 成功——`_ocr_page` 捕获了所有异常静默返回空。单测复现：`tesseract` rc=1「Please make sure the TESSDATA_PREFIX is set」。
+- 原因：conda 布局下语言包在 `<env>/share/tessdata`（不是 `Library/share/tessdata`），环境变量缺失时 tesseract 找不到 `chi_sim.traineddata`；解析器吞掉异常无从察觉。另：原 `char_count < 80` 触发条件挡住的是真空白页，字符数很高的 cid 乱码页（`(cid:xx)` 占比 97%）永远轮不到 OCR。
+- 解决：`_ocr_page` 从 `shutil.which('tesseract')` 推导 tessdata 目录（兼容 `<env>/Library/bin` 与 `<env>/bin` 两种布局），不硬编码机器路径；触发条件加 cid 密度 >10%；OCR 输出加质量闸门（≥50 有效字符、字母/数字/CJK 占比 ≥50%），失败置 `is_ocr=2`（检索侧统一排除，pages_fts 镜像不动）。**关键**：OCR 页提取的三表行标 `statements.is_ocr=1`，默认排除在 indicators 与 `query_statements` 之外——实测 OCR 行行名稀疏、数字不可证（如发行股本样板行取数错位），进指标会直接污染笔记数字。
+- 教训：1）OCR 输出质量没有闸门等于把噪声当语料入库；「OCR 成功」和「OCR 输出可用」是两件事。2）隔离策略让覆盖与可靠兼得：行保留可查（`include_ocr=True`），指标与默认查询只用干净文本，缺失年份宁可由次年报比较列补。3）子进程静默失败要留审计线索，至少在返回空时能定位到 rc/stderr。
+
+### 47. 检索与评测：year_mismatch 的软排序、hybrid 假融合、正式稿审计闭环（2026-09-13）
+
+- 现象：hybrid 对 <6 字符查询短路回 FTS，20 道 keyword 题只有 1 题真正融合——「hybrid keyword」实为 FTS；无年份问句的同一报表页在多年份报告间 bm25 近乎并列，year_mismatch 占 keyword 失分 13/20；正式稿（skill+LLM 产物）只有 LLM 自查，无程序化门禁；MCP locator「title 第N页」与审计正则只认的「《title》第N页」不一致，`get_indicators` 干脆不返回出处。
+- 解决：1）hybrid 短查询 FTS **零命中**才走向量兜底（评测改为读检索器返回的 `hybrid_fused` 标志，删掉按长度预测的 `_would_hybrid_fuse`，避免口径漂移）；2）FTS 无年份问句加 1.5%/年的新近度软排序（`rank / (1 + 0.015*(当前年-报告年))`，rank 为负故旧页变差；有年份问句不变），G1/G2 不回退、negative_hit_rate 0.55→0.45；3）`tools/audit_formal_notes.py` 程序化审计正式稿（[n]↔注释表、页存在性、页内数字含两数之和与亿元换算 2% 容差、正文页码残留、HTML 图表、行情日期），接入回归并做阴性验证（篡改数字/页码残留均 FAIL）；4）MCP 三工具 locator 统一《》格式、`get_indicators` 带 locator（派生指标标 `derived`）。
+- 教训：1）「软排序」优先只打散并列（同文本跨年份重复页），幅度要小到不动真实相关性序。2）评测口径的实现细节（融合判定、locator 格式）必须与被测代码同源，两处硬编码必然漂移。3）no_answer 的 empty_rate 要加哨兵（公司名必命中查询）区分「拒答正确」与「引擎坏了」，否则故障反而刷高分数。4）给 MCP 客户端配 `trust_env=False`/超时——系统代理会劫持 127.0.0.1，5s 默认超时扛不住冷启动加载 sqlite-vec。
+
 ## 七、当前已知局限与下一步
 
 > 评测体系见 `eval/EVAL_SYSTEM.md`；三个产品目标到门的映射见 `eval/METRICS_CONTRACT.md`；过程记录见 `eval/EVAL_PLAN.md`；8-16 数据修复见 `docs/fix-record-20260816.md`。

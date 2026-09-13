@@ -35,10 +35,10 @@
 | freeze | year_filter | 4 | 命中页 `reports.year` 与问句年份一致 |
 | diag | indicator | 12 | 12/12 |
 | diag | no_answer | 8 | FTS / hybrid empty_rate |
-| diag | semantic | 8 | 否（对照脚本） |
-| diag | cross | 10 | 否（对照脚本） |
+| diag | semantic | 13 | 否（对照脚本） |
+| diag | cross | 15 | 否（对照脚本） |
 
-`split` 缺省视为 freeze。`--split freeze` 才进 `tools/run_eval_regression.py` 的检索/结构化门槛。diag 只把 **指标** 和 **无答案** 纳入回归，真语义 / 跨语言只做诊断。
+`split` 缺省视为 freeze。`--split freeze` 才进 `tools/run_eval_regression.py` 的检索/结构化门槛。diag 只把 **指标** 和 **无答案** 纳入回归，真语义 / 跨语言只做诊断。回归另输出 `recall_soft_at_k`（期望页在 top-k 内仅页码 ±5 的 near-miss 计半分，仅展示不设门）与「公司×年份×指标」覆盖矩阵（`tools/coverage_matrix.py`）。题集 2026-09-13 扩至 156 道（+5 英文 cross、+5 中报 semantic，全部 diag）。
 
 ---
 
@@ -102,7 +102,7 @@ diag 对照脚本 `tools/diag_retrieval.py`：同一题跑 FTS@5、vector@50、h
 
 ### 3.4 无答案
 
-`empty_rate` = 返回 0 条的比例。FTS 与 hybrid 分列。向量距离不能当门槛（2026E 预测比「师徒制」更近）。
+`empty_rate` = 返回 0 条的比例（分母扣除 engine_error）。评测前先跑**哨兵查询**（公司名，必命中）：哨兵也为空说明引擎故障，该题记 `engine_error` 而非 empty，避免检索 bug 伪装成正确拒答。FTS 与 hybrid 分列。向量距离不能当门槛（2026E 预测比「师徒制」更近）。
 
 ### 3.5 生成
 

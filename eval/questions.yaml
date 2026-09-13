@@ -2436,3 +2436,119 @@ questions:
           page: 19
           required: true
 
+  # ---------------- 扩充（2026-09-13）：英文问句 + 中报覆盖，全部 diag ----------------
+  - id: cross-023
+    type: cross
+    split: diag
+    question: Haidilao table turnover rate in 2018
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2018年报"
+          page: 18
+          required: true
+          relevance: 3
+          authority: annual
+  - id: cross-024
+    type: cross
+    split: diag
+    question: Haidilao average spending per guest in 2018
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2018年报"
+          page: 18
+          required: true
+          relevance: 3
+          authority: annual
+  - id: cross-025
+    type: cross
+    split: diag
+    question: Yum China same-store sales growth in 2018
+    company: 百胜中国
+    expected:
+      sources:
+        - file: "百胜中国_2018_Annual_Report"
+          page: 150
+          required: true
+          relevance: 3
+          authority: annual
+  - id: cross-026
+    type: cross
+    split: diag
+    question: Haidilao table turnover rate first half of 2025
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2025中报"
+          page: 19
+          required: true
+          relevance: 3
+          authority: interim
+  - id: cross-027
+    type: cross
+    split: diag
+    question: Haidilao same store sales first half of 2025
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2025中报"
+          page: 20
+          required: true
+          relevance: 3
+          authority: interim
+  - id: semantic-029
+    type: semantic
+    split: diag
+    question: 海底捞 2025 年上半年整体翻台率和顾客人均消费是多少
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2025中报"
+          page: 19
+          required: true
+          authority: interim
+  - id: semantic-030
+    type: semantic
+    split: diag
+    question: 海底捞 2025 年上半年同店销售额和同店数量表现如何
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2025中报"
+          page: 20
+          required: true
+          authority: interim
+  - id: semantic-031
+    type: semantic
+    split: diag
+    question: 截至 2025 年 6 月 30 日海底捞一共经营多少家餐厅
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2025中报"
+          page: 11
+          required: true
+          authority: interim
+  - id: semantic-032
+    type: semantic
+    split: diag
+    question: 海底捞 2024 年上半年员工成本占收入的百分比是多少
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2024中报"
+          page: 22
+          required: true
+          authority: interim
+  - id: semantic-033
+    type: semantic
+    split: diag
+    question: 海底捞 2024 年上半年按地理区域划分的海底捞餐厅经营收入
+    company: 海底捞
+    expected:
+      sources:
+        - file: "2024中报"
+          page: 21
+          required: true
+          authority: interim

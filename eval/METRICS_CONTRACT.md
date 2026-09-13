@@ -73,11 +73,14 @@ G1–G11 全绿，只说明「科目数字能回到文件+页、短术语能搜�
 
 改 `skill/stock-note/`、组稿模板、或试点 Markdown 笔记时：
 
-1. `python -m stock_kb eval-generation`（`compose-note` 按 skill 工具顺序填模板；财务摘要每个数字必须出现在引用页的 `pages.content` / `content_orig`）。
+1. `python -m stock_kb eval-generation`（`compose-note` 按 skill 工具顺序填模板；财务摘要每个数字必须出现在引用页的 `pages.content` / `content_orig`；组合口径数字（如海底捞总资产）允许「页内两数之和」核对）。
 2. `python tools/audit_notes.py`（手写试点笔记的数字与 `《文件》第N页` 对库）。
-3. 二者都进 `python tools/run_eval_regression.py`。门槛是 G11：fail_count = 0，faithful_rate = 1.00。
+3. `python tools/audit_formal_notes.py`（**正式稿**程序化审计：正文 [n]↔注释表对应、注释页码存在、数值列数字在引用页可追溯（含两数之和与亿元换算 2% 容差）、正文无页码残留、HTML 有图、行情带日期；行情/汇率等非页面出处单独披露不判败）。
+4. 三者都进 `python tools/run_eval_regression.py`。门槛是 G11：fail_count = 0，faithful_rate = 1.00（样张缺失时正式稿审计自动跳过）。
 
-**LLM 写的 1,500–3,000 字笔记（研报观点 / 同行对比 / 估值推演）尚未设门。** 组稿路径故意把这些节写成「暂无数据」，避免无出处判断。[`EVAL_SYSTEM.md`](EVAL_SYSTEM.md) §6 明确不采用 LLM judge。在用户确认把 LLM 成稿纳入范围之前，skill 合规只靠人工读稿，不进回归。
+**LLM 观点层（判断段、估值推演、心算复核）尚未设门。** 正式稿的可追溯面（注释/出处/页内数字）已自动审计，观点与算式仍靠人工 rubric（R1/R2/R11）。[`EVAL_SYSTEM.md`](EVAL_SYSTEM.md) §6 明确不采用 LLM judge。
+
+**引用格式契约（2026-09-13 起）**：MCP 全部工具（`get_financial_statements` / `get_indicators` / `get_source_excerpt` / `search_reports`）与组稿统一返回 `《title》第N页` locator；派生指标（无页码）标 `derived`。审计正则只认此格式，新工具必须遵守。
 
 ### Data-add measurement（添加数据）
 
@@ -96,8 +99,8 @@ G1–G11 全绿，只说明「科目数字能回到文件+页、短术语能搜�
 这些缺口本里程碑**不修**。列在这里是为了把「G1–G11 全绿」和「能批量发雪球」分开。
 
 1. **diag / embed miss@50（真语义与跨语言）。** 证据清单之后仍有约 11 道页不在向量 top-50；44 道长句 miss 28/44。英文问中文页、附注减值仍常打到封面或目录。FTS diag semantic Recall = 0.0。
-2. **hybrid 短查询只走 FTS。** [`stock_kb/vector.py`](../stock_kb/vector.py) 对 `len(query) < 6` 短路；keyword 20 题剥掉公司名后几乎都 `hybrid_fused=False`。
-3. **MCP 默认检索引擎是 FTS。** [`search_reports(..., engine="fts")`](../stock_kb/serve/mcp_server.py) 与组稿 `fetch_operating_hits()` 都走 `fts_search`。agent 不显式传 `hybrid` 就没有向量。
+2. **hybrid 短查询**（2026-09-13 更新）：`len(query) < 6` 仍关键词优先，但 **FTS 零命中时自动走向量融合兜底**（`vector.hybrid_search`）；评测读取检索器返回的 `hybrid_fused` 标志，不再按长度预测。
+3. **MCP 默认检索引擎仍是 FTS，零命中自动升引擎。** [`search_reports(..., engine="fts")`](../stock_kb/serve/mcp_server.py) 与组稿 `fetch_operating_hits()` 默认 `fts_search`，零命中时自动 hybrid 兜底（向量索引缺失时静默降级为空）。无年份问句的 FTS 排序带 1.5%/年新近度软因子（仅打散跨年份重复页并列）。
 4. **生成评测不打 LLM 是否遵守 skill。** G11 覆盖工具顺序和「数字在引用页上」。skill 要求 1,500–3,000 字、观点层与事实层分开、同行对比、估值假设：这些还没有自动门。
 5. 相邻、不挡数字可追溯：两字 `pages_bigram_fts` 排序未启用；US/HK 年报语义重复未标 canonical；路由越界年份写死 `>= 2026`。
 

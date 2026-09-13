@@ -57,6 +57,18 @@ def run_eval(
     conn = db.connect(cfg["db_path"])
     db_path = Path(cfg["db_path"])
 
+    # no_answer 哨兵：先确认引擎本身健康（公司名必命中），
+    # 避免「检索 bug 空结果」伪装成「正确拒答」抬高 empty_rate。
+    engine_alive: bool | None = None
+    if any((q.get("type") or "") == NO_ANSWER_TYPE for q in questions):
+        try:
+            sentinel = _run_search(
+                cfg, conn, "海底捞", None, 1, model, engine
+            )
+            engine_alive = bool(sentinel)
+        except Exception:
+            engine_alive = False
+
     results: list[dict[str, Any]] = []
     for q in questions:
         qtype = q.get("type") or ""
@@ -102,6 +114,8 @@ def run_eval(
             "split": q.get("split") or "freeze",
             "retrieval": retrieval,
         }
+        if qtype == NO_ANSWER_TYPE:
+            item["engine_alive"] = engine_alive
         if qtype == YEAR_FILTER_TYPE:
             expected_year = (q.get("expected") or {}).get("year")
             q_years = set(search.query_years(query))
@@ -178,13 +192,6 @@ def _search_queries(q: dict[str, Any], search_path: str) -> list[str]:
     return list(keywords) if keywords else [q["question"]]
 
 
-def _would_hybrid_fuse(engine: str, query: str) -> bool:
-    if engine != "hybrid":
-        return False
-    normalized = search.normalize_query(query)
-    return bool(normalized) and len(normalized) >= 6
-
-
 def _search_hits(
     cfg: dict[str, Any],
     conn,
@@ -196,7 +203,6 @@ def _search_hits(
 ) -> tuple[list[dict[str, Any]], str, bool]:
     queries = _search_queries(q, search_path)
     fused: dict[int, dict[str, Any]] = {}
-    hybrid_fused = any(_would_hybrid_fuse(engine, query) for query in queries)
     for query in queries:
         hs = _run_search(
             cfg,
@@ -227,6 +233,8 @@ def _search_hits(
     for h in out:
         h.pop("_rrf", None)
         h.pop("_min_rank", None)
+    # 以检索器返回的融合标志为准，避免评测口径与实现漂移
+    hybrid_fused = engine == "hybrid" and any(h.get("hybrid_fused") for h in out)
     return out, queries[0] if queries else "", hybrid_fused
 
 
@@ -822,6 +830,7 @@ def _blank_ret_bucket() -> dict[str, Any]:
         "neg_hit": 0,
         "neg_at_1": 0,
         "fused_n": 0,
+        "near_miss": 0,
         "error_tags": {},
         "annual_n": 0,
         "annual_hit": 0,
@@ -831,14 +840,18 @@ def _blank_ret_bucket() -> dict[str, Any]:
 def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
     ret_stats: dict[str, dict[str, Any]] = {}
     ret_diag: dict[str, dict[str, Any]] = {}
-    no_answer = {"n": 0, "empty": 0, "nonempty": 0}
+    no_answer = {"n": 0, "empty": 0, "nonempty": 0, "engine_error": 0}
     for item in results:
         split = item.get("split") or "freeze"
         if item["type"] == NO_ANSWER_TYPE:
             no_answer["n"] += 1
             n_hits = len((item.get("retrieval") or {}).get("top_hits") or [])
             if n_hits == 0:
-                no_answer["empty"] += 1
+                if item.get("engine_alive") is False:
+                    # 哨兵查询也为空：引擎故障，不能算「正确拒答」
+                    no_answer["engine_error"] += 1
+                else:
+                    no_answer["empty"] += 1
             else:
                 no_answer["nonempty"] += 1
             continue
@@ -854,6 +867,9 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
         r = item["retrieval"]
         if r["hit"]:
             s["hit"] += 1
+        elif "page_near_miss" in (r.get("error_tags") or []):
+            # 软分：期望页在 top-k 内仅页码略偏（±5），未命中但近乎可用
+            s["near_miss"] += 1
         if r["rank"] == 1:
             s["hit1"] += 1
         if r["rank"]:
@@ -941,7 +957,10 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
             indicator["value_total"] += 1
 
     if no_answer["n"]:
-        no_answer["empty_rate"] = round(no_answer["empty"] / no_answer["n"], 3)
+        effective = no_answer["n"] - no_answer["engine_error"]
+        no_answer["empty_rate"] = (
+            round(no_answer["empty"] / effective, 3) if effective > 0 else None
+        )
 
     generation = {"n": 0, "auto_scored": 0, "pending_manual": 0}
     for item in results:
@@ -1011,6 +1030,10 @@ def _finalize_retrieval(ret_stats: dict[str, dict[str, Any]]) -> dict[str, Any]:
             "n": n,
             "recall_at_k": round(s["hit"] / n, 3) if n else 0.0,
             "recall_at_k_ci": wilson_ci(s["hit"], n),
+            "recall_soft_at_k": (
+                round((s["hit"] + 0.5 * s["near_miss"]) / n, 3) if n else 0.0
+            ),
+            "near_miss_n": s["near_miss"],
             "hit_at_1": round(s["hit1"] / n, 3) if n else 0.0,
             "mrr": round(s["rr_sum"] / n, 3) if n else 0.0,
             "ndcg": round(s["ndcg_sum"] / n, 3) if n else 0.0,

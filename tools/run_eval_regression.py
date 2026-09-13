@@ -16,6 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import audit_notes as audit_notes_mod
+from audit_formal_notes import audit_formal_note
+from stock_kb import db as db_mod
 from stock_kb.config import load_config
 from stock_kb.eval_regression import (
     baseline_path,
@@ -240,6 +242,33 @@ def main() -> int:
         if not ok_gen:
             failed.append("generation_compose")
 
+    if not args.skip_notes:
+        print("[coverage_matrix]")
+        from coverage_matrix import print_coverage_matrix
+
+        conn = db_mod.connect(cfg["db_path"])
+        print_coverage_matrix(conn)
+        conn.close()
+
+    if not args.skip_notes:
+        # 正式稿样张存在时做程序化审计（R3/R4/R5/R9 可自动部分）
+        formal = sorted(Path("eval/generated_notes").glob("*/*-正式稿.md"))
+        if formal:
+            print("[audit_formal_notes]")
+            conn = db_mod.connect(cfg["db_path"])
+            formal_fails = 0
+            for p in formal:
+                res = audit_formal_note(conn, p)
+                print(f"  {p.parent.name}/{p.name}: {'OK' if res['ok'] else 'FAIL'}")
+                for issue in res["issues"]:
+                    print(f"    {issue}")
+                if not res["ok"]:
+                    formal_fails += 1
+            conn.close()
+            if formal_fails:
+                failed.append("audit_formal_notes")
+        else:
+            print("[audit_formal_notes] 无正式稿样张，跳过")
 
     print("RESULT:", "PASS" if not failed else "FAIL")
     print(json.dumps(

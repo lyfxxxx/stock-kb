@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "questions_sha256": "38d608a2e512e10b71fa29e8af75639d327d7eecf9b51458715acc3bca170995",
+  "questions_sha256": "a4349cd2b893ba010bcd10afa1134bc0280c38fd9de77ec0101f24e422097a6d",
   "runs": {
     "fts:freeze": {
       "engine": "fts",
       "split": "freeze",
-      "questions_sha256": "38d608a2e512e10b71fa29e8af75639d327d7eecf9b51458715acc3bca170995",
+      "questions_sha256": "a4349cd2b893ba010bcd10afa1134bc0280c38fd9de77ec0101f24e422097a6d",
       "questions": {
         "exact-001": {
           "type": "exact",
@@ -137,7 +137,7 @@
         },
         "keyword-008": {
           "type": "keyword",
-          "hit": false
+          "hit": true
         },
         "keyword-009": {
           "type": "keyword",
@@ -157,7 +157,7 @@
         },
         "keyword-013": {
           "type": "keyword",
-          "hit": true
+          "hit": false
         },
         "keyword-014": {
           "type": "keyword",
@@ -474,7 +474,7 @@
     "hybrid:freeze": {
       "engine": "hybrid",
       "split": "freeze",
-      "questions_sha256": "38d608a2e512e10b71fa29e8af75639d327d7eecf9b51458715acc3bca170995",
+      "questions_sha256": "a4349cd2b893ba010bcd10afa1134bc0280c38fd9de77ec0101f24e422097a6d",
       "questions": {
         "exact-001": {
           "type": "exact",
@@ -606,7 +606,7 @@
         },
         "keyword-008": {
           "type": "keyword",
-          "hit": false
+          "hit": true
         },
         "keyword-009": {
           "type": "keyword",
@@ -626,7 +626,7 @@
         },
         "keyword-013": {
           "type": "keyword",
-          "hit": true
+          "hit": false
         },
         "keyword-014": {
           "type": "keyword",
@@ -658,11 +658,11 @@
         },
         "semantic-001": {
           "type": "semantic",
-          "hit": false
+          "hit": true
         },
         "semantic-002": {
           "type": "semantic",
-          "hit": false
+          "hit": true
         },
         "semantic-003": {
           "type": "semantic",
@@ -722,7 +722,7 @@
         },
         "semantic-017": {
           "type": "semantic",
-          "hit": false
+          "hit": true
         },
         "semantic-018": {
           "type": "semantic",
@@ -943,7 +943,7 @@
     "fts:diag": {
       "engine": "fts",
       "split": "diag",
-      "questions_sha256": "38d608a2e512e10b71fa29e8af75639d327d7eecf9b51458715acc3bca170995",
+      "questions_sha256": "a4349cd2b893ba010bcd10afa1134bc0280c38fd9de77ec0101f24e422097a6d",
       "questions": {
         "indicator-001": {
           "type": "indicator",
@@ -1071,7 +1071,7 @@
         },
         "cross-016": {
           "type": "cross",
-          "hit": false
+          "hit": true
         },
         "cross-017": {
           "type": "cross",
@@ -1095,6 +1095,46 @@
         },
         "cross-022": {
           "type": "cross",
+          "hit": false
+        },
+        "cross-023": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-024": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-025": {
+          "type": "cross",
+          "hit": true
+        },
+        "cross-026": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-027": {
+          "type": "cross",
+          "hit": false
+        },
+        "semantic-029": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-030": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-031": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-032": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-033": {
+          "type": "semantic",
           "hit": false
         }
       }
@@ -1102,7 +1142,7 @@
     "hybrid:diag": {
       "engine": "hybrid",
       "split": "diag",
-      "questions_sha256": "38d608a2e512e10b71fa29e8af75639d327d7eecf9b51458715acc3bca170995",
+      "questions_sha256": "a4349cd2b893ba010bcd10afa1134bc0280c38fd9de77ec0101f24e422097a6d",
       "questions": {
         "indicator-001": {
           "type": "indicator",
@@ -1254,6 +1294,46 @@
         },
         "cross-022": {
           "type": "cross",
+          "hit": true
+        },
+        "cross-023": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-024": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-025": {
+          "type": "cross",
+          "hit": true
+        },
+        "cross-026": {
+          "type": "cross",
+          "hit": false
+        },
+        "cross-027": {
+          "type": "cross",
+          "hit": false
+        },
+        "semantic-029": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-030": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-031": {
+          "type": "semantic",
+          "hit": true
+        },
+        "semantic-032": {
+          "type": "semantic",
+          "hit": false
+        },
+        "semantic-033": {
+          "type": "semantic",
           "hit": true
         }
       }

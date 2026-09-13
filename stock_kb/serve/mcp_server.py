@@ -37,6 +37,15 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         conn.row_factory = sqlite3.Row
         return conn
 
+    def _with_locator(hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """给检索命中补《title》第N页 locator，与组稿/审计的引用格式一致。"""
+        for h in hits:
+            title = (h.get("title") or "").strip()
+            page = h.get("page_no")
+            if title and page is not None:
+                h["locator"] = f"《{title}》第{int(page)}页"
+        return hits
+
     @mcp.tool()
     def list_companies() -> list[dict[str, Any]]:
         """列出知识库中的公司。"""
@@ -85,11 +94,11 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         report_type: str | None = None,
         language: str | None = None,
     ) -> list[dict[str, Any]]:
-        """检索报告页（经营叙述：翻台率/同店/师徒等）。科目数字请用 get_indicators 或 get_financial_statements(keyword=)。engine: fts/vector/hybrid。"""
+        """检索报告页（经营叙述：翻台率/同店/师徒等）。科目数字请用 get_indicators 或 get_financial_statements(keyword=)。engine: fts/vector/hybrid。返回带 locator（《title》第N页），可直接用作笔记出处。"""
         conn = _conn()
         try:
             if engine == "fts":
-                return search.fts_search(
+                hits = search.fts_search(
                     conn,
                     query,
                     company=company,
@@ -98,13 +107,37 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                     report_type=report_type,
                     language=language,
                 )
+                if not hits:
+                    # 默认 FTS 不变，但零命中时自动升引擎兜底，
+                    # 避免「报告取数」场景空手而归；向量缺失时静默降级。
+                    from stock_kb import vector as _vector
+
+                    try:
+                        hits = _vector.hybrid_search(
+                            conn,
+                            query,
+                            model=model
+                            or cfg.get("embedding", {}).get(
+                                "model", "BAAI/bge-small-zh-v1.5"
+                            ),
+                            top_k=top_k,
+                            company=company,
+                            cache_dir=cfg.get("models_dir"),
+                            backend=cfg.get("embedding", {}).get("backend", "auto"),
+                            year=year,
+                            report_type=report_type,
+                            language=language,
+                        )
+                    except Exception:
+                        hits = []
+                return _with_locator(hits)
             from stock_kb import vector
 
             model = model or cfg.get("embedding", {}).get(
                 "model", "BAAI/bge-small-zh-v1.5"
             )
             if engine == "vector":
-                return vector.vector_search(
+                hits = vector.vector_search(
                     conn,
                     model,
                     query,
@@ -116,8 +149,9 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                     report_type=report_type,
                     language=language,
                 )
+                return _with_locator(hits)
             if engine == "hybrid":
-                return vector.hybrid_search(
+                hits = vector.hybrid_search(
                     conn,
                     query,
                     model=model,
@@ -129,6 +163,7 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                     report_type=report_type,
                     language=language,
                 )
+                return _with_locator(hits)
             raise ValueError(f"不支持的检索引擎: {engine}")
         finally:
             conn.close()
@@ -167,7 +202,8 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                 include_comparatives=include_comparatives,
             )
             for row in rows:
-                row["locator"] = f"{row['title']} 第{row['page_no']}页"
+                # 与组稿/审计统一：《title》第N页（generation_eval._CITE 只认此格式）
+                row["locator"] = f"《{row['title']}》第{row['page_no']}页"
             return rows
         finally:
             conn.close()
@@ -177,22 +213,39 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         company: str,
         years: list[int] | None = None,
         metrics: list[str] | None = None,
+        period_type: str | None = None,
     ) -> list[dict[str, Any]]:
-        """获取财务指标。metrics 如 revenue / net_profit / total_assets / total_equity / operating_cashflow / gross_profit。"""
-        sql = "SELECT * FROM indicators WHERE company=?"
+        """获取财务指标。metrics 如 revenue / net_profit / total_assets / total_equity / operating_cashflow / gross_profit / net_margin / roe。period_type=annual/interim，默认全部；locator 为《报告》第N页，派生指标（比率）无页码时为 "derived"。"""
+        sql = (
+            "SELECT i.*, r.title FROM indicators i "
+            "LEFT JOIN reports r ON r.id = i.report_id WHERE i.company=?"
+        )
         params: list[Any] = [company]
         if years:
             marks = ",".join("?" * len(years))
-            sql += f" AND year IN ({marks})"
+            sql += f" AND i.year IN ({marks})"
             params.extend(years)
         if metrics:
             marks = ",".join("?" * len(metrics))
-            sql += f" AND name IN ({marks})"
+            sql += f" AND i.name IN ({marks})"
             params.extend(metrics)
-        sql += " ORDER BY year, name"
+        if period_type is not None:
+            sql += " AND i.period_type=?"
+            params.append(period_type)
+        sql += " ORDER BY i.year, i.name"
         conn = _conn()
         try:
-            return [dict(r) for r in conn.execute(sql, params).fetchall()]
+            out = []
+            for r in conn.execute(sql, params).fetchall():
+                row = dict(r)
+                title = (row.pop("title", None) or "").strip()
+                page = row.get("page_no")
+                if title and page is not None:
+                    row["locator"] = f"《{title}》第{int(page)}页"
+                else:
+                    row["locator"] = "derived"
+                out.append(row)
+            return out
         finally:
             conn.close()
 
@@ -255,7 +308,7 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                     "title": r["title"],
                     "page": r["page_no"],
                     "is_ocr": r["is_ocr"],
-                    "locator": f"{r['title']} 第{r['page_no']}页",
+                    "locator": f"《{r['title']}》第{r['page_no']}页",
                     "excerpt": content[start : start + context_chars],
                 }
             )

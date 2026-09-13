@@ -20,7 +20,11 @@ async def main() -> None:
     token = os.environ.get("STOCK_KB_TOKEN", "")
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     print("connect:", url)
-    async with httpx.AsyncClient(headers=headers) as http_client:
+    # 默认 5s 超时对冷启动的 initialize/工具调用过紧（首次要加载 sqlite-vec 扩展）；
+    # trust_env=False 防止系统代理把 127.0.0.1 劫持到 HTTP_PROXY。
+    async with httpx.AsyncClient(
+        headers=headers, timeout=30.0, trust_env=False
+    ) as http_client:
         async with streamable_http_client(
             url, http_client=http_client
         ) as (read, write, _):

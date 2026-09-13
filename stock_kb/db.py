@@ -55,9 +55,12 @@ CREATE TABLE IF NOT EXISTS statements (
     currency TEXT,
     year INTEGER,
     page_no INTEGER,
+    line_no INTEGER,
     table_index INTEGER,
     source_id INTEGER,
-    UNIQUE(report_id, statement_type, page_no, table_index, line_name_orig, year)
+    is_subtotal INTEGER DEFAULT 0,
+    is_ocr INTEGER DEFAULT 0,
+    UNIQUE(report_id, statement_type, page_no, table_index, line_name_orig, year, line_no)
 );
 
 CREATE TABLE IF NOT EXISTS indicators (
@@ -151,6 +154,45 @@ def _migrate(conn: sqlite3.Connection) -> None:
     for col in ("currency", "report_id", "page_no", "line_name"):
         if col not in indicator_cols:
             conn.execute(f"ALTER TABLE indicators ADD COLUMN {col}")
+
+    # statements 需要把 line_no 纳入唯一键（同页同名小计行多次出现，如含/不含
+    # 持作出售的两版小计），SQLite 无法 ALTER 约束，走重建迁移。
+    stmt_cols = [row[1] for row in conn.execute("PRAGMA table_info(statements)").fetchall()]
+    if stmt_cols and "line_no" not in stmt_cols:
+        conn.executescript(
+            """
+            CREATE TABLE statements_migrate (
+                id INTEGER PRIMARY KEY,
+                report_id INTEGER NOT NULL REFERENCES reports(id),
+                statement_type TEXT NOT NULL,
+                line_name_orig TEXT,
+                line_name_norm TEXT,
+                value REAL,
+                unit TEXT,
+                currency TEXT,
+                year INTEGER,
+                page_no INTEGER,
+                line_no INTEGER,
+                table_index INTEGER,
+                source_id INTEGER,
+                is_subtotal INTEGER DEFAULT 0,
+                is_ocr INTEGER DEFAULT 0,
+                UNIQUE(report_id, statement_type, page_no, table_index,
+                       line_name_orig, year, line_no)
+            );
+            INSERT INTO statements_migrate(id, report_id, statement_type, line_name_orig,
+                line_name_norm, value, unit, currency, year, page_no, line_no,
+                table_index, source_id, is_subtotal, is_ocr)
+            SELECT id, report_id, statement_type, line_name_orig, line_name_norm,
+                value, unit, currency, year, page_no, NULL,
+                table_index, source_id, 0, 0 FROM statements;
+            DROP TABLE statements;
+            ALTER TABLE statements_migrate RENAME TO statements;
+            """
+        )
+    if stmt_cols and "is_ocr" not in stmt_cols and "line_no" in stmt_cols:
+        # 已做过 line_no 迁移但还没有 is_ocr 的中间态库
+        conn.execute("ALTER TABLE statements ADD COLUMN is_ocr INTEGER DEFAULT 0")
 
     index_cols = [row[1] for row in conn.execute("PRAGMA table_info(embedding_index)").fetchall()]
     if "vec_table" not in index_cols:
@@ -287,21 +329,27 @@ def query_statements(
     keyword: str | None = None,
     limit: int | None = 100,
     include_comparatives: bool = False,
+    include_ocr: bool = False,
 ) -> list[dict[str, Any]]:
     """按公司查三表行项目。keyword 匹配 line_name_norm / line_name_orig。
 
     year 默认同时约束科目年 ``s.year`` 和报告年 ``r.year``，只要当年年报正文，
     不要次年报比较列。比较列需显式 ``include_comparatives=True``。
+    未指定 ``period_type`` 时默认只取年报（r.period_type='annual'），中报/招股书
+    行项目需显式传 ``period_type``，避免与年报正文混排。
+    OCR 页提取的行（s.is_ocr=1）数字可靠性有限，默认排除，需 ``include_ocr=True``。
     """
     sql = """
         SELECT s.id AS statement_id, r.id AS report_id, s.statement_type,
                s.line_name_orig, s.line_name_norm, s.value,
-               s.unit, s.currency, s.year, s.page_no, r.title, r.path,
-               r.year AS report_year
+               s.unit, s.currency, s.year, s.page_no, s.line_no, s.is_subtotal,
+               r.title, r.path, r.year AS report_year
         FROM statements s JOIN reports r ON r.id = s.report_id
         WHERE r.company=?
     """
     params: list[Any] = [company]
+    if not include_ocr:
+        sql += " AND COALESCE(s.is_ocr, 0) = 0"
     if statement_type is not None:
         sql += " AND s.statement_type=?"
         params.append(statement_type)
@@ -314,6 +362,8 @@ def query_statements(
     if period_type is not None:
         sql += " AND r.period_type=?"
         params.append(period_type)
+    else:
+        sql += " AND r.period_type='annual'"
     if keyword is not None and str(keyword).strip():
         kw = str(keyword).strip()
         needles = [kw]
@@ -477,8 +527,9 @@ def replace_statements(conn: sqlite3.Connection, report_id: int, rows: list[dict
         conn.execute(
             """
             INSERT OR IGNORE INTO statements(report_id, statement_type, line_name_orig,
-                line_name_norm, value, unit, currency, year, page_no, table_index, source_id)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                line_name_norm, value, unit, currency, year, page_no, line_no,
+                is_subtotal, is_ocr, table_index, source_id)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 report_id,
@@ -490,6 +541,9 @@ def replace_statements(conn: sqlite3.Connection, report_id: int, rows: list[dict
                 r.get("currency"),
                 r.get("year"),
                 r.get("page_no"),
+                r.get("line_no"),
+                r.get("is_subtotal", 0),
+                r.get("is_ocr", 0),
                 r.get("table_index"),
                 r.get("source_id"),
             ),
@@ -506,7 +560,7 @@ def _refresh_sources_for_report(conn: sqlite3.Connection, report_id: int) -> Non
             report_id, company, report_title, page_no, table_index, locator, snippet
         )
         SELECT s.report_id, r.company, r.title, s.page_no, s.table_index,
-               r.title || ' 第' || s.page_no || '页', NULL
+               '《' || r.title || '》第' || s.page_no || '页', NULL
         FROM statements s JOIN reports r ON r.id = s.report_id
         WHERE s.report_id=?
         """,

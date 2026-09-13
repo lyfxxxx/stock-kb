@@ -47,6 +47,10 @@ python -m stock_kb compose-note --company 海底捞   # 扫描体 Markdown + ECh
 python -m stock_kb quote --company 海底捞 --json   # 最新价/市值/TTM PE；失败则非零退出
 python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json
 python tools/check_vec.py                           # 快速检查向量索引健康度
+python tools/coverage_matrix.py                     # 公司×年份×指标覆盖矩阵（已接入回归）
+python tools/audit_formal_notes.py [md...]          # 正式稿程序化审计（已接入回归；无参=扫全部样张）
+python tools/backfill_ocr_quality.py                # 一次性：回填 OCR 噪声/乱码页 is_ocr=2
+python tools/reprocess_reports.py <report_id...>    # 定向重扫指定报告（读 NAS，走 OCR 闸门）
 ```
 
 MCP 联调：
@@ -55,7 +59,7 @@ MCP 联调：
 python -m stock_kb mcp --transport http --host 127.0.0.1 --port 8931   # 先启动服务
 $env:STOCK_KB_MCP_URL="http://127.0.0.1:8931/mcp"
 $env:STOCK_KB_TOKEN="<token>"
-python tools/test_mcp_http.py                       # 端到端测试
+python tools/test_mcp_http.py                       # 端到端测试（已内置 30s 超时与 trust_env=False）
 ```
 
 `scan` 会访问 NAS，较重且沙箱内可能需要提权；除非用户明确要求或确需验证扫描逻辑，不要跑全量 `scan`。全部 CLI 子命令见 `stock_kb/cli.py`。
@@ -228,14 +232,19 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 - `data/*.pid` 与 `*.log` 是历史后台任务产物，不要据 pid 文件假设进程状态。
 - 三表英文行名两套形态：美版常无空格（`Cashdividendspaidoncommonstock`/`Capitalspending`），港版有空格；`db._STATEMENT_ALIASES` 的 needle 要同时覆盖 `line_name_norm`（instr 区分大小写）与 `lower(line_name_orig)` 两条路径。
 - 港股年报用独立短横「–」表示零值列：解析器按 `CELL_RE` 对齐，短横列不产生行项目；真零值年份在图上留洞是诚实表现，不要补数。
-- 指标缺口的根因要先查三表行名再改规则：两家公司无「毛利」行、海底捞资产负债表无「资产总额」行，属报表格式而非解析 bug（详见 `eval/data_gaps.md`），不要自造口径硬算。
+- 指标缺口的根因要先查三表行名再改规则：两家公司无「毛利」行属报表格式（详见 `eval/data_gaps.md`），不要自造口径硬算；海底捞总资产已用「资产总额减流动负债 + 流动负债小计」组合口径修复（`indicators._haidilao_total_assets`），改报表页识别或小计逻辑时必须重跑 30 期勾稽。
+- 中报标题 `Condensed …`、百胜早期 10-K `Consolidated and Combined …`：报表页识别先剥前缀/后缀再整行精确匹配，新报告类型标题先查 `_STATEMENT_TITLE_TYPES` 是否覆盖。
+- OCR 有两道闸门：触发看 `(cid:` 密度（不只 char_count），输出要过质量校验（长度+有效占比），失败置 `is_ocr=2`；`statements.is_ocr=1` 的行**默认不进 indicators 和 query_statements**（`include_ocr=True` 才返回），不要在指标里混入 OCR 行。tesseract 报「找不到 traineddata」时解析器会自动推导 tessdata 目录（见 `pdf_parser._tessdata_env`）。
+- 检索行为约定：hybrid 短查询 FTS 零命中才走向量兜底；FTS 无年份问句有 1.5%/年的新近度软排序（打散跨年份重复页并列，改动幅度前先跑 G1/G2）；检索引用格式与 MCP locator 统一为 `《title》第N页`，审计正则只认此格式。
+- `tools/test_mcp_http.py` 已内置 30s 超时与 `trust_env=False`：系统代理会劫持 127.0.0.1、httpx 默认 5s 超时扛不住冷启动加载 sqlite-vec。
 
 ## 12. 当前已知局限 / 待办
 
-> 2026-08-16 自动修复后的最新状态见 `docs/fix-record-20260816.md`；以下只列仍未完成或需要人工的事项。
+> 2026-08-16 自动修复后的最新状态见 `docs/fix-record-20260816.md`；2026-09-13 数据/审计轮次见 `eval/data_gaps.md` 与 `docs/process-log.md` 45–47 条；以下只列仍未完成或需要人工的事项。
 
-- 评测现状见 `eval/EVAL_PLAN.md`。`indicators.net_profit` 已改为归母；FTS 无答案 empty_rate=1.0。问句带年份时检索硬过滤 `reports.year`；三表 `year=` 默认当年正文。路由 24/24；组稿 faithful_rate=1.0（含趋势句口径一致性自检）。hybrid 对短于 6 字的查询仍短路回 FTS。freeze hybrid semantic Recall@5 2026-09-04 为 0.30。真语义 / 跨语言 diag FTS Recall 为 0。400 字分块已试过并回滚。行情走 `python -m stock_kb quote`，不入库。
-- 扫描报告数据面缺口（两家均无毛利率序列、海底捞缺总资产、分部收入未结构化等）见 `eval/data_gaps.md`；组稿底稿图表为 vendored ECharts（SVG renderer）内嵌单文件 HTML，正式稿 skill 直接复用图块。
+- 评测现状见 `eval/EVAL_PLAN.md`。`indicators.net_profit` 已改为归母；no_answer 带引擎健康哨兵（engine_error 不计入 empty_rate）。问句带年份时检索硬过滤 `reports.year`；三表 `year=` 默认当年正文且默认排除 OCR 行、未指定 `period_type` 时只取年报。路由 24/24；组稿 faithful_rate=1.0（含趋势句口径一致性自检）。freeze hybrid semantic Recall@5 为 0.30（含近失软分 `recall_soft_at_k` 字段）。真语义/跨语言仍是 diag 盲区（已扩英文+中报题至 156 题/48 diag）。行情走 `python -m stock_kb quote`，不入库；TTM 已能用中报拼 `interim_plus_stub`。
+- 扫描报告数据面：中报三表、百胜 2016–2018、海底捞总资产均已修复；剩余缺口（两家无毛利率序列、分部收入未结构化、OCR 行数字复核、美/港双版本 canonical）见 `eval/data_gaps.md` 待办。
+- 正式稿程序化审计已落地（`tools/audit_formal_notes.py`，接入回归；样张缺失时自动跳过），但 R1/R2/R11（判断段分布、心算复核）仍靠人工 rubric。
 - 两字查询已建 `pages_bigram_fts`，但 bigram 排序暂未启用（避免牺牲 keyword 基线），需独立评测集调权。
 - reranker / jina 对比未完成（可选）。
 - US/HK 年报等“内容不同但语义重复”的 canonical 标记未实现；SHA 完全重复已自动标记并排除。

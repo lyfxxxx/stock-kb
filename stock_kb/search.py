@@ -102,7 +102,16 @@ def _match_search(
     sql, params = _append_filters(
         sql, params, company, year, report_type, language, years=years
     )
-    sql += " ORDER BY rank LIMIT ?"
+    if year is None and years is None:
+        # 无年份问句：同一段报表文字在多年份报告中近乎重复，bm25 几乎并列，
+        # 用轻微的新近度因子（每年 1.5%）打散并列，偏向较新的报告。
+        # rank 为负（越小越好），除以 >1 的因子会让旧页变差。
+        sql += (
+            " ORDER BY rank / (1.0 + 0.015 * (CAST(strftime('%Y','now') AS INTEGER) "
+            "- COALESCE(r.year, 2000))), rank LIMIT ?"
+        )
+    else:
+        sql += " ORDER BY rank LIMIT ?"
     params.append(top_k)
     try:
         return [dict(r) for r in conn.execute(sql, params).fetchall()]
@@ -185,6 +194,8 @@ def _append_filters(
     years: list[int] | None = None,
 ) -> tuple[str, list[Any]]:
     sql += " AND COALESCE(r.is_duplicate, 0) = 0"
+    # is_ocr=2 为 OCR 失败/乱码页（内容不可用），不进检索结果
+    sql += " AND COALESCE(p.is_ocr, 0) < 2"
     if company is not None:
         sql += " AND r.company = ?"
         params.append(company)

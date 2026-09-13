@@ -165,14 +165,17 @@ def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
         """
         SELECT r.company, r.id AS report_id, r.title, r.period_type, r.year AS report_year,
                s.statement_type, s.year, s.line_name_norm, s.value,
-               s.unit, s.currency, s.page_no
+               s.unit, s.currency, s.page_no, s.line_no, s.is_subtotal, s.is_ocr
         FROM statements s JOIN reports r ON r.id = s.report_id
         WHERE s.year IS NOT NULL AND s.value IS NOT NULL
+          AND COALESCE(s.is_ocr, 0) = 0
         """
     ).fetchall()
 
-    # key: (company, year, metric) -> 全部候选，稍后按规则挑一行
-    buckets: dict[tuple[str, int, str], list[dict[str, Any]]] = {}
+    # key: (company, year, period_type, metric) -> 全部候选，稍后按规则挑一行。
+    # 中报/招股书与年报分桶，避免 H1 比较列与全年数值互相挤占；
+    # 年报桶候选与旧行为一致（年报报告期分最高）。
+    buckets: dict[tuple[str, int, str, str], list[dict[str, Any]]] = {}
     for row in rows:
         rule = None
         for metric, candidate_rule in METRIC_RULES.items():
@@ -185,18 +188,19 @@ def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
             continue
         metric, metric_rule = rule
         base_score = _candidate_score(row["line_name_norm"], metric_rule) or 0
+        period_type = row["period_type"] or "annual"
         period_score = {"annual": 30, "interim": 20, "q3": 15}.get(
             row["period_type"] or "", 0
         )
         same_year = 10 if row["report_year"] == row["year"] else 0
         score = base_score + period_score + same_year
-        key = (row["company"], row["year"], metric)
+        key = (row["company"], row["year"], period_type, metric)
         buckets.setdefault(key, []).append(
             {
                 "_score": score,
                 "company": row["company"],
                 "year": row["year"],
-                "period_type": row["period_type"] or "annual",
+                "period_type": period_type,
                 "name": metric,
                 "value": row["value"],
                 "unit": row["unit"],
@@ -208,44 +212,40 @@ def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
         )
 
     output: list[dict[str, Any]] = []
-    for (company, year, metric), items in sorted(buckets.items()):
+    for (company, year, _pt, metric), items in sorted(buckets.items()):
         base = _pick_metric_row(metric, items)
         item = {k: v for k, v in base.items() if not k.startswith("_")}
         output.append(item)
 
-    revenue_by_key = {
-        (b["company"], b["year"]): b["value"] for b in output if b["name"] == "revenue"
-    }
-    net_profit_by_key = {
-        (b["company"], b["year"]): b["value"]
-        for b in output
-        if b["name"] == "net_profit"
-    }
-    equity_by_key = {
-        (b["company"], b["year"]): b["value"]
-        for b in output
-        if b["name"] == "total_equity"
-    }
-    gross_profit_by_key = {
-        (b["company"], b["year"]): b["value"]
-        for b in output
-        if b["name"] == "gross_profit"
-    }
+    output.extend(
+        _haidilao_total_assets(
+            rows,
+            {
+                (b["company"], b["year"], b["period_type"])
+                for b in output
+                if b["name"] == "total_assets"
+            },
+        )
+    )
 
-    for (company, year), revenue in revenue_by_key.items():
+    def _by_key(metric: str) -> dict[tuple[str, int, str], float]:
+        return {
+            (b["company"], b["year"], b["period_type"]): b["value"]
+            for b in output
+            if b["name"] == metric
+        }
+
+    revenue_by_key = _by_key("revenue")
+    net_profit_by_key = _by_key("net_profit")
+    equity_by_key = _by_key("total_equity")
+    gross_profit_by_key = _by_key("gross_profit")
+
+    for (company, year, period_type), revenue in revenue_by_key.items():
         if revenue is None or revenue == 0:
             continue
-        period_type = next(
-            (
-                b["period_type"]
-                for b in output
-                if b["company"] == company and b["year"] == year and b["name"] == "revenue"
-            ),
-            "annual",
-        )
-        gross_profit = gross_profit_by_key.get((company, year))
-        net_profit = net_profit_by_key.get((company, year))
-        equity = equity_by_key.get((company, year))
+        gross_profit = gross_profit_by_key.get((company, year, period_type))
+        net_profit = net_profit_by_key.get((company, year, period_type))
+        equity = equity_by_key.get((company, year, period_type))
         if gross_profit is not None:
             output.append(
                 _derived(company, year, period_type, "gross_margin", gross_profit / revenue)
@@ -308,3 +308,76 @@ def _derived(
         "page_no": None,
         "line_name": None,
     }
+
+
+def _haidilao_total_assets(
+    rows: list[dict[str, Any]], existing: set[tuple[str, int, str]]
+) -> list[dict[str, Any]]:
+    """海底捞资产负债表没有「资产总额」行（eval/data_gaps.md 待办 1，报表格式使然）。
+
+    组合口径：总资产 = 「资产总额减流动负债」 + 流动负债小计。
+    小计行不带行名，解析器已挂上小节标题并标 is_subtotal=1；同一小节可能出现
+    不含/含「持作出售资产」两版小计，取行序靠后（line_no 较大）即含持作出售的
+    一版，与「资产总额减流动负债」口径一致。出处锚在「资产总额减流动负债」行。
+    """
+    groups: dict[tuple[int, int], list[dict[str, Any]]] = {}
+    for row in rows:
+        if row["company"] != "海底捞" or row["statement_type"] != "balance":
+            continue
+        if row["year"] is None or row["value"] is None:
+            continue
+        groups.setdefault((row["report_id"], row["year"]), []).append(row)
+
+    out: list[dict[str, Any]] = []
+    for (report_id, year), items in sorted(groups.items()):
+        period_type = items[0]["period_type"] or "annual"
+        if ("海底捞", year, period_type) in existing:
+            continue
+        anchor = None
+        cl_subtotals: list[dict[str, Any]] = []
+        for row in items:
+            name = _normalize_name(row["line_name_norm"])
+            if row["is_subtotal"]:
+                if (
+                    ("currentliabilities" in name or "流动负债" in name)
+                    and "noncurrent" not in name
+                    and "非流动" not in name
+                ):
+                    cl_subtotals.append(row)
+            elif (
+                "totalassetslesscurrentliabilities" in name
+                or "资产总额减流动负债" in name
+            ):
+                anchor = row
+        if anchor is None or not cl_subtotals:
+            continue
+        subtotal = max(cl_subtotals, key=lambda x: (x["line_no"] or 0, x["value"]))
+        out.append(
+            {
+                "company": "海底捞",
+                "year": year,
+                "period_type": period_type,
+                "name": "total_assets",
+                "value": anchor["value"] + subtotal["value"],
+                "unit": anchor["unit"],
+                "currency": anchor["currency"],
+                "report_id": report_id,
+                "page_no": anchor["page_no"],
+                "line_name": "资产总额减流动负债 + 流动负债小计（含持作出售）",
+                "_report_year": items[0]["report_year"],
+            }
+        )
+
+    # 同一 (year, period_type) 可能同时来自当年报告与次年报比较列，优先当年报告。
+    merged: dict[tuple[int, str], list[dict[str, Any]]] = {}
+    for item in out:
+        merged.setdefault((item["year"], item["period_type"]), []).append(item)
+    result: list[dict[str, Any]] = []
+    for key, cands in merged.items():
+        same_year = [c for c in cands if c["_report_year"] == key[0]]
+        chosen = same_year[0] if same_year else max(
+            cands, key=lambda c: c["_report_year"] or 0
+        )
+        chosen.pop("_report_year", None)
+        result.append(chosen)
+    return result

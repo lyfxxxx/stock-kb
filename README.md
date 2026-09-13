@@ -59,6 +59,15 @@ python -m stock_kb stats --json
 # 审计两篇试点笔记的关键数字（与数据库交叉验证）
 python tools/audit_notes.py
 
+# 审计正式稿（skill+LLM 产出）：[n] 注释对应、页内数字可追溯、页码残留等
+python tools/audit_formal_notes.py            # 无参数时扫描 eval/generated_notes 下全部样张
+
+# 公司×年份×指标覆盖矩阵（静默丢数据当天可见）
+python tools/coverage_matrix.py
+
+# 定向重扫指定报告（读 NAS；OCR 乱码页自动走质量闸门）
+python tools/reprocess_reports.py 35 36
+
 # HTTP MCP 端到端测试（需先启动服务并设 STOCK_KB_MCP_URL/STOCK_KB_TOKEN）
 python tools/test_mcp_http.py
 

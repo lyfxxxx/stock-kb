@@ -163,10 +163,13 @@ def _search_hits(
     conn: sqlite3.Connection,
     company: str,
     terms: tuple[str, ...],
+    cfg: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for term in terms:
         hits = search.fts_search(conn, term, company=company, top_k=1)
+        if not hits:
+            hits = _vector_fallback(conn, company, term, cfg)
         if not hits:
             continue
         h = hits[0]
@@ -179,30 +182,58 @@ def _search_hits(
                 "snippet": humanfmt.clean_snippet(h.get("snippet"), 160),
                 "locator": format_locator(h.get("title"), h.get("page_no")),
                 "tool": TOOL_SEARCH,
+                "engine": h.get("source", "fts"),
             }
         )
     return out
 
 
+def _vector_fallback(
+    conn: sqlite3.Connection,
+    company: str,
+    term: str,
+    cfg: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    """FTS 零命中时用混合检索兜底；向量索引缺失时静默降级返回空。"""
+    from stock_kb import vector
+
+    emb = (cfg or {}).get("embedding", {})
+    try:
+        return vector.hybrid_search(
+            conn,
+            term,
+            model=emb.get("model", "BAAI/bge-small-zh-v1.5"),
+            top_k=1,
+            company=company,
+            cache_dir=(cfg or {}).get("models_dir"),
+            backend=emb.get("backend", "auto"),
+        )
+    except Exception:
+        return []
+
+
 def fetch_operating_hits(
     conn: sqlite3.Connection,
     company: str,
+    cfg: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    return _search_hits(conn, company, OPERATING_TERMS)
+    return _search_hits(conn, company, OPERATING_TERMS, cfg)
 
 
 def fetch_industry_hits(
     conn: sqlite3.Connection,
     company: str,
+    cfg: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    return _search_hits(conn, company, INDUSTRY_TERMS)
+    return _search_hits(conn, company, INDUSTRY_TERMS, cfg)
 
 
 def fetch_shareholder_hits(
     conn: sqlite3.Connection,
     company: str,
+    cfg: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    return _search_hits(conn, company, SHAREHOLDER_TERMS)
+    return _search_hits(conn, company, SHAREHOLDER_TERMS, cfg)
 
 
 def company_code(conn: sqlite3.Connection, company: str) -> str | None:
@@ -399,9 +430,9 @@ def compose_note(
             years = [as_of - i for i in range(max(year_count, 1))]
         indicators = fetch_indicators(conn, company, years)
         statements = fetch_statement_lines(conn, company, years)
-        operating = fetch_operating_hits(conn, company)
-        shareholders = fetch_shareholder_hits(conn, company)
-        industry = fetch_industry_hits(conn, company)
+        operating = fetch_operating_hits(conn, company, cfg)
+        shareholders = fetch_shareholder_hits(conn, company, cfg)
+        industry = fetch_industry_hits(conn, company, cfg)
         code = company_code(conn, company)
         peers = [
             n

@@ -235,6 +235,8 @@ def scale_to_units(value: float, unit: str | None) -> float:
         return value * 1e9
     if "亿" in u:
         return value * 1e8
+    if "十万" in u:
+        return value * 1e5
     if "百万" in u or "million" in u or u in {"mn", "m"}:
         return value * 1e6
     if "万" in u:
@@ -309,10 +311,13 @@ def ttm_net_profit(
         y = int(fy["year"])
     else:
         raise QuoteError(f"{company} 无法由年报/中报拼出 TTM 归母净利")
+    if not currency:
+        # 币种缺失时绝不能默认 CNY：美元报表不折算会把 PE 错报约 7 倍。
+        raise QuoteError(f"{company} TTM 净利缺少币种字段，拒绝计算 PE")
     return {
         "company": company,
         "ttm_profit": ttm,
-        "currency": (currency or "CNY").upper().replace("RMB", "CNY"),
+        "currency": currency.upper().replace("RMB", "CNY"),
         "unit": unit,
         "method": method,
         "as_of_year": y,

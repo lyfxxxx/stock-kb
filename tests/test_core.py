@@ -114,6 +114,60 @@ def test_statement_page_detection_rejects_notes_and_summary():
     )
 
 
+def test_statement_page_detection_condensed_and_combined():
+    # 中报标题：Condensed/简明 前缀剥离后命中词典
+    assert (
+        _statement_type_from_page(
+            {
+                "content": (
+                    "Condensed Consolidated Statement of Profit or Loss and "
+                    "Other Comprehensive Income\nfor the six months\n2025"
+                )
+            }
+        )
+        == "income"
+    )
+    assert (
+        _statement_type_from_page({"content": "Condensed Consolidated Statement of Cash Flows"})
+        == "cashflow"
+    )
+    assert _statement_type_from_page({"content": "簡明綜合財務狀況表"}) == "balance"
+    assert (
+        _statement_type_from_page({"content": "簡明綜合損益及其他全面收益表（未經審核）"})
+        == "income"
+    )
+    # 百胜早期 10-K：Consolidated and Combined 变体 + (Loss) 后缀
+    assert (
+        _statement_type_from_page(
+            {"content": "Consolidated and Combined Statements of Income (Loss)"}
+        )
+        == "income"
+    )
+    assert (
+        _statement_type_from_page(
+            {"content": "Consolidated and Combined Statements of Cash Flows"}
+        )
+        == "cashflow"
+    )
+    assert (
+        _statement_type_from_page({"content": "Consolidated and Combined Balance Sheets"})
+        == "balance"
+    )
+    # 中报财务摘要页的中英混排标题不是报表正文页，仍应拒绝
+    assert (
+        _statement_type_from_page(
+            {
+                "content": (
+                    "CONDENSED CONSOLIDATED STATEMENT OF PROFIT OR 簡明綜合損益及其他全面收益表\n"
+                    "人民币千元 2025 2024\n"
+                    "收入 40,561,900"
+                )
+            }
+        )
+        is None
+    )
+
+
 def test_extract_statements_years_and_units():
     page = {
         "page_no": 1,
@@ -146,6 +200,88 @@ def test_unit_currency_rejects_embedded_rmb():
         "USD",
     )
     assert _detect_unit_currency("RMB’000 RMB’000") == ("千元", "CNY")
+
+
+def test_extract_statements_subtotal_and_wrapped_label():
+    page = {
+        "page_no": 1,
+        "content": "\n".join(
+            [
+                "Consolidated Statement of Financial Position",
+                "As at December 31, 2024",
+                "Notes 2024 2023",
+                "RMB’000 RMB’000",
+                "Non-current Assets 非流動資產",
+                "Property, plant and equipment 物業、廠房及設備 16 3,000 2,900",
+                "999 900",
+                "Current Assets 流動資產",
+                "Inventories 存貨 23 1,000 900",
+                "Financial assets at fair value through 按公允值計入其他全面收益的",
+                "other comprehensive income 金融資產 22 324 150",
+                "1,500 1,400",
+            ]
+        ),
+    }
+    page["content_orig"] = page["content"]
+    rows = extract_statements_from_pages([page], "测试", "r", report_year=2024)
+    by = {(r["line_name_norm"], r["year"]): r for r in rows}
+    # 无标签小计行挂最近的小节标题（norm 列已转简体），line_no 参与唯一键
+    assert ("Non-current Assets 非流动资产", 2024) in by
+    assert by[("Non-current Assets 非流动资产", 2024)]["is_subtotal"] == 1
+    assert by[("Non-current Assets 非流动资产", 2024)]["value"] == 999.0
+    assert ("Current Assets 流动资产", 2024) in by
+    assert by[("Current Assets 流动资产", 2024)]["value"] == 1500.0
+    # 折行标签拼接：上半行 + 下半行
+    stitched = [
+        r
+        for r in rows
+        if "fairvaluethrough" in _norm(r["line_name_norm"])
+        and not r["is_subtotal"]
+    ]
+    assert stitched and all(
+        "金融資產" in r["line_name_orig"] and "other" in r["line_name_orig"].lower()
+        for r in stitched
+    )
+
+
+def _norm(text: str) -> str:
+    import re as _re
+
+    return _re.sub(r"[^0-9a-z\u4e00-\u9fff]+", "", str(text).casefold())
+
+
+def test_compute_indicators_haidilao_total_assets(tmp_path):
+    db_path = tmp_path / "ta.db"
+    conn = db.connect(db_path)
+    conn.execute("INSERT INTO companies(name) VALUES('海底捞')")
+    conn.execute(
+        "INSERT INTO reports(company, report_type, year, period_type, title, path, status) "
+        "VALUES('海底捞','annual',2024,'annual','2024年报','/h.pdf','ok')"
+    )
+    rid = conn.execute("SELECT id FROM reports").fetchone()["id"]
+    for name, value, page, line_no, subtotal in (
+        ("Total Assets less Current Liabilities 資產總額減流動負債", 15677436.0, 145, 27, 0),
+        ("Current Liabilities 流動負債", 7021037.0, 145, 22, 1),
+        ("Current Liabilities 流動負債", 7103821.0, 145, 25, 1),
+    ):
+        conn.execute(
+            "INSERT INTO statements(report_id, statement_type, line_name_orig, line_name_norm, "
+            "value, unit, currency, year, page_no, line_no, is_subtotal) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+            (rid, "balance", name, name, value, "千元", "CNY", 2024, page, line_no, subtotal),
+        )
+    conn.commit()
+    from stock_kb.indicators import compute_indicators
+
+    compute_indicators({"db_path": str(db_path)})
+    row = conn.execute(
+        "SELECT value, unit, page_no FROM indicators "
+        "WHERE company='海底捞' AND name='total_assets' AND period_type='annual'"
+    ).fetchone()
+    assert row is not None
+    assert row["value"] == 15677436.0 + 7103821.0
+    assert row["page_no"] == 145
+    conn.close()
 
 
 def test_classify_research_before_report_period():

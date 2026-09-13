@@ -465,6 +465,7 @@ def vector_search(
             FROM chunks c JOIN pages p ON p.id = c.page_id
             JOIN reports r ON r.id = p.report_id
             WHERE c.id=? AND COALESCE(r.is_duplicate, 0) = 0
+              AND COALESCE(p.is_ocr, 0) < 2
             """,
             (h["chunk_id"],),
         ).fetchone()
@@ -524,8 +525,8 @@ def hybrid_search(
     query = search.normalize_query(query)
     if not query:
         return []
-    # 短术语（<6 个字符）以关键词命中为准，向量容易引入同义噪音。
-    # 长句/语义问题再走 RRF 融合。
+    # 短术语（<6 个字符）以关键词命中为准，向量容易引入同义噪音；
+    # 但 FTS 零命中时仍走向量融合兜底，避免经营叙述类短查询直接空手而归。
     did_fuse = len(query) >= 6
     if not did_fuse:
         hits = search.fts_search(
@@ -537,10 +538,11 @@ def hybrid_search(
             report_type=report_type,
             language=language,
         )
-        for h in hits:
-            h["source"] = "hybrid"
-            h["hybrid_fused"] = False
-        return hits
+        if hits:
+            for h in hits:
+                h["source"] = "hybrid"
+                h["hybrid_fused"] = False
+            return hits
 
     candidate_k = max(top_k * 4, 20)
     fts = search.fts_search(

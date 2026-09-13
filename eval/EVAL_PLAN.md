@@ -210,3 +210,15 @@ freeze keyword 测不到向量。新增 `python -m stock_kb eval-embed`：44 道
 2. **问句带年份**：FTS/向量把年份从 MATCH 里拿掉，改为过滤 `reports.year`；超出入库年则空（与无答案 2026 题一致）。无年份问句不按新近排序，freeze keyword 0.80 不变。4 道 `year_filter` precision_mean=1.0。
 3. **三表正文**：`query_statements(year=)` 默认 `r.year = s.year`。2023 经营现金流不再带回 2024 年报比较列。
 4. **路由**：`stock_kb.route` + freeze 24 道 `route`，accuracy=1.0。MCP `route_query`。减值主走三表，可 fallback 到 search。
+
+### 5.6 数据面修复、正式稿审计与检索软排序（2026-09-13）
+
+按「为报告生成提供可靠数据」的审计结论落地四批改动：
+
+1. **数据面**：报表页识别剥 `Condensed/简明` 前缀与 `(Loss)/（未经审核）` 后缀、补 `Consolidated and Combined` 变体——海底捞 7 份中报三表从 0 恢复（每份 258–298 行），百胜 2016/2018 恢复；无标签小计行挂小节标题（`is_subtotal`）+ 折行标签拼接，`indicators` 分桶键扩到 period_type（中报指标 48 条）并新增海底捞总资产组合规则（30 期勾稽恒等式全过）。指标 117→230，原有值零漂移。
+2. **OCR 闸门**：触发加 `(cid:` 密度、输出加质量校验（失败 `is_ocr=2` 不进检索）；tesseract 自动推导 tessdata。OCR 行标 `statements.is_ocr=1`，默认隔离于 indicators 与 `query_statements`。百胜 2017 重扫 122 页 OCR 成功。
+3. **审计**：`tools/audit_formal_notes.py` 程序化审计正式稿（接入回归，含阴性验证）；MCP locator 统一《title》第N页；`quotes` 币种缺失改报错。
+4. **检索**：hybrid 短查询 FTS 零命中走向量兜底（评测改读 `hybrid_fused` 标志）；FTS 无年份问句 1.5%/年新近度软排序（keyword Neg@5 0.55→0.45）；MCP/组稿零命中升引擎。
+5. **评测**：no_answer 引擎哨兵（engine_error 不计 empty_rate）；`recall_soft_at_k` 软分；题集 146→156（+5 英文 cross、+5 中报 semantic，全 diag）；回归新增覆盖矩阵。回归全过后已 `--write-baseline`。
+
+遗留：分部收入结构化、美/港双版本 canonical、OCR 行数字人工复核、观点层（R1/R2/R11）仍靠人工 rubric。

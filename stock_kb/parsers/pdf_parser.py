@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -111,6 +112,14 @@ _STATEMENT_TITLE_TYPES = {
     "statement of cash flows": "cashflow",
     "statements of cash flows": "cashflow",
     "cash flow statement": "cashflow",
+    # 百胜早期 10-K（2016-2018）标题用 "Consolidated and Combined ..."
+    "consolidated and combined statements of income": "income",
+    "consolidated and combined statement of income": "income",
+    "consolidated and combined statements of comprehensive income": "income",
+    "consolidated and combined statements of cash flows": "cashflow",
+    "consolidated and combined statement of cash flows": "cashflow",
+    "consolidated and combined balance sheets": "balance",
+    "consolidated and combined balance sheet": "balance",
     "综合现金流量表": "cashflow",
     "现金流量表": "cashflow",
     "合并现金流量表": "cashflow",
@@ -132,9 +141,38 @@ _TITLE_SUFFIXES = (
     "(cont'd)",
     "(cont’d)",
     "(unaudited)",
+    "(loss)",
     "（续）",
     "（續）",
+    "（未经审核）",
+    "（未經審核）",
 )
+
+# 中报标题常带 Condensed/简明 前缀（如 "Condensed Consolidated Statement of ..."），
+# 剥掉后再精确匹配词典，保持「整行命中」语义以排除附注/摘要页误判。
+_TITLE_PREFIXES = ("condensed", "简明")
+
+
+_CID_TOKEN_RE = re.compile(r"\(cid:\d+\)")
+# OCR 输出的有效性闸门：低于该长度或有效字符占比过低的输出视为噪声，不采用。
+_OCR_MIN_VALID_CHARS = 50
+_OCR_MIN_VALID_RATIO = 0.5
+# 页面 (cid:xx) token 字符占比超过该阈值视为字体缺 ToUnicode 的乱码页。
+_CID_GARBLED_RATIO = 0.1
+
+
+def _cid_ratio(text: str) -> float:
+    if not text:
+        return 0.0
+    cid_len = sum(len(m.group(0)) for m in _CID_TOKEN_RE.finditer(text))
+    return cid_len / len(text)
+
+
+def _text_quality_ok(text: str) -> bool:
+    if len(text) < _OCR_MIN_VALID_CHARS:
+        return False
+    valid = sum(1 for ch in text if ch.isalnum() or "\u4e00" <= ch <= "\u9fff")
+    return valid / len(text) >= _OCR_MIN_VALID_RATIO
 
 
 def extract_pdf(
@@ -149,12 +187,18 @@ def extract_pdf(
             text = (page.extract_text() or "").strip()
             char_count = len(text)
             is_ocr = 0
-            if use_ocr and char_count < ocr_min_chars:
+            # 乱码页（字体缺 ToUnicode）字符数可能很高但内容不可用，
+            # 也需要走 OCR，不能只用 char_count 判断。
+            garbled = _cid_ratio(text) > _CID_GARBLED_RATIO
+            if use_ocr and (char_count < ocr_min_chars or garbled):
                 ocr_text = _ocr_page(page, ocr_langs)
-                if ocr_text:
+                if ocr_text and _text_quality_ok(ocr_text):
                     text = ocr_text
                     char_count = len(text)
                     is_ocr = 1
+                elif garbled:
+                    # 乱码页 OCR 失败/输出无效：保留原文但标记，检索侧排除。
+                    is_ocr = 2
             try:
                 tables = page.extract_tables() or []
             except Exception:
@@ -195,7 +239,12 @@ def extract_statements_from_pages(
         text = page.get("content_orig") or page["content"]
         years = _detect_year_columns(text, report_year=report_year)
         unit, currency = _detect_unit_currency(text)
-        for line in text.splitlines():
+        # 无数字的行有两种：小节标题（「Current Assets 流動資產」，持久，用于命名
+        # 其后的小计行）与折行标签上半行（一次性，与下一行标签拼接）。
+        section_header: str | None = None
+        wrap_head: str | None = None
+        section_stack: list[str | None] = []
+        for line_no, line in enumerate(text.splitlines(), 1):
             line = line.strip()
             if not line:
                 continue
@@ -210,6 +259,17 @@ def extract_statements_from_pages(
                 continue
             matches = list(CELL_RE.finditer(line))
             if not matches:
+                if _is_junk_name(line):
+                    section_header = None
+                    wrap_head = None
+                    section_stack.clear()
+                    continue
+                wrap_head = line
+                # 以未闭合括号/连词结尾、或以小写字母/连词开头的行是折行片段，
+                # 不应顶掉小节标题。
+                if not _ends_mid_phrase(line) and not _starts_as_fragment(line):
+                    section_stack.append(section_header)
+                    section_header = line
                 continue
             k = len(years) if years else 1
             if len(matches) < k:
@@ -217,6 +277,26 @@ def extract_statements_from_pages(
             value_matches = matches[-k:]
             label = line[: value_matches[0].start()].strip()
             label = re.sub(r"\s+\d{1,3}$", "", label).strip()
+            is_subtotal = 0
+            if not label:
+                # 无标签小计行（港式资产负债表小节合计不带行名），挂最近的小节标题。
+                # 整行必须是纯数字/括号/短横，防止把「22001188 AAnnnn…」之类
+                # 页脚行误判成小计；同一小节可能有多版小计，标题不清空。
+                if (
+                    not section_header
+                    or not re.fullmatch(r"[0-9,.\s()\[\]{}–—‒―−%+]+", line)
+                ):
+                    continue
+                label = section_header
+                is_subtotal = 1
+                wrap_head = None
+            else:
+                if wrap_head and _looks_like_continuation(wrap_head, label):
+                    label = f"{wrap_head} {label}"
+                    # 折行头被消费：若它此前被误当作小节标题，恢复上一层。
+                    if section_header == wrap_head and section_stack:
+                        section_header = section_stack.pop()
+                wrap_head = None
             if _is_junk_name(label):
                 continue
             for idx, m in enumerate(value_matches):
@@ -237,11 +317,42 @@ def extract_statements_from_pages(
                         "currency": currency,
                         "year": year,
                         "page_no": page["page_no"],
+                        "line_no": line_no,
+                        "is_subtotal": is_subtotal,
+                        # OCR 成功页(1)与乱码页(2)上提取的行都视为低可靠
+                        "is_ocr": 1 if page.get("is_ocr") else 0,
                         "table_index": 0,
                         "source_id": None,
                     }
                 )
     return rows
+
+
+def _ends_mid_phrase(line: str) -> bool:
+    """行尾是未闭合括号或连词，说明该行是折行标签的上半行。"""
+    s = (line or "").rstrip()
+    if not s:
+        return False
+    if s.count("（") > s.count("）") or s.count("(") > s.count(")"):
+        return True
+    return s.endswith(("的", "及", "與", "与", "或", "和", "以", "（", "("))
+
+
+def _starts_as_fragment(line: str) -> bool:
+    """行首小写字母或连词开头，多为折行标签的中间片段。"""
+    head = (line or "").strip()[:1]
+    if head.isascii() and head.isalpha() and head.islower():
+        return True
+    return head in {"的", "及", "與", "与", "或", "和", "以"}
+
+
+def _looks_like_continuation(prev: str, label: str) -> bool:
+    """判断上一行（无数字）与当前行标签是否为同一科目折行。"""
+    if not prev:
+        return False
+    if _ends_mid_phrase(prev):
+        return True
+    return _starts_as_fragment(label)
 
 
 def _parse_table(table: list[list[Any]]) -> list[list[str]]:
@@ -324,6 +435,10 @@ def _normalize_title_line(line: str) -> str:
         if n.endswith(suffix):
             n = n[: -len(suffix)].strip()
             break
+    for prefix in _TITLE_PREFIXES:
+        if n.startswith(prefix):
+            n = re.sub(rf"^{re.escape(prefix)}\s*", "", n).strip()
+            break
     return n
 
 
@@ -399,9 +514,21 @@ def _is_header_or_junk_line(line: str) -> bool:
         "人民币百万元",
         "截至",
         "for the year",
+        "for the six",
+        "for the three",
+        "for the nine",
+        "six months ended",
+        "three months ended",
+        "nine months ended",
         "as at",
         "於",
+        "于",
         "at january",
+        "at june",
+        "at july",
+        "at august",
+        "at september",
+        "at march",
         "at december",
         "consolidated statement",
         "綜合損益",
@@ -420,11 +547,54 @@ def _is_header_or_junk_line(line: str) -> bool:
         return True
     if "rmb’000" in n or "rmb'000" in n or "人民幣千元" in n:
         return True
-    if "annual report" in n or re.search(r"form\s*10[\s\-–—]*k", n):
+    # 部分 PDF 页脚每个字符被提取两次（「AAnnnnuuaall RReeppoorrtt」），
+    # 连续字符去重后再识别 annual report / 年度报告 / Form 10-K。
+    dedup = re.sub(r"(.)\1+", r"\1", n)
+    if "annual report" in dedup or "年度报告" in dedup or re.search(
+        r"form\s*10[\s\-–—]*k", dedup
+    ):
+        return True
+    if _DATE_LINE_RE.search(n):
+        # 「于2019年6月30日及2020年…」「August 27, 2020」等表头日期行，
+        # 其中的年份数字不是行项目数值。
         return True
     if not re.search(r"[\u4e00-\u9fff]|[a-z]", n):
-        return True
+        # 无字母/CJK 的行通常是页脚页码等噪声；但纯数字行（港式小计
+        # 「12,874,180 14,907,039」）要放行给小计逻辑处理。
+        return not re.search(r"\d", n)
     return False
+
+
+# 表头日期行：「于2019年6月30日…」「August 27, 2020」等；月名后跟数字才判定，
+# 避免误伤含 may/June 等词的正文行。
+_DATE_LINE_RE = re.compile(
+    r"[零一二三四五六七八九]*\d{4}年[01]?\d月"
+    r"|[01]?\d月[一二三四五六七八九十零\d]{1,3}日"
+    r"|(?:january|february|march|april|may|june|july|august|september|october"
+    r"|november|december)\s+\d{1,2},?\s*\d{2,4}",
+    re.IGNORECASE,
+)
+
+
+def _tessdata_env() -> dict[str, str]:
+    """tesseract 找不到语言包时（TESSDATA_PREFIX 未设置），从可执行文件位置推导
+    tessdata 目录。兼容 conda 两种布局：<env>/Library/bin/tesseract 对应
+    <env>/share/tessdata 与 <env>/Library/share/tessdata。"""
+    env = os.environ.copy()
+    if env.get("TESSDATA_PREFIX"):
+        return env
+    exe = shutil.which("tesseract")
+    if not exe:
+        return env
+    bin_dir = Path(exe).resolve().parent
+    for candidate in (
+        bin_dir.parent / "share" / "tessdata",
+        bin_dir.parent.parent / "share" / "tessdata",
+    ):
+        if (candidate / "eng.traineddata").exists():
+            env["TESSDATA_PREFIX"] = str(candidate)
+            break
+    return env
 
 
 def _ocr_page(page: Any, langs: str) -> str:
@@ -439,6 +609,7 @@ def _ocr_page(page: Any, langs: str) -> str:
                 encoding="utf-8",
                 errors="replace",
                 timeout=120,
+                env=_tessdata_env(),
             )
             return (out.stdout or "").strip()
         except Exception:

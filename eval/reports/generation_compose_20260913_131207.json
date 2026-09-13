@@ -1,0 +1,906 @@
+{
+  "meta": {
+    "companies": [
+      "海底捞",
+      "百胜中国"
+    ],
+    "duration_seconds": 9.624,
+    "generated_at": "2026-09-13T05:12:07.641444+00:00"
+  },
+  "notes": [
+    {
+      "company": "海底捞",
+      "path": "D:\\workspace\\stock-kb\\eval\\generated_notes\\海底捞\\2026-09-13-海底捞-扫描.md",
+      "html_path": "D:\\workspace\\stock-kb\\eval\\generated_notes\\海底捞\\2026-09-13-海底捞-扫描-组稿.html",
+      "as_of_year": 2025,
+      "n_indicators": 30,
+      "n_statements": 9,
+      "n_operating": 5,
+      "tools_used": [
+        "get_indicators",
+        "get_financial_statements",
+        "search_reports"
+      ],
+      "route_sample": [
+        {
+          "company": "海底捞",
+          "year": null,
+          "query": "海底捞 归母净利润",
+          "fallback": null,
+          "name": "net_profit",
+          "keyword": null,
+          "tool": "get_indicators",
+          "reason": "indicator_metric"
+        },
+        {
+          "company": "海底捞",
+          "year": null,
+          "query": "海底捞 已付股息",
+          "fallback": null,
+          "name": null,
+          "keyword": "已付股息",
+          "tool": "get_financial_statements",
+          "reason": "statement_line"
+        },
+        {
+          "company": "海底捞",
+          "year": null,
+          "query": "海底捞 翻台率",
+          "fallback": null,
+          "name": null,
+          "keyword": null,
+          "tool": "search_reports",
+          "reason": "operating_narrative"
+        }
+      ]
+    },
+    {
+      "company": "百胜中国",
+      "path": "D:\\workspace\\stock-kb\\eval\\generated_notes\\百胜中国\\2026-09-13-百胜中国-扫描.md",
+      "html_path": "D:\\workspace\\stock-kb\\eval\\generated_notes\\百胜中国\\2026-09-13-百胜中国-扫描-组稿.html",
+      "as_of_year": 2025,
+      "n_indicators": 30,
+      "n_statements": 10,
+      "n_operating": 4,
+      "tools_used": [
+        "get_indicators",
+        "get_financial_statements",
+        "search_reports"
+      ],
+      "route_sample": [
+        {
+          "company": "百胜中国",
+          "year": null,
+          "query": "百胜中国 归母净利润",
+          "fallback": null,
+          "name": "net_profit",
+          "keyword": null,
+          "tool": "get_indicators",
+          "reason": "indicator_metric"
+        },
+        {
+          "company": "百胜中国",
+          "year": null,
+          "query": "百胜中国 已付股息",
+          "fallback": null,
+          "name": null,
+          "keyword": "已付股息",
+          "tool": "get_financial_statements",
+          "reason": "statement_line"
+        },
+        {
+          "company": "百胜中国",
+          "year": null,
+          "query": "百胜中国 翻台率",
+          "fallback": null,
+          "name": null,
+          "keyword": null,
+          "tool": "search_reports",
+          "reason": "operating_narrative"
+        }
+      ]
+    }
+  ],
+  "audits": [
+    {
+      "company": "海底捞",
+      "n_rows": 34,
+      "citation_precision": 1.0,
+      "faithful_rate": 1.0,
+      "missing_citation": [],
+      "unfaithful": [],
+      "labels_ok": true,
+      "unit_consistency": {
+        "trend_numbers": 12,
+        "consistent": 12,
+        "mismatch": []
+      },
+      "ok": true,
+      "rows": [
+        {
+          "company": "海底捞",
+          "label": "营业收入",
+          "year": 2025,
+          "value": 43225355.0,
+          "unit": "千元",
+          "locator": "《2025年报》第152页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "营业收入",
+          "year": 2024,
+          "value": 42754687.0,
+          "unit": "千元",
+          "locator": "《2024年报》第142页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "营业收入",
+          "year": 2023,
+          "value": 41453348.0,
+          "unit": "千元",
+          "locator": "《2023年报》第278页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "营业收入",
+          "year": 2022,
+          "value": 31038634.0,
+          "unit": "千元",
+          "locator": "《2022年报》第243页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "营业收入",
+          "year": 2021,
+          "value": 41111624.0,
+          "unit": "千元",
+          "locator": "《2021年报》第225页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "归母净利润",
+          "year": 2025,
+          "value": 4049824.0,
+          "unit": "千元",
+          "locator": "《2025年报》第153页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "归母净利润",
+          "year": 2024,
+          "value": 4708084.0,
+          "unit": "千元",
+          "locator": "《2024年报》第143页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "归母净利润",
+          "year": 2023,
+          "value": 4499080.0,
+          "unit": "千元",
+          "locator": "《2023年报》第279页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "归母净利润",
+          "year": 2022,
+          "value": 1374477.0,
+          "unit": "千元",
+          "locator": "《2022年报》第244页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "归母净利润",
+          "year": 2021,
+          "value": -4163175.0,
+          "unit": "千元",
+          "locator": "《2021年报》第225页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "总资产",
+          "year": 2025,
+          "value": 22090202.0,
+          "unit": "千元",
+          "locator": "《2025年报》第155页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "总资产",
+          "year": 2024,
+          "value": 22781257.0,
+          "unit": "千元",
+          "locator": "《2024年报》第145页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "总资产",
+          "year": 2023,
+          "value": 24676998.0,
+          "unit": "千元",
+          "locator": "《2023年报》第281页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "总资产",
+          "year": 2022,
+          "value": 21439155.0,
+          "unit": "千元",
+          "locator": "《2022年报》第246页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "总资产",
+          "year": 2021,
+          "value": 28021487.0,
+          "unit": "千元",
+          "locator": "《2021年报》第228页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "净资产",
+          "year": 2025,
+          "value": 10005135.0,
+          "unit": "千元",
+          "locator": "《2025年报》第156页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "净资产",
+          "year": 2024,
+          "value": 10417496.0,
+          "unit": "千元",
+          "locator": "《2024年报》第146页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "净资产",
+          "year": 2023,
+          "value": 11516940.0,
+          "unit": "千元",
+          "locator": "《2023年报》第282页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "净资产",
+          "year": 2022,
+          "value": 7456092.0,
+          "unit": "千元",
+          "locator": "《2022年报》第247页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "净资产",
+          "year": 2021,
+          "value": 7928625.0,
+          "unit": "千元",
+          "locator": "《2021年报》第229页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "经营现金流",
+          "year": 2025,
+          "value": 5664189.0,
+          "unit": "千元",
+          "locator": "《2025年报》第159页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "经营现金流",
+          "year": 2024,
+          "value": 7634465.0,
+          "unit": "千元",
+          "locator": "《2024年报》第149页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "经营现金流",
+          "year": 2023,
+          "value": 9000350.0,
+          "unit": "千元",
+          "locator": "《2023年报》第285页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "经营现金流",
+          "year": 2022,
+          "value": 6152295.0,
+          "unit": "千元",
+          "locator": "《2022年报》第250页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "经营现金流",
+          "year": 2021,
+          "value": 3806125.0,
+          "unit": "千元",
+          "locator": "《2021年报》第231页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "已付股息",
+          "year": 2025,
+          "value": -4133303.0,
+          "unit": "千元",
+          "locator": "《2025年报》第161页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "资本开支",
+          "year": 2025,
+          "value": -1672555.0,
+          "unit": "千元",
+          "locator": "《2025年报》第160页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "已付股息",
+          "year": 2024,
+          "value": -6071486.0,
+          "unit": "千元",
+          "locator": "《2024年报》第151页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "资本开支",
+          "year": 2024,
+          "value": -1299048.0,
+          "unit": "千元",
+          "locator": "《2024年报》第150页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "已付股息",
+          "year": 2023,
+          "value": -553798.0,
+          "unit": "千元",
+          "locator": "《2023年报》第287页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "资本开支",
+          "year": 2023,
+          "value": -452410.0,
+          "unit": "千元",
+          "locator": "《2023年报》第286页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "资本开支",
+          "year": 2022,
+          "value": -825055.0,
+          "unit": "千元",
+          "locator": "《2022年报》第251页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "已付股息",
+          "year": 2021,
+          "value": -92781.0,
+          "unit": "千元",
+          "locator": "《2021年报》第233页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "海底捞",
+          "label": "资本开支",
+          "year": 2021,
+          "value": -4429589.0,
+          "unit": "千元",
+          "locator": "《2021年报》第232页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        }
+      ],
+      "path": "D:\\workspace\\stock-kb\\eval\\generated_notes\\海底捞\\2026-09-13-海底捞-扫描.md"
+    },
+    {
+      "company": "百胜中国",
+      "n_rows": 35,
+      "citation_precision": 1.0,
+      "faithful_rate": 1.0,
+      "missing_citation": [],
+      "unfaithful": [],
+      "labels_ok": true,
+      "unit_consistency": {
+        "trend_numbers": 12,
+        "consistent": 12,
+        "mismatch": []
+      },
+      "ok": true,
+      "rows": [
+        {
+          "company": "百胜中国",
+          "label": "营业收入",
+          "year": 2025,
+          "value": 11797.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2025_Annual_Report》第112页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "营业收入",
+          "year": 2024,
+          "value": 11303.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2024_Annual_Report》第110页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "营业收入",
+          "year": 2023,
+          "value": 10978.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2023_Annual_Report》第109页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "营业收入",
+          "year": 2022,
+          "value": 9569.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2022_Annual_Report》第217页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "营业收入",
+          "year": 2021,
+          "value": 9853.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2021_Annual_Report》第194页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "归母净利润",
+          "year": 2025,
+          "value": 929.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2025_Annual_Report》第112页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "归母净利润",
+          "year": 2024,
+          "value": 911.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2024_Annual_Report》第110页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "归母净利润",
+          "year": 2023,
+          "value": 827.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2023_Annual_Report》第109页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "归母净利润",
+          "year": 2022,
+          "value": 442.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2022_Annual_Report》第217页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "归母净利润",
+          "year": 2021,
+          "value": 990.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2021_Annual_Report》第194页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "总资产",
+          "year": 2025,
+          "value": 10783.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2025_Annual_Report》第115页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "总资产",
+          "year": 2024,
+          "value": 11121.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2024_Annual_Report》第113页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "总资产",
+          "year": 2023,
+          "value": 12031.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2023_Annual_Report》第112页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "总资产",
+          "year": 2022,
+          "value": 11826.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2022_Annual_Report》第220页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "总资产",
+          "year": 2021,
+          "value": 13223.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2021_Annual_Report》第197页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "净资产",
+          "year": 2025,
+          "value": 6099.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2025_Annual_Report》第115页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "净资产",
+          "year": 2024,
+          "value": 6414.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2024_Annual_Report》第113页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "净资产",
+          "year": 2023,
+          "value": 7106.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2023_Annual_Report》第112页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "净资产",
+          "year": 2022,
+          "value": 7148.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2022_Annual_Report》第220页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "净资产",
+          "year": 2021,
+          "value": 7908.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2021_Annual_Report》第197页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "经营现金流",
+          "year": 2025,
+          "value": 1466.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2025_Annual_Report》第114页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "经营现金流",
+          "year": 2024,
+          "value": 1419.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2024_Annual_Report》第112页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "经营现金流",
+          "year": 2023,
+          "value": 1473.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2023_Annual_Report》第111页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "经营现金流",
+          "year": 2022,
+          "value": 1413.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2022_Annual_Report》第219页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "经营现金流",
+          "year": 2021,
+          "value": 1131.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2021_Annual_Report》第196页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "已付股息",
+          "year": 2025,
+          "value": -353.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2025_Annual_Report》第114页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "资本开支",
+          "year": 2025,
+          "value": -626.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2025_Annual_Report》第114页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "已付股息",
+          "year": 2024,
+          "value": -248.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2024_Annual_Report》第112页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "资本开支",
+          "year": 2024,
+          "value": -705.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2024_Annual_Report》第112页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "已付股息",
+          "year": 2023,
+          "value": -216.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2023_Annual_Report》第111页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "资本开支",
+          "year": 2023,
+          "value": -710.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2023_Annual_Report》第111页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "已付股息",
+          "year": 2022,
+          "value": -202.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2022_HK_Annual_Report》第152页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "资本开支",
+          "year": 2022,
+          "value": -679.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2022_HK_Annual_Report》第152页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "已付股息",
+          "year": 2021,
+          "value": -203.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2021_Annual_Report》第196页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        },
+        {
+          "company": "百胜中国",
+          "label": "资本开支",
+          "year": 2021,
+          "value": -689.0,
+          "unit": "百万美元",
+          "locator": "《百胜中国_2021_Annual_Report》第196页",
+          "has_citation": true,
+          "page_exists": true,
+          "number_on_page": true
+        }
+      ],
+      "path": "D:\\workspace\\stock-kb\\eval\\generated_notes\\百胜中国\\2026-09-13-百胜中国-扫描.md"
+    }
+  ],
+  "summary": {
+    "n": 2,
+    "fail_count": 0,
+    "faithful_rate_mean": 1.0
+  }
+}

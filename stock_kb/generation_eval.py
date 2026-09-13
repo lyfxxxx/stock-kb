@@ -54,6 +54,41 @@ def page_has_number(content: str, value: float) -> bool:
     return any(tok and tok in blob for tok in tokens)
 
 
+_PAGE_NUMBER_RE = re.compile(r"\(?\s*-?[\d,]+(?:\.\d+)?\s*\)?")
+
+
+def page_numbers(content: str) -> list[float]:
+    """页面上出现的全部数值（去千分位/括号负号），供组合口径核对。"""
+    out: list[float] = []
+    blob = (content or "").replace("−", "-").replace("－", "-")
+    for m in _PAGE_NUMBER_RE.finditer(blob):
+        raw = m.group(0).replace(",", "").replace(" ", "")
+        negative = raw.strip().startswith("(")
+        raw = raw.replace("(", "").replace(")", "")
+        try:
+            v = float(raw)
+        except ValueError:
+            continue
+        out.append(-v if negative else v)
+    return out
+
+
+def page_has_number_or_sum(content: str, value: float) -> bool:
+    """组合口径（如海底捞总资产 = 页内「资产总额减流动负债」+「流动负债小计」）
+    的数字不会以字面形式出现在页面上，允许页内两数之和核对。"""
+    if page_has_number(content, value):
+        return True
+    nums = page_numbers(content)
+    if len(nums) < 2 or len(nums) > 400:
+        return False
+    tol = 1e-6 * max(1.0, abs(value))
+    for i, a in enumerate(nums):
+        for b in nums[i + 1 :]:
+            if abs(a + b - value) <= tol:
+                return True
+    return False
+
+
 def citation_on_page(
     conn: sqlite3.Connection, file_frag: str, page: int
 ) -> tuple[bool, str]:
@@ -163,7 +198,7 @@ def audit_composed_markdown(
         if cite and value is not None:
             exists, content = citation_on_page(conn, cite.group(1), int(cite.group(2)))
             entry["page_exists"] = exists
-            entry["number_on_page"] = exists and page_has_number(content, value)
+            entry["number_on_page"] = exists and page_has_number_or_sum(content, value)
         rows_out.append(entry)
 
     n = len(rows_out)
