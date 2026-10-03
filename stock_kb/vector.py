@@ -465,6 +465,7 @@ def vector_search(
             FROM chunks c JOIN pages p ON p.id = c.page_id
             JOIN reports r ON r.id = p.report_id
             WHERE c.id=? AND COALESCE(r.is_duplicate, 0) = 0
+              AND COALESCE(r.status, 'ok') = 'ok'
               AND COALESCE(p.is_ocr, 0) < 2
             """,
             (h["chunk_id"],),

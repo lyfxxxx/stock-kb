@@ -332,6 +332,27 @@
 - 解决：1）hybrid 短查询 FTS **零命中**才走向量兜底（评测改为读检索器返回的 `hybrid_fused` 标志，删掉按长度预测的 `_would_hybrid_fuse`，避免口径漂移）；2）FTS 无年份问句加 1.5%/年的新近度软排序（`rank / (1 + 0.015*(当前年-报告年))`，rank 为负故旧页变差；有年份问句不变），G1/G2 不回退、negative_hit_rate 0.55→0.45；3）`tools/audit_formal_notes.py` 程序化审计正式稿（[n]↔注释表、页存在性、页内数字含两数之和与亿元换算 2% 容差、正文页码残留、HTML 图表、行情日期），接入回归并做阴性验证（篡改数字/页码残留均 FAIL）；4）MCP 三工具 locator 统一《》格式、`get_indicators` 带 locator（派生指标标 `derived`）。
 - 教训：1）「软排序」优先只打散并列（同文本跨年份重复页），幅度要小到不动真实相关性序。2）评测口径的实现细节（融合判定、locator 格式）必须与被测代码同源，两处硬编码必然漂移。3）no_answer 的 empty_rate 要加哨兵（公司名必命中查询）区分「拒答正确」与「引擎坏了」，否则故障反而刷高分数。4）给 MCP 客户端配 `trust_env=False`/超时——系统代理会劫持 127.0.0.1，5s 默认超时扛不住冷启动加载 sqlite-vec。
 
+### 48. 披露易 prefix.do 不带 callback 只回空行（2026-10-02）
+
+- 现象：`python -m stock_kb fetch --source hkex --company 海底捞` 退出码 1，报 `Expecting value: line 1 column 1`。
+- 原因：`prefix.do` 在查询串没有 `callback` 时只返回 `\r\n`。带 `callback=callback` 才返回 JSONP，股票代码 `06862` 对应 `stockId` 199151。`titleSearchServlet.do` 本身返回 JSON，不依赖 callback。
+- 解决：`stock_list_url` 加上 `callback=callback`。现有 `parse_json_payload` 已能剥掉 JSONP。
+- 教训：披露易股票代码查询和标题搜索不是同一响应形态。适配器改完要用实网看前几百字节，不能只靠假 HTTP。
+
+### 49. catalog-first：两处原文、一份 reports 目录（2026-10-03）
+
+- 现象：文件分别在只读 NAS 和可写 `collect.raw_dir`；sidecar 容易被当成第二份目录，skip 时 origin / 出处也不回填。
+- 原因：扫描后的事实在 SQLite。sidecar 只该在 fetch 时带入 `source_url` / `retrieved_at`，NAS 不写 sidecar，两边也不互拷。
+- 解决：`reports.origin`（`nas` / `collect`）；skip 走 `_touch_catalog` 用 COALESCE 回填；sidecar 只作 fetch 入库输入。`origin_for` 对绝对路径做字符串前缀比较，不 `resolve()` 访问 NAS。pathlib 给 UNC 根留下的尾斜杠要剥掉，否则 60 份 NAS 行匹配不上。
+- 教训：物理文件可以分根，入库后的元数据只认 `reports`。已知 origin 不能被 NULL 覆盖。目录字段按路径字符串回填，不要依赖共享在线。
+
+### 50. meta_dir 统一 NAS 与网络文件的磁盘出处（2026-10-03）
+
+- 现象：catalog-first 之后查询只认 `reports`，fetch 仍把 `.source.json` 贴在 `raw_dir` 原文旁。NAS 文件没有磁盘出处缓存。`scan` 因此会对网络根目录写入。
+- 原因：sidecar 当初只服务 fetch→scan 交接。NAS 只读，没法同样贴一份。两边物理根不同，磁盘 metadata 跟着文件走就会分叉。
+- 解决：新增 `collect.meta_dir`（默认 `data/meta`），键 `{origin}/{公司}/{相对路径}.source.json`。`fetch` 把网络 JSON 写到 `meta_dir/collect/...`，字节仍落 `raw_dir`。`scan` 对 NAS 和 `raw_dir` 都只读；扫过的 NAS 和网络文件都把 JSON 写回 `meta_dir`。先读 `meta_dir`，没有再读原文旁旧 sidecar 并拷进去。运行时查询仍读 `reports`。读写集中在 `stock_kb/source_meta.py`。
+- 教训：统一的是入库后的 metadata。原文继续待在 NAS 和 `raw_dir`。`fetch` 仍要写 `raw_dir`（下载落点）。`origin_for` 对 UNC 用字符串前缀、剥尾斜杠，不要 `resolve()`。
+
 ## 七、当前已知局限与下一步
 
 > 评测体系见 `eval/EVAL_SYSTEM.md`；三个产品目标到门的映射见 `eval/METRICS_CONTRACT.md`；过程记录见 `eval/EVAL_PLAN.md`；8-16 数据修复见 `docs/fix-record-20260816.md`。

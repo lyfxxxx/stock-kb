@@ -458,8 +458,13 @@ def _statement_type_from_page(page: dict[str, Any]) -> str | None:
     return None
 
 
-def _is_statement_title_page(page: dict[str, Any]) -> bool:
+def is_statement_page(page: dict[str, Any]) -> bool:
+    """该页是否为三大报表页。标题表只维护在 _STATEMENT_TITLE_TYPES。"""
     return _statement_type_from_page(page) is not None
+
+
+def _is_statement_title_page(page: dict[str, Any]) -> bool:
+    return is_statement_page(page)
 
 
 def _detect_unit_currency(text: str) -> tuple[str | None, str | None]:

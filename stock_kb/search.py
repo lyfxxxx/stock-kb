@@ -4,6 +4,7 @@ import re
 import sqlite3
 from typing import Any
 
+from stock_kb import db
 from stock_kb.textutil import to_simplified
 
 
@@ -193,7 +194,7 @@ def _append_filters(
     language: str | None,
     years: list[int] | None = None,
 ) -> tuple[str, list[Any]]:
-    sql += " AND COALESCE(r.is_duplicate, 0) = 0"
+    sql += " AND " + db.live_report_sql("r")
     # is_ocr=2 为 OCR 失败/乱码页（内容不可用），不进检索结果
     sql += " AND COALESCE(p.is_ocr, 0) < 2"
     if company is not None:
@@ -376,7 +377,7 @@ def years_out_of_corpus(
         return False
     sql = (
         "SELECT MIN(year) AS mn, MAX(year) AS mx FROM reports "
-        "WHERE COALESCE(is_duplicate, 0) = 0 AND year IS NOT NULL"
+        f"WHERE {db.live_report_sql('')} AND year IS NOT NULL"
     )
     params: list[Any] = []
     if company:
@@ -452,6 +453,12 @@ def stats(conn: sqlite3.Connection) -> dict[str, Any]:
         dict(r)
         for r in conn.execute(
             "SELECT company, report_type, COUNT(*) AS n FROM reports GROUP BY company, report_type ORDER BY company"
+        ).fetchall()
+    ]
+    out["reports_by_origin"] = [
+        dict(r)
+        for r in conn.execute(
+            "SELECT origin, COUNT(*) AS n FROM reports GROUP BY origin ORDER BY origin"
         ).fetchall()
     ]
     return out

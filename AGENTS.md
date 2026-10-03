@@ -1,14 +1,14 @@
 # AGENTS.md — stock-kb 项目开发指引
 
-本文件写给后续在本仓库工作的 agent（Codex / Claude 等）。开始改动前先读完本文件，并按需查看 `README.md`、`PLAN.md` 和 `docs/process-log.md`。其中 `PLAN.md` 是早期设计方案，**以第 15 节「当前实施状态」为准**；其余章节描述的是设计意图，不一定与代码完全一致。
+本文件写给后续在本仓库工作的 agent（Codex / Claude 等）。开始改动前先读完本文件，并按需查看 `README.md`、`PLAN.md`、`docs/report-system.md` 和 `docs/process-log.md`。三层数据流和每层评测见 `docs/report-system.md`。其中 `PLAN.md` 是早期设计方案，**以第 15 节「当前实施状态」为准**；其余章节描述的是设计意图，不一定与代码完全一致。
 
 ## 1. 项目是什么
 
 把 NAS（SMB 只读共享）上的财报/研报解析成本地知识库：
 
 ```
-NAS 财报/研报 → 解析（pdfplumber/xlrd/OCR 兜底）→ SQLite（页文本 + 三表 + 指标 + FTS5 + sqlite-vec 向量）
-            → MCP 只读接口（stdio + HTTP）→ Codex / Hermes Agent → stock-note skill → Markdown 笔记
+收集（stock-collect / fetch）→ scan（NAS 与 raw_dir）→ 解析 → SQLite
+            → MCP 只读接口 → stock-note 写稿（带 STOCK_KB_RUN_ID）→ audit-report
 ```
 
 - 试点公司：海底捞（06862.HK）、百胜中国（YUMC/09987.HK），已在 `config.yaml` 配置。
@@ -25,6 +25,8 @@ NAS 财报/研报 → 解析（pdfplumber/xlrd/OCR 兜底）→ SQLite（页文�
 
 ## 3. 常用命令（修改前先确认基线）
 
+别人从零跑通的顺序：安装 `pip install -e ".[mcp,ml]"` → `python -m stock_kb models download --model BAAI/bge-small-zh-v1.5` → 填 `config.yaml` → 按 `skill/stock-collect/SKILL.md` 取链接 → `fetch` → `scan` → `index` → `indicators` → `mcp` → 设置 `STOCK_KB_RUN_ID` → 按 `skill/stock-note/SKILL.md` 写稿 → `python -m stock_kb audit-report <路径> --company <公司>`。`data/` 与 `models/` 不入库。公司目录都不存在且没有跳过的旧文件时 `scan` 退出码 2；有未变更跳过则仍为 0。`python tools/run_eval_regression.py` 只在维护者本机、库里已有试点数据时跑。
+
 ```powershell
 python -m stock_kb stats --json                  # 入库统计，不访问 NAS，改前改后都跑
 python -m stock_kb search "翻台率" --top-k 5 --json           # FTS5 检索
@@ -38,12 +40,13 @@ python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 
 python -m stock_kb indicators                       # 重算/写入财务指标
 python -m stock_kb reparse-statements --company 海底捞        # 从已存页文本重算三表（不重读 NAS）
 python tools/audit_notes.py                         # 审计两篇试点笔记数字与 DB 交叉验证（归母净利）
-python tools/run_eval_regression.py                 # freeze + diag + 路由/年份/组稿 + audit_notes
+python tools/run_eval_regression.py                 # freeze + diag + 路由/年份 + audit-report（无终稿则跳过，不是通过）
 python tools/run_eval_regression.py --write-baseline
 python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger BAAI/bge-m3
 python -m stock_kb eval-generation                  # 按 skill 组稿并审计引用页
 python -m stock_kb route "海底捞 2024 年营业收入是多少" --company 海底捞
-python -m stock_kb compose-note --company 海底捞   # 扫描体 Markdown + ECharts 单文件 HTML
+python -m stock_kb compose-note --company 海底捞   # 材料底稿；不是终稿
+python -m stock_kb render-note <扫描.md>            # 终稿默认格式：同名单文件 HTML
 python -m stock_kb quote --company 海底捞 --json   # 最新价/市值/TTM PE；失败则非零退出
 python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json
 python tools/check_vec.py                           # 快速检查向量索引健康度
@@ -71,7 +74,12 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 | `stock_kb/cli.py` | argparse CLI 入口，所有子命令的调度 |
 | `stock_kb/config.py` | `load_config()`：读 YAML、解析相对路径 |
 | `stock_kb/db.py` | SQLite schema、连接、迁移、FTS/向量扩展加载、表级 upsert/replace |
-| `stock_kb/ingest.py` | `scan`：遍历 NAS、SHA-256 manifest、按类型分发解析 |
+| `stock_kb/ingest.py` | `scan`：只读遍历 NAS 与 `collect.raw_dir`、SHA-256 manifest、按类型分发解析；出处 JSON 写 `collect.meta_dir` |
+| `stock_kb/fetch.py` | 下载原文到 raw_dir，出处 JSON 写到 `collect.meta_dir` |
+| `stock_kb/source_meta.py` | `origin` 判定与 `meta_dir` 读写 |
+| `stock_kb/fidelity.py` | 页文本保真抽检 |
+| `stock_kb/retrieval_log.py` | 只读查询旁路日志 `retrieval_log.jsonl` |
+| `stock_kb/audit_report.py` | 终稿出处、run_id 日志和事实清单 |
 | `stock_kb/classify.py` | 按文件名/目录分类报告类型、语言、年份 |
 | `stock_kb/parsers/pdf_parser.py` | PDF 页文本提取、OCR 兜底、三表按行解析 |
 | `stock_kb/parsers/xls_parser.py` | 旧版 `.xls` 矩阵读取 |
@@ -92,16 +100,18 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 | `stock_kb/serve/mcp_server.py` | FastMCP 服务：8 个只读工具（含 `route_query`）+ HTTP Bearer 鉴权 |
 | `tools/` | 一次性/运维脚本（审计、检查、迁移、下载模型、生成人工复核底稿） |
 | `eval/` | `questions.yaml` 评测集、`EVAL_SYSTEM.md` 门禁、`METRICS_CONTRACT.md` 目标到门、`reports/` 历史报告、人工审核表 |
-| `data/` | SQLite 库、日志、pid 文件（运行时产物） |
+| `data/` | SQLite 库、出处 JSON（`meta/`）、下载原文（`raw/`）、日志、pid 文件（运行时产物） |
 | `models/` | Hugging Face 模型缓存（运行时产物） |
-| `skill/stock-note/` | 可移植的笔记生成 skill |
+| `skill/stock-collect/` | 收集 skill：发现财报、电话会、研报直链并调用 `fetch` |
+| `skill/stock-note/` | 报告 skill：agent 按框架写扫描稿 |
+| `docs/report-system.md` | 三层架构、数据转换、每层评测和 exact-001 实例 |
 | `docs/process-log.md` | 历次踩坑记录与解法（现象/原因/解决/教训），改相关模块前必读；简历过程记录指定此文件 |
 
 注意：`tools/*.py` 里多数脚本硬编码了 `D:\workspace\stock-kb\data\stock_kb.db`，是历史一次性脚本，**新代码不要模仿**。
 
 ## 5. 配置
 
-`config.yaml` 关键项：`nas.root`（只读 SMB 路径）、`nas.companies`、`data_dir`、`db_path`、`models_dir`、`ocr.*`、`embedding.*`、`mcp.*`、`eval.*`。
+`config.yaml` 关键项：`nas.root`（只读 SMB 路径）、`nas.companies`、`data_dir`、`db_path`、`models_dir`、`ocr.*`、`embedding.*`、`mcp.*`、`eval.*`、`collect.raw_dir`、`collect.meta_dir`。
 
 路径规则（`stock_kb/config.py` 统一处理）：
 
@@ -118,7 +128,7 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 
 ## 6. 数据流
 
-1. `scan` 遍历 `nas.root/<company>`，仅处理 `.pdf/.xls/.html/.htm/.csv/.txt/.md`，跳过 `nas.exclude_dirs`。
+1. `scan` 遍历 `nas.root/<company>` 和 `collect.raw_dir/<company>`，仅处理 `.pdf/.xls/.html/.htm/.csv/.txt/.md`，跳过 `nas.exclude_dirs`。文件留在原处，不互拷。`scan` 对 NAS 和 `raw_dir` 都只读。出处 JSON 在 `collect.meta_dir`（默认 `data/meta/{origin}/{公司}/{相对路径}.source.json`）：`fetch` 写网络文件，`scan` 给 NAS 和网络文件都更新。先读 `meta_dir`，没有则读原文旁旧 sidecar。`source_url` 与 `retrieved_at` 写入 `reports`，`origin` 为 `nas` 或 `collect`。查询目录是 `reports`。
 2. `manifest` 按路径 + SHA-256 判断是否已处理；未变化则跳过，`--rebuild` 强制重解析。
 3. PDF：pdfplumber 逐页提文本；文本量低于 `ocr.min_chars` 的页走 tesseract OCR 兜底；随后繁体转简体存 `pages.content`，原文存 `pages.content_orig`。
 4. 三表：按报表页标题定位（前 10 行内），按「行标签 + 行尾数字」解析（独立短横「–」视为零值列参与对齐，不产生行项目），不依赖 `extract_tables()`（港股双栏表格会错位）。
@@ -126,7 +136,7 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 6. 向量：`pages.content` 按行合并成约 800 字/块写入 `chunks`（`embedding.chunk_size`）；`index` 用指定模型嵌入未索引块。`--rebuild` 只删当前模型向量；`--rebuild-chunks` 重切页面并清空**所有**模型索引（chunk_id 会变）。400 字块已在 diag 试过，freeze hybrid semantic 从 0.10 掉到 0.05，未采用。
 7. `indicators` 从 `statements` 行项目关键词匹配提取收入/净利/资产等，再派生毛利率、净利率、ROE。`net_profit` 是归母（港股「本公司拥有人应占」，美国 `Net income — Yum China Holdings`），不是年内溢利合计。
 8. MCP 以 `mode=ro` 打开 SQLite，只暴露只读工具（含 `route_query`）；HTTP 传输外包 Starlette 中间件做 Bearer 鉴权。`get_financial_statements(year=)` 默认当年年报正文。
-9. `stock-note` skill 调 MCP/CLI 查数 → 按模板生成笔记 → 自查引用。
+9. `stock-collect` 只找直链并 `fetch`。`stock-note` 在设置 `STOCK_KB_RUN_ID` 后查数写稿，再 `audit-report`。查询日志不进 SQLite。
 
 ## 7. 数据库约定
 
@@ -135,7 +145,7 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 | 表 | 内容 |
 |---|---|
 | `companies` | 公司名、代码、交易所 |
-| `reports` | 报告元数据，`path` 唯一，`status` 生命周期 pending/parsing/ok |
+| `reports` | 报告元数据，`path` 唯一，`origin` 为 `nas`/`collect`，`status` 生命周期 pending/parsing/ok |
 | `pages` | 每页文本；`content` 为简体索引用，`content_orig` 为原文引用用 |
 | `pages_fts` | FTS5 虚拟表，与 `pages` 一对一镜像 |
 | `statements` | 三表行项目；数值未换算（海底捞 `千元/CNY`，百胜 `百万美元/USD`） |
@@ -222,6 +232,7 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 ## 11. 已知陷阱速查（详见 docs/process-log.md）
 
 - NAS 在沙箱内可能需要提权才能枚举/读取；先 `Test-Path`，再只读操作。
+- 出处 JSON 写在 `collect.meta_dir`，不要贴在原文旁。遗留 sidecar 只作 fallback。`origin_for` 对 UNC 用字符串前缀比较，剥 pathlib 尾斜杠，不要 `resolve()`。
 - 港股繁体、中英混排：先归一化再索引，引用用原文。
 - FTS5 默认分词器对中文无效，必须 trigram；<3 字查询走 LIKE。
 - `index --rebuild` 曾误删所有模型索引——回归时重点检查「按 model 隔离」。
@@ -235,7 +246,7 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 - 指标缺口的根因要先查三表行名再改规则：两家公司无「毛利」行属报表格式（详见 `eval/data_gaps.md`），不要自造口径硬算；海底捞总资产已用「资产总额减流动负债 + 流动负债小计」组合口径修复（`indicators._haidilao_total_assets`），改报表页识别或小计逻辑时必须重跑 30 期勾稽。
 - 中报标题 `Condensed …`、百胜早期 10-K `Consolidated and Combined …`：报表页识别先剥前缀/后缀再整行精确匹配，新报告类型标题先查 `_STATEMENT_TITLE_TYPES` 是否覆盖。
 - OCR 有两道闸门：触发看 `(cid:` 密度（不只 char_count），输出要过质量校验（长度+有效占比），失败置 `is_ocr=2`；`statements.is_ocr=1` 的行**默认不进 indicators 和 query_statements**（`include_ocr=True` 才返回），不要在指标里混入 OCR 行。tesseract 报「找不到 traineddata」时解析器会自动推导 tessdata 目录（见 `pdf_parser._tessdata_env`）。
-- 检索行为约定：hybrid 短查询 FTS 零命中才走向量兜底；FTS 无年份问句有 1.5%/年的新近度软排序（打散跨年份重复页并列，改动幅度前先跑 G1/G2）；检索引用格式与 MCP locator 统一为 `《title》第N页`，审计正则只认此格式。
+- 检索行为约定：见 `docs/report-system.md`「混合检索」。`hybrid_search` 在归一化后长度小于 6 且 FTS 有命中时不融合；长度达到 6，或短查询 FTS 为空，才按页做 RRF。CLI 默认只做 FTS；MCP `search_reports` 默认 FTS，零命中才升级。FTS 无年份问句有 1.5%/年的新近度软排序（打散跨年份重复页并列，改动幅度前先跑 G1/G2）；检索引用格式与 MCP locator 统一为 `《title》第N页`，审计正则只认此格式。
 - `tools/test_mcp_http.py` 已内置 30s 超时与 `trust_env=False`：系统代理会劫持 127.0.0.1、httpx 默认 5s 超时扛不住冷启动加载 sqlite-vec。
 
 ## 12. 当前已知局限 / 待办

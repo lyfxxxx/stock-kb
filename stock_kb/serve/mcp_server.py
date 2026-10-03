@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +38,23 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         conn.row_factory = sqlite3.Row
         return conn
 
+    def _log(tool: str, query, company, year, engine, params, hits) -> None:
+        try:
+            from stock_kb.retrieval_log import append_retrieval
+
+            append_retrieval(
+                cfg,
+                tool=tool,
+                query=query,
+                company=company,
+                year=year,
+                engine=engine,
+                params=params,
+                hits=hits,
+            )
+        except Exception as exc:
+            print(f"retrieval_log: {exc}", file=sys.stderr)
+
     def _with_locator(hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """给检索命中补《title》第N页 locator，与组稿/审计的引用格式一致。"""
         for h in hits:
@@ -64,10 +82,10 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         report_type: str | None = None,
         year: int | None = None,
     ) -> list[dict[str, Any]]:
-        """列出某公司报告；可按类型（annual/interim/q3/prospectus/research/other）和年份过滤。"""
+        """列出某公司报告（含 superseded/missing/failed）；可按类型（annual/interim/q3/prospectus/research/transcript/other）和年份过滤。检索默认只返回 status=ok。"""
         sql = (
             "SELECT id, company, report_type, language, year, period_type, title, path, "
-            "is_duplicate, duplicate_of FROM reports WHERE company=?"
+            "status, is_duplicate, duplicate_of FROM reports WHERE company=?"
         )
         params: list[Any] = [company]
         if report_type:
@@ -130,7 +148,22 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                         )
                     except Exception:
                         hits = []
-                return _with_locator(hits)
+                logged = _with_locator(hits)
+                _log(
+                    "search_reports",
+                    query,
+                    company,
+                    year,
+                    "fts" if hits and hits[0].get("source") != "hybrid" else (hits[0].get("source") if hits else "fts"),
+                    {
+                        "top_k": top_k,
+                        "engine": engine,
+                        "report_type": report_type,
+                        "language": language,
+                    },
+                    logged,
+                )
+                return logged
             from stock_kb import vector
 
             model = model or cfg.get("embedding", {}).get(
@@ -149,7 +182,23 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                     report_type=report_type,
                     language=language,
                 )
-                return _with_locator(hits)
+                logged = _with_locator(hits)
+                _log(
+                    "search_reports",
+                    query,
+                    company,
+                    year,
+                    "vector",
+                    {
+                        "top_k": top_k,
+                        "engine": engine,
+                        "model": model,
+                        "report_type": report_type,
+                        "language": language,
+                    },
+                    logged,
+                )
+                return logged
             if engine == "hybrid":
                 hits = vector.hybrid_search(
                     conn,
@@ -163,7 +212,23 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                     report_type=report_type,
                     language=language,
                 )
-                return _with_locator(hits)
+                logged = _with_locator(hits)
+                _log(
+                    "search_reports",
+                    query,
+                    company,
+                    year,
+                    "hybrid",
+                    {
+                        "top_k": top_k,
+                        "engine": engine,
+                        "model": model,
+                        "report_type": report_type,
+                        "language": language,
+                    },
+                    logged,
+                )
+                return logged
             raise ValueError(f"不支持的检索引擎: {engine}")
         finally:
             conn.close()
@@ -204,6 +269,20 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
             for row in rows:
                 # 与组稿/审计统一：《title》第N页（generation_eval._CITE 只认此格式）
                 row["locator"] = f"《{row['title']}》第{row['page_no']}页"
+            _log(
+                "get_financial_statements",
+                kw or None,
+                company,
+                year,
+                None,
+                {
+                    "statement_type": statement_type,
+                    "period_type": period_type,
+                    "limit": limit,
+                    "include_comparatives": include_comparatives,
+                },
+                rows,
+            )
             return rows
         finally:
             conn.close()
@@ -236,15 +315,26 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         conn = _conn()
         try:
             out = []
+            logged = []
             for r in conn.execute(sql, params).fetchall():
                 row = dict(r)
                 title = (row.pop("title", None) or "").strip()
                 page = row.get("page_no")
                 if title and page is not None:
                     row["locator"] = f"《{title}》第{int(page)}页"
+                    logged.append({"title": title, "page": int(page)})
                 else:
                     row["locator"] = "derived"
                 out.append(row)
+            _log(
+                "get_indicators",
+                ",".join(metrics) if metrics else None,
+                company,
+                None,
+                None,
+                {"years": years, "metrics": metrics, "period_type": period_type},
+                logged,
+            )
             return out
         finally:
             conn.close()
@@ -262,6 +352,8 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                    p.content, p.content_orig, r.title, r.path
             FROM pages p JOIN reports r ON r.id = p.report_id
             WHERE r.company=?
+              AND COALESCE(r.is_duplicate, 0) = 0
+              AND COALESCE(r.status, 'ok') = 'ok'
         """
         params: list[Any] = [company]
         if title is not None:

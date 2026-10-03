@@ -1,0 +1,12 @@
+# 页文本保真抽检清单。pages 为空时，`python -m stock_kb fidelity` 只打印 skipped 并退出码 0。
+# 那不是通过：非 OCR 页还没有标注原句，不能当作保真已经过关。
+#
+# 每项字段：
+#   company: 公司名，对应 reports.company
+#   title_contains: 活报告标题子串（reports.title）
+#   page_no: 页码
+#   report_type: annual / interim / q3 / prospectus / research / transcript / other
+#   is_ocr: 0 表示非 OCR，1 表示 OCR。OCR 缺句只列入报告，不因此把退出码设为 1
+#   needles: 字符串列表，每条都必须出现在该页 content_orig
+# 不要在这里编造尚未对照过原文的句子。
+pages: []

@@ -3,10 +3,13 @@
 把 NAS 上的财报/研报解析成本地可检索的知识库，通过 MCP 暴露给
 Codex / Hermes Agent，配合 `stock-note` skill 生成股票分析笔记。
 
+三层怎么转换、每层怎么评测、海底捞 2024 年营业收入怎么走完全程，见 [docs/report-system.md](docs/report-system.md)。零基础说明仍在 [docs/knowledge-base-rag-eval-tutorial.md](docs/knowledge-base-rag-eval-tutorial.md)。
+
 ## 安装
 
+在仓库根目录：
+
 ```powershell
-cd D:\workspace\stock-kb
 pip install -e ".[mcp,ml]"
 ```
 
@@ -40,11 +43,40 @@ python -m stock_kb models download --model BAAI/bge-m3 --mirror https://hf-mirro
 - `nas.companies`：试点公司（海底捞 / 百胜中国）
 - `data_dir` / `db_path`：本地数据与 SQLite 路径
 - `models_dir`：嵌入模型缓存目录
+- `collect.raw_dir`：网络下载原文（默认 `data/raw`；`scan` 只读）
+- `collect.meta_dir`：出处 JSON（默认 `data/meta/{origin}/{公司}/{相对路径}.source.json`）
 
-## 常用命令
+## 运行顺序
+
+`data/` 和 `models/` 不入库。公司目录（`nas.root` 与 `collect.raw_dir`）都不存在、也没有任何已扫描文件时，`scan` 退出码为 2。已有文件但字节和解析版本都没变、因而被跳过时，退出码仍为 0。黄金回归 `python tools/run_eval_regression.py` 只在维护者本机、库里已经有试点数据时跑，不是别人安装后的完成条件。
 
 ```powershell
-# 全量扫描入库（需能访问 NAS；只读）
+pip install -e ".[mcp,ml]"
+python -m stock_kb models download --model BAAI/bge-small-zh-v1.5
+```
+
+按 `config.yaml` 填 NAS、公司、`collect.companies`（百胜中国的 CIK、海底捞的港股代码）。收集链接的步骤见 `skill/stock-collect/SKILL.md`：财报用 `fetch --source`，电话会和研报只用能直接打开的文件 URL。
+
+```powershell
+python -m stock_kb fetch --source sec --company 百胜中国
+python -m stock_kb fetch --source hkex --company 海底捞
+python -m stock_kb scan
+python -m stock_kb index --model BAAI/bge-small-zh-v1.5
+python -m stock_kb indicators
+python -m stock_kb mcp --transport http --host 127.0.0.1 --port 8931
+```
+
+写稿前设置同一次查询共用的运行号，再按 `skill/stock-note/SKILL.md` 写。稿子里要有一行 `run_id:`。
+
+```powershell
+$env:STOCK_KB_RUN_ID = "note-001"
+python -m stock_kb audit-report <稿子路径> --company 海底捞
+```
+
+## 其他命令
+
+```powershell
+# 全量重扫（只读 NAS 与 raw_dir；出处 JSON 写 meta_dir；公司目录都不存在时退出码 2）
 python -m stock_kb scan --rebuild
 
 # 自动扫描（默认关闭；--watch-interval 秒数开启）
@@ -87,7 +119,7 @@ python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild
 # 按 config embedding.chunk_size 重切全部页面（会清空所有模型的向量）
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild-chunks
 
-# 检索评测（回归：freeze 检索/结构化 + 路由/年份/组稿 + diag 指标/无答案 + 笔记审计）
+# 黄金回归只在维护者本机、库内已有试点数据时跑（组稿不再当门；有 agent 终稿才 audit-report）
 python tools/run_eval_regression.py
 python tools/run_eval_regression.py --write-baseline
 
@@ -97,7 +129,9 @@ python -m stock_kb eval --split freeze
 python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5 --split freeze
 python -m stock_kb eval-generation
 python -m stock_kb route "海底捞 2024 年营业收入是多少" --company 海底捞
-python -m stock_kb compose-note --company 海底捞   # 扫描体 Markdown + ECharts 单文件 HTML（内嵌 vendored 图表库）
+python -m stock_kb compose-note --company 海底捞   # 材料底稿，不是 agent 终稿
+python -m stock_kb fidelity                         # 页文本抽检；空清单退出码 0 但不是通过
+python -m stock_kb audit-report <稿子路径> --company 海底捞
 python -m stock_kb quote --company 海底捞 --json   # 最新价/市值/TTM PE（失败非零退出）
 
 # 评测体系与过程记录
@@ -134,7 +168,8 @@ stock-kb/
 │   └── reports/               # 评测报告
 ├── data/                # SQLite 与日志
 ├── models/              # 嵌入模型缓存
-└── skill/stock-note/    # 可移植 agent skill（已复制到个人 skills 目录）
+├── skill/stock-collect/ # 只下载原文
+└── skill/stock-note/    # 只写报告
 ```
 
 ## 过程复盘

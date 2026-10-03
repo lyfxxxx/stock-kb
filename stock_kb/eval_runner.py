@@ -27,6 +27,35 @@ _DASHES = (" ", "\t", "\n", "\r", "\u2014", "\u2013", "-", "\uff0d")
 _YEAR_RE = re.compile(r"(?:19|20)\d{2}")
 _CJK_RE = re.compile(r"[\u4e00-\u9fff]")
 _LATIN_RE = re.compile(r"[A-Za-z]{4,}")
+_LATIN_CHAR_RE = re.compile(r"[A-Za-z]")
+_BUCKET_NONE_TYPES = {"exact", "indicator", "route", "year_filter", "end2end"}
+
+
+def retrieval_bucket(question: dict) -> str | None:
+    """检索分桶。exact / indicator / route / year_filter / end2end 不是检索桶。"""
+    explicit = question.get("bucket")
+    if explicit:
+        return str(explicit)
+    qtype = question.get("type") or ""
+    text = question.get("question") or ""
+    if qtype == NO_ANSWER_TYPE:
+        return "无答案"
+    if qtype == "keyword":
+        return "关键词"
+    latin = len(_LATIN_CHAR_RE.findall(text))
+    cjk = len(_CJK_RE.findall(text))
+    if (latin > 0 and latin > cjk) or (qtype == "cross" and latin > cjk):
+        return "跨语言"
+    lowered = text.lower()
+    if any(token in text for token in ("附注", "减值")) or any(
+        token in lowered for token in ("footnote", "notes to")
+    ):
+        return "附注"
+    if qtype == "semantic" or qtype == "cross":
+        return "语义"
+    if qtype in _BUCKET_NONE_TYPES:
+        return None
+    return None
 
 
 def run_eval(
@@ -84,6 +113,7 @@ def run_eval(
                     "question": q["question"],
                     "company": q.get("company"),
                     "split": q.get("split") or "freeze",
+                    "bucket": retrieval_bucket(q),
                     "route": {
                         "predicted": predicted,
                         "expected": want,
@@ -112,6 +142,7 @@ def run_eval(
             "question": q["question"],
             "company": q.get("company"),
             "split": q.get("split") or "freeze",
+            "bucket": retrieval_bucket(q),
             "retrieval": retrieval,
         }
         if qtype == NO_ANSWER_TYPE:
@@ -1012,6 +1043,7 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
 
     return {
         "retrieval": retrieval,
+        "retrieval_buckets": _bucket_summary(results),
         "retrieval_diag": retrieval_diag,
         "structured": structured,
         "indicator": indicator,
@@ -1020,6 +1052,45 @@ def _summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
         "route": route,
         "year_filter": year_filter,
     }
+
+
+def _bucket_item_hit(item: dict[str, Any]) -> bool | None:
+    """与 retrieval['hit'] 相同：期望页在 top-k。无答案沿用空结果，引擎故障不计入。"""
+    ret = item.get("retrieval")
+    if not isinstance(ret, dict):
+        return None
+    if item.get("type") == NO_ANSWER_TYPE:
+        if item.get("engine_alive") is False:
+            return None
+        return len(ret.get("top_hits") or []) == 0
+    if not ret.get("expected_sources"):
+        return None
+    return bool(ret.get("hit"))
+
+
+def _bucket_summary(results: list[dict[str, Any]]) -> dict[str, Any]:
+    stats: dict[str, dict[str, int]] = {}
+    for item in results:
+        name = item.get("bucket")
+        if not name:
+            continue
+        hit = _bucket_item_hit(item)
+        if hit is None:
+            continue
+        bucket = stats.setdefault(name, {"n": 0, "hit": 0})
+        bucket["n"] += 1
+        if hit:
+            bucket["hit"] += 1
+    out: dict[str, Any] = {}
+    for name in sorted(stats):
+        n = stats[name]["n"]
+        hit = stats[name]["hit"]
+        out[name] = {
+            "n": n,
+            "hit": hit,
+            "recall_at_5": round(hit / n, 3) if n else 0.0,
+        }
+    return out
 
 
 def _finalize_retrieval(ret_stats: dict[str, dict[str, Any]]) -> dict[str, Any]:
@@ -1237,6 +1308,18 @@ def save_report(cfg: dict[str, Any], data: dict[str, Any]) -> Path:
         f"| {gen.get('n', 0)} | {gen.get('auto_scored', 0)} | {gen.get('pending_manual', 0)} |"
     )
 
+    buckets = data["summary"].get("retrieval_buckets") or {}
+    if buckets:
+        lines.append("")
+        lines.append("## 检索分桶")
+        lines.append("")
+        for name, stat in buckets.items():
+            if stat["n"] < 5:
+                lines.append(f"- {name}: n={stat['n']}")
+            else:
+                lines.append(
+                    f"- {name}: n={stat['n']} Recall@5={stat['recall_at_5']}"
+                )
     lines.append("")
     lines.append("## 失败与负样本命中明细")
     lines.append("")

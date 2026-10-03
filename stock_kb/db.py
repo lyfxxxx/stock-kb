@@ -31,7 +31,13 @@ CREATE TABLE IF NOT EXISTS reports (
     status TEXT DEFAULT 'pending',
     parsed_at TEXT,
     is_duplicate INTEGER DEFAULT 0,
-    duplicate_of INTEGER
+    duplicate_of INTEGER,
+    source_url TEXT,
+    retrieved_at TEXT,
+    origin TEXT,
+    parse_version TEXT,
+    supersedes_id INTEGER,
+    logical_key TEXT
 );
 
 CREATE TABLE IF NOT EXISTS pages (
@@ -41,6 +47,8 @@ CREATE TABLE IF NOT EXISTS pages (
     content TEXT,
     char_count INTEGER DEFAULT 0,
     is_ocr INTEGER DEFAULT 0,
+    content_orig TEXT,
+    page_kind TEXT,
     UNIQUE(report_id, page_no)
 );
 
@@ -149,6 +157,19 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE reports ADD COLUMN is_duplicate INTEGER DEFAULT 0")
     if "duplicate_of" not in report_cols:
         conn.execute("ALTER TABLE reports ADD COLUMN duplicate_of INTEGER")
+    for col, decl in (
+        ("source_url", "TEXT"),
+        ("retrieved_at", "TEXT"),
+        ("origin", "TEXT"),
+        ("parse_version", "TEXT"),
+        ("supersedes_id", "INTEGER"),
+        ("logical_key", "TEXT"),
+    ):
+        if col not in report_cols:
+            conn.execute(f"ALTER TABLE reports ADD COLUMN {col} {decl}")
+
+    if "page_kind" not in cols:
+        conn.execute("ALTER TABLE pages ADD COLUMN page_kind TEXT")
 
     indicator_cols = [row[1] for row in conn.execute("PRAGMA table_info(indicators)").fetchall()]
     for col in ("currency", "report_id", "page_no", "line_name"):
@@ -269,6 +290,15 @@ def _init_fts(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+def live_report_sql(alias: str = "") -> str:
+    """默认检索只看活报告：非重复，且 status 为空或 ok。"""
+    prefix = f"{alias}." if alias else ""
+    return (
+        f"COALESCE({prefix}is_duplicate, 0) = 0 "
+        f"AND COALESCE({prefix}status, 'ok') = 'ok'"
+    )
+
+
 def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
     return (
         conn.execute(
@@ -346,6 +376,8 @@ def query_statements(
                r.title, r.path, r.year AS report_year
         FROM statements s JOIN reports r ON r.id = s.report_id
         WHERE r.company=?
+          AND COALESCE(r.is_duplicate, 0) = 0
+          AND COALESCE(r.status, 'ok') = 'ok'
     """
     params: list[Any] = [company]
     if not include_ocr:
@@ -388,13 +420,43 @@ def query_statements(
     return [dict(r) for r in conn.execute(sql, params).fetchall()]
 
 
+_REPORT_UPSERT_KEYS = (
+    "company",
+    "report_type",
+    "language",
+    "currency",
+    "accounting_standard",
+    "year",
+    "period_type",
+    "title",
+    "path",
+    "sha256",
+    "size",
+    "mtime",
+    "status",
+    "source_url",
+    "retrieved_at",
+    "origin",
+    "parse_version",
+    "supersedes_id",
+    "logical_key",
+)
+
+
 def upsert_report(conn: sqlite3.Connection, meta: dict[str, Any]) -> int:
-    cur = conn.execute(
+    payload = {key: meta.get(key) for key in _REPORT_UPSERT_KEYS}
+    if payload["status"] is None:
+        payload["status"] = "pending"
+    # path 是冲突键。归档行的 path 已改成「原路径::superseded::sha」，这里不能再写 path，
+    # 否则会把活路径更新盖回归档行，或把归档路径改掉。
+    conn.execute(
         """
         INSERT INTO reports(company, report_type, language, currency, accounting_standard,
-                            year, period_type, title, path, sha256, size, mtime, status)
+                            year, period_type, title, path, sha256, size, mtime, status,
+                            source_url, retrieved_at, origin, parse_version, supersedes_id, logical_key)
         VALUES(:company, :report_type, :language, :currency, :accounting_standard,
-               :year, :period_type, :title, :path, :sha256, :size, :mtime, :status)
+               :year, :period_type, :title, :path, :sha256, :size, :mtime, :status,
+               :source_url, :retrieved_at, :origin, :parse_version, :supersedes_id, :logical_key)
         ON CONFLICT(path) DO UPDATE SET
             company=excluded.company,
             report_type=excluded.report_type,
@@ -407,9 +469,15 @@ def upsert_report(conn: sqlite3.Connection, meta: dict[str, Any]) -> int:
             sha256=excluded.sha256,
             size=excluded.size,
             mtime=excluded.mtime,
-            status=excluded.status
+            status=excluded.status,
+            source_url=COALESCE(excluded.source_url, reports.source_url),
+            retrieved_at=COALESCE(excluded.retrieved_at, reports.retrieved_at),
+            origin=COALESCE(excluded.origin, reports.origin),
+            parse_version=COALESCE(excluded.parse_version, reports.parse_version),
+            supersedes_id=COALESCE(excluded.supersedes_id, reports.supersedes_id),
+            logical_key=COALESCE(excluded.logical_key, reports.logical_key)
         """,
-        meta,
+        payload,
     )
     conn.commit()
     row = conn.execute("SELECT id FROM reports WHERE path=?", (meta["path"],)).fetchone()
@@ -496,8 +564,8 @@ def replace_pages(conn: sqlite3.Connection, report_id: int, pages: list[dict[str
         conn.execute("DELETE FROM pages_bigram_fts WHERE report_id=?", (report_id,))
     for p in pages:
         cur = conn.execute(
-            "INSERT INTO pages(report_id, page_no, content, content_orig, char_count, is_ocr) "
-            "VALUES(?,?,?,?,?,?)",
+            "INSERT INTO pages(report_id, page_no, content, content_orig, char_count, is_ocr, page_kind) "
+            "VALUES(?,?,?,?,?,?,?)",
             (
                 report_id,
                 p["page_no"],
@@ -505,6 +573,7 @@ def replace_pages(conn: sqlite3.Connection, report_id: int, pages: list[dict[str
                 p.get("content_orig"),
                 p["char_count"],
                 p.get("is_ocr", 0),
+                p.get("page_kind"),
             ),
         )
         page_id = cur.lastrowid

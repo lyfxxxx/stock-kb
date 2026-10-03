@@ -94,7 +94,9 @@ def latest_annual_year(conn: sqlite3.Connection, company: str) -> int | None:
         """
         SELECT MAX(year) AS y FROM reports
         WHERE company=? AND report_type='annual'
-          AND COALESCE(is_duplicate, 0)=0 AND year IS NOT NULL
+          AND COALESCE(is_duplicate, 0)=0
+          AND COALESCE(status, 'ok')='ok'
+          AND year IS NOT NULL
         """,
         (company,),
     ).fetchone()

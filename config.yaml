@@ -42,3 +42,14 @@ mcp:
 eval:
   questions: "eval/questions.yaml"
   top_k: 5
+
+# 收集只下载直链。raw_dir / meta_dir 相对本文件所在目录。研报/电话会失败记到 data/collect_log.jsonl。
+collect:
+  user_agent: "stock-kb local@localhost"
+  raw_dir: "data/raw"
+  meta_dir: "data/meta"
+  companies:
+    百胜中国:
+      cik: "0001673358"
+    海底捞:
+      hkex_code: "06862"

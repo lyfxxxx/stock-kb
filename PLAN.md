@@ -500,6 +500,14 @@ SQLite 主要表：
 - 可选：hybrid 无答案距离门槛；跨语言问句。reranker 仍排在「页已进候选」之后。
 - 迁移 Docker 到 DXP-4800、接入 Hermes Agent；
 
+### 2026-10-02 三层流水线落地
+
+本次落地了版本链（`parse_version` / `logical_key` / `page_kind`）、`fidelity`、`fetch`（SEC 与披露易分开，另有 `skill/stock-collect`）、检索分桶、`retrieval_log`、`audit-report`，以及收紧后的 `skill/stock-note`。`compose-note` 仍保留作材料底稿，回归门改为有 agent 终稿才跑 `audit-report`；没有终稿只打印跳过，不算通过。检索桶题数不足 5 只报告 n，不因此失败。
+
+### 2026-10-03 catalog-first 与 meta_dir
+
+原文仍分 NAS 与 `collect.raw_dir`。出处 JSON 集中在 `collect.meta_dir`（默认 `data/meta/{origin}/{公司}/{相对路径}.source.json`）。`fetch` 写网络 JSON；`scan` 给 NAS 和网络文件都更新，对两个证据根只读。查询目录仍是 SQLite `reports`。遗留的原文旁 sidecar 只作 fallback。
+
 ## 16. RAG 评测系统优化记录（2026-08-15）
 
 ### 16.1 为什么做这次优化

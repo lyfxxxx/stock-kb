@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "从原文到审计稿",
+    "quality_profile": "showcase",
+    "viewBox": [1680, 860],
+    "views": [
+      {
+        "id": "main",
+        "label": "一次跑通",
+        "focus": ["fetch", "scan", "store", "index", "mcp", "draft", "audit"],
+        "note": "收集、入库、查询、写稿、审计按这个顺序走。"
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "collect", "label": "收集" },
+    { "id": "evidence", "label": "证据" },
+    { "id": "kb", "label": "知识库" },
+    { "id": "report", "label": "报告" }
+  ],
+  "phases": [
+    { "id": "gather", "label": "收集", "fromCol": 0, "toCol": 1 },
+    { "id": "build", "label": "建库", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "write", "label": "成稿", "fromCol": 4, "toCol": 5 }
+  ],
+  "mainPath": ["fetch", "scan", "store", "index", "mcp", "draft", "audit"],
+  "nodes": [
+    { "id": "fetch", "lane": "collect", "col": 0, "type": "backend", "label": "fetch", "sublabel": "stock-collect", "width": 96, "height": 52 },
+    { "id": "scan", "lane": "evidence", "col": 0, "type": "backend", "label": "scan", "sublabel": "NAS 与 raw", "width": 96, "height": 52 },
+    { "id": "store", "lane": "evidence", "col": 2, "type": "database", "label": "三表", "sublabel": "页文本", "width": 96, "height": 52 },
+    { "id": "index", "lane": "kb", "col": 2, "type": "backend", "label": "index", "sublabel": "向量与指标", "width": 96, "height": 52 },
+    { "id": "mcp", "lane": "kb", "col": 4, "type": "backend", "label": "MCP", "sublabel": "只读", "width": 96, "height": 52 },
+    { "id": "draft", "lane": "report", "col": 4, "type": "frontend", "label": "写稿", "sublabel": "stock-note", "width": 96, "height": 52 },
+    { "id": "audit", "lane": "report", "col": 5, "type": "security", "label": "审计", "sublabel": "audit-report", "width": 96, "height": 52 }
+  ],
+  "edges": [
+    { "id": "fetch-scan", "from": "fetch", "to": "scan", "label": "本机文件", "variant": "emphasis" },
+    { "id": "scan-store", "from": "scan", "to": "store", "variant": "emphasis", "route": "straight" },
+    { "id": "store-index", "from": "store", "to": "index", "label": "建索引", "variant": "emphasis" },
+    { "id": "index-mcp", "from": "index", "to": "mcp", "variant": "emphasis", "route": "straight" },
+    { "id": "mcp-draft", "from": "mcp", "to": "draft", "label": "查询", "variant": "emphasis" },
+    { "id": "draft-audit", "from": "draft", "to": "audit", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "收集与入库",
+      "items": [
+        "财报一件都没落到则 fetch 失败",
+        "研报和电话会单条失败只记日志",
+        "公司目录都不存在时 scan 退出码 2"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "查询",
+      "items": [
+        "科目不先走全文检索",
+        "归一化后不足 6 字且 FTS 有命中则不融合",
+        "写稿前设置 STOCK_KB_RUN_ID"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "成稿门",
+      "items": [
+        "fidelity 抽检页文本，空清单不算通过",
+        "命中写入 retrieval_log.jsonl",
+        "带 run_id 的稿审计失败才挡回归"
+      ]
+    }
+  ]
+}

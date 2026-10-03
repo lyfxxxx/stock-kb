@@ -17,6 +17,7 @@ def main(argv: list[str] | None = None) -> int:
         pass
     parser = argparse.ArgumentParser(prog="stock-kb", description="财报知识库 CLI")
     parser.add_argument("--config", help="配置文件路径")
+    parser.add_argument("--run-id", default=None, help="覆盖 STOCK_KB_RUN_ID，写入 retrieval_log")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_scan = sub.add_parser("scan", help="扫描并解析 NAS 财报/研报")
@@ -161,6 +162,29 @@ def main(argv: list[str] | None = None) -> int:
     p_mcp.add_argument("--host", default="127.0.0.1")
     p_mcp.add_argument("--port", type=int, default=8931)
 
+    p_audit = sub.add_parser("audit-report", help="审计 agent 终稿的出处、日志和事实清单")
+    p_audit.add_argument("path")
+    p_audit.add_argument("--company", required=True)
+
+    p_render = sub.add_parser("render-note", help="把扫描稿 Markdown 渲染成默认的单文件 HTML")
+    p_render.add_argument("path")
+    p_render.add_argument("-o", "--out", default=None, help="输出路径，默认同名 .html")
+
+    p_fidelity = sub.add_parser("fidelity", help="抽检页文本是否含标注原句")
+    p_fidelity.add_argument("--pages", default=None, help="清单 YAML，默认 eval/page_fidelity.yaml")
+    p_fidelity.add_argument("--json", action="store_true")
+
+    p_fetch = sub.add_parser("fetch", help="下载财报、研报或电话会原文")
+    p_fetch.add_argument("--url", default=None, help="直接文件 URL")
+    p_fetch.add_argument("--company", default=None)
+    p_fetch.add_argument(
+        "--kind",
+        choices=["annual", "interim", "research", "transcript"],
+        default=None,
+    )
+    p_fetch.add_argument("--optional", action="store_true", help="失败只记 collect_log.jsonl，退出码 0")
+    p_fetch.add_argument("--source", choices=["sec", "hkex"], default=None)
+
     p_models = sub.add_parser("models", help="模型下载与管理")
     p_models_sub = p_models.add_subparsers(dest="models_cmd", required=True)
     p_dl = p_models_sub.add_parser("download", help="下载模型（支持镜像/加速/续传）")
@@ -198,6 +222,12 @@ def main(argv: list[str] | None = None) -> int:
                 use_ocr=not args.no_ocr,
             )
             print(json.dumps(result, ensure_ascii=False, indent=2))
+            if (
+                (result.get("scanned") or 0) == 0
+                and (result.get("parsed") or 0) == 0
+                and (result.get("skipped") or 0) == 0
+            ):
+                return 2
         return 0
 
     if args.cmd == "eval-embed":
@@ -283,6 +313,21 @@ def main(argv: list[str] | None = None) -> int:
                     report_type=args.report_type,
                     language=args.language,
                 )
+        _log_retrieval(
+            cfg,
+            run_id=args.run_id,
+            tool="search",
+            query=args.query,
+            company=args.company,
+            year=args.year,
+            engine=engine,
+            params={
+                "top_k": args.top_k,
+                "report_type": args.report_type,
+                "language": args.language,
+            },
+            hits=hits,
+        )
         if args.json:
             print(json.dumps(hits, ensure_ascii=False, indent=2))
         else:
@@ -298,11 +343,14 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(data, ensure_ascii=False, indent=2))
         else:
             for k, v in data.items():
-                if k != "reports_by_type":
+                if k not in ("reports_by_type", "reports_by_origin"):
                     print(f"{k}: {v}")
             print("reports_by_type:")
             for r in data["reports_by_type"]:
                 print(f"  {r['company']} / {r['report_type']}: {r['n']}")
+            print("reports_by_origin:")
+            for r in data["reports_by_origin"]:
+                print(f"  {r['origin']}: {r['n']}")
         conn.close()
         return 0
 
@@ -388,6 +436,21 @@ def main(argv: list[str] | None = None) -> int:
             limit=args.limit,
             include_comparatives=args.include_comparatives,
         )
+        _log_retrieval(
+            cfg,
+            run_id=args.run_id,
+            tool="statements",
+            query=kw or None,
+            company=args.company,
+            year=args.year,
+            engine=None,
+            params={
+                "statement_type": args.statement_type,
+                "period_type": args.period_type,
+                "limit": args.limit,
+            },
+            hits=rows,
+        )
         conn.close()
         print(json.dumps(rows, ensure_ascii=False, indent=2))
         return 0
@@ -396,6 +459,22 @@ def main(argv: list[str] | None = None) -> int:
         from stock_kb import indicators
 
         result = indicators.compute_indicators(cfg)
+        logged = conn.execute(
+            "SELECT r.title AS title, i.page_no AS page_no FROM indicators i "
+            "LEFT JOIN reports r ON r.id = i.report_id WHERE i.page_no IS NOT NULL"
+        ).fetchall()
+        _log_retrieval(
+            cfg,
+            run_id=args.run_id,
+            tool="indicators",
+            query=None,
+            company=None,
+            year=None,
+            engine=None,
+            params={"recomputed": True},
+            hits=[dict(row) for row in logged],
+        )
+        conn.close()
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
 
@@ -411,6 +490,28 @@ def main(argv: list[str] | None = None) -> int:
 
         run_mcp(cfg, transport=args.transport, host=args.host, port=args.port)
         return 0
+
+    if args.cmd == "audit-report":
+        from stock_kb.audit_report import audit_report_main
+
+        return audit_report_main(cfg, args.path, args.company)
+
+    if args.cmd == "render-note":
+        from stock_kb.note_html import render_note_file
+
+        target = render_note_file(args.path, args.out)
+        print(json.dumps({"html": str(target)}, ensure_ascii=False))
+        return 0
+
+    if args.cmd == "fidelity":
+        from stock_kb.fidelity import fidelity_main
+
+        return fidelity_main(cfg, pages=args.pages, as_json=args.json)
+
+    if args.cmd == "fetch":
+        from stock_kb.fetch import fetch_main
+
+        return fetch_main(cfg, args)
 
     if args.cmd == "models":
         import subprocess
@@ -428,6 +529,17 @@ def main(argv: list[str] | None = None) -> int:
 
     parser.print_help()
     return 1
+
+
+def _log_retrieval(cfg, **kwargs) -> None:
+    import sys
+
+    from stock_kb.retrieval_log import append_retrieval
+
+    try:
+        append_retrieval(cfg, **kwargs)
+    except Exception as exc:
+        print(f"retrieval_log: {exc}", file=sys.stderr)
 
 
 if __name__ == "__main__":

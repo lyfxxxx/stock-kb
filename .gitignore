@@ -11,6 +11,7 @@ venv/
 data/
 models/
 eval/generated_notes/
+analysis-notes/
 
 # 日志与进程文件
 *.log

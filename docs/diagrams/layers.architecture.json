@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "报告系统三层结构",
+    "quality_profile": "showcase",
+    "viewBox": [1500, 760],
+    "views": [
+      {
+        "id": "evidence",
+        "label": "证据层",
+        "focus": ["fetch", "sources", "scan", "pages"],
+        "note": "原文落到本机后，scan 写成页文本和三表。"
+      },
+      {
+        "id": "knowledge",
+        "label": "知识库层",
+        "focus": ["pages", "fts", "vectors", "indicators", "mcp"],
+        "note": "科目走指标和三表，短术语走 FTS，长问句或 FTS 无命中才融合向量。"
+      },
+      {
+        "id": "report",
+        "label": "报告层",
+        "focus": ["mcp", "agent", "audit", "qlog"],
+        "note": "agent 写稿，查询记在旁路日志，audit-report 核对出处。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "fetch",
+      "type": "backend",
+      "label": "fetch",
+      "sublabel": "SEC / 披露易 / 直链",
+      "pos": [80, 48],
+      "size": [168, 72]
+    },
+    {
+      "id": "sources",
+      "type": "external",
+      "label": "原始文件",
+      "sublabel": "NAS 与 data/raw",
+      "pos": [340, 48],
+      "size": [168, 72]
+    },
+    {
+      "id": "scan",
+      "type": "backend",
+      "label": "scan",
+      "sublabel": "解析并写入版本链",
+      "pos": [600, 48],
+      "size": [168, 72]
+    },
+    {
+      "id": "pages",
+      "type": "database",
+      "label": "页与三表",
+      "sublabel": "pages / statements",
+      "pos": [900, 48],
+      "size": [180, 72]
+    },
+    {
+      "id": "indicators",
+      "type": "database",
+      "label": "指标",
+      "sublabel": "indicators",
+      "pos": [260, 230],
+      "size": [160, 72]
+    },
+    {
+      "id": "fts",
+      "type": "database",
+      "label": "FTS5",
+      "sublabel": "短术语",
+      "pos": [520, 230],
+      "size": [150, 72]
+    },
+    {
+      "id": "vectors",
+      "type": "database",
+      "label": "向量",
+      "sublabel": "sqlite-vec",
+      "pos": [780, 230],
+      "size": [160, 72]
+    },
+    {
+      "id": "mcp",
+      "type": "backend",
+      "label": "MCP",
+      "sublabel": "只读查询",
+      "pos": [520, 400],
+      "size": [160, 72],
+      "tag": "SQLite mode=ro"
+    },
+    {
+      "id": "agent",
+      "type": "frontend",
+      "label": "stock-note",
+      "sublabel": "agent 写扫描稿",
+      "pos": [180, 500],
+      "size": [180, 72]
+    },
+    {
+      "id": "qlog",
+      "type": "database",
+      "label": "查询日志",
+      "sublabel": "retrieval_log.jsonl",
+      "pos": [180, 640],
+      "size": [190, 72]
+    },
+    {
+      "id": "audit",
+      "type": "security",
+      "label": "audit-report",
+      "sublabel": "出处与事实清单",
+      "pos": [560, 500],
+      "size": [180, 72]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "证据层",
+      "wraps": ["fetch", "sources", "scan", "pages"]
+    },
+    {
+      "kind": "region",
+      "label": "知识库层",
+      "wraps": ["indicators", "fts", "vectors", "mcp"]
+    },
+    {
+      "kind": "region",
+      "label": "报告层",
+      "wraps": ["agent", "qlog", "audit"]
+    }
+  ],
+  "connections": [
+    { "id": "fetch-files", "from": "fetch", "to": "sources", "label": "字节落盘", "variant": "emphasis" },
+    { "id": "files-scan", "from": "sources", "to": "scan", "label": "只读扫描", "variant": "emphasis" },
+    { "id": "scan-pages", "from": "scan", "to": "pages", "label": "写入", "variant": "emphasis", "labelDy": -28 },
+    { "id": "pages-indicators", "from": "pages", "to": "indicators", "label": "算指标", "fromSide": "bottom", "toSide": "top" },
+    { "id": "pages-fts", "from": "pages", "to": "fts", "label": "全文索引", "fromSide": "bottom", "toSide": "top" },
+    { "id": "pages-vec", "from": "pages", "to": "vectors", "label": "分块嵌入", "fromSide": "bottom", "toSide": "top" },
+    { "id": "indicators-mcp", "from": "indicators", "to": "mcp", "label": "科目", "fromSide": "bottom", "toSide": "top" },
+    { "id": "fts-mcp", "from": "fts", "to": "mcp", "fromSide": "bottom", "toSide": "top" },
+    { "id": "vec-mcp", "from": "vectors", "to": "mcp", "label": "hybrid", "fromSide": "bottom", "toSide": "right" },
+    { "id": "mcp-agent", "from": "mcp", "to": "agent", "label": "只读工具", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
+    { "id": "agent-log", "from": "agent", "to": "qlog", "label": "记命中", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "agent-audit", "from": "agent", "to": "audit", "label": "终稿", "variant": "emphasis", "labelDy": 16 },
+    { "id": "log-audit", "from": "qlog", "to": "audit", "label": "核对 run_id" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "证据层",
+      "items": [
+        "回答这句话还在不在原文里",
+        "fidelity 抽检 content_orig",
+        "空清单只跳过，不算通过"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "知识库层",
+      "items": [
+        "科目走 indicators 与 statements",
+        "短术语走 FTS，长问句才融合",
+        "分桶 Recall@5，不足 5 题只报 n"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "报告层",
+      "items": [
+        "agent 自己拟查询并写稿",
+        "日志不写入 SQLite",
+        "带 run_id 的稿审计失败才挡回归"
+      ]
+    }
+  ]
+}

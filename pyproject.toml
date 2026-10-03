@@ -28,4 +28,4 @@ quotes = ["yfinance>=0.2", "akshare>=1.14"]
 stock-kb = "stock_kb.cli:main"
 
 [tool.setuptools]
-packages = ["stock_kb", "stock_kb.parsers", "stock_kb.serve"]
+packages = ["stock_kb", "stock_kb.parsers", "stock_kb.serve", "stock_kb.collectors"]

@@ -23,6 +23,14 @@ RESEARCH_KEYS = (
     "company update",
 )
 CATALOG_KEYS = ("参考清单", "清單", "清单")
+# 电话会优先于研报，避免「业绩会点评」被「点评」收成 research。
+TRANSCRIPT_KEYS = (
+    "电话会",
+    "业绩会",
+    "earnings call",
+    "transcript",
+    "纪要",
+)
 
 
 def classify_report(path: str | Path) -> dict:
@@ -39,11 +47,17 @@ def classify_report(path: str | Path) -> dict:
         k in parent_norm for k in PROSPECTUS_KEYS
     )
     catalog = any(k in name_norm for k in CATALOG_KEYS)
+    transcript = any(k in name_norm for k in TRANSCRIPT_KEYS) or any(
+        k in parent_norm for k in TRANSCRIPT_KEYS
+    )
 
     # 研报特征优先于“年报/中报”等报告期词，避免
     # 《2023年报费用管控效果显著》被误判为年报。
+    # 电话会再优先于研报。
     if catalog:
         report_type = "other"
+    elif transcript:
+        report_type = "transcript"
     elif research:
         report_type = "research"
     elif prospectus:

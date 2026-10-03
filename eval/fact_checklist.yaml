@@ -1,0 +1,20 @@
+# audit-report 的事实清单。库里有数时对应节不能写「暂无数据」，且终稿要有文末注释。
+# 库里没有时，该节必须写「暂无数据」。
+items:
+  - id: revenue_series
+    section: 利润表
+    indicator: revenue
+  - id: net_profit
+    section: 利润表
+    indicator: net_profit
+  - id: net_cash
+    section: 资产负债
+    statement_keywords: [货币资金, 短期借款, 长期借款]
+  - id: cash_five
+    section: 现金流
+    indicator: operating_cashflow
+    # 已付股息，以及资本开支或购买物业，任一能在活报告三表里查到即算有数。
+    statement_keywords: [已付股息, 资本开支, 购买物业]
+  - id: dividend
+    section: 分红
+    statement_keywords: [已付股息]

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -229,18 +230,56 @@ def main() -> int:
     else:
         print("[audit_notes] skipped")
 
-    if not args.skip_notes:
-        print("[generation_compose]")
-        from stock_kb.generation_eval import run_generation_eval
+    print("[retrieval_buckets]")
+    for engine, data in results.items():
+        buckets = (data.get("summary") or {}).get("retrieval_buckets") or {}
+        if not buckets:
+            print(f"  {engine}: n=0")
+            continue
+        for name, stat in buckets.items():
+            n = stat.get("n") or 0
+            if n < 5:
+                print(f"  {engine}.{name}: n={n}")
+            else:
+                print(f"  {engine}.{name}: n={n} recall_at_5={stat.get('recall_at_5')}")
 
-        gen = run_generation_eval(cfg)
-        gen_fail = (gen.get("summary") or {}).get("fail_count")
-        gen_faith = (gen.get("summary") or {}).get("faithful_rate_mean")
-        ok_gen = gen_fail == 0
-        print(f"  fail_count: {gen_fail} (max 0) {'OK' if ok_gen else 'FAIL'}")
-        print(f"  faithful_rate_mean: {gen_faith}")
-        if not ok_gen:
-            failed.append("generation_compose")
+    if not args.skip_notes:
+        print("[audit-report]")
+        from stock_kb.audit_report import audit_report
+        from stock_kb.retrieval_log import log_path, read_log
+
+        root = Path(cfg["project_root"])
+        notes = root / "eval" / "generated_notes"
+        reports = sorted(notes.glob("**/*扫描*.md")) + sorted(notes.glob("**/*扫描*.html"))
+        if not reports:
+            print("audit-report: skipped (no agent report); not a pass")
+        else:
+            conn = db_mod.connect(cfg["db_path"])
+            log_lines = read_log(log_path(cfg))
+            audit_fails = 0
+            try:
+                for path in reports:
+                    company = path.parent.name
+                    if company == "generated_notes":
+                        company = path.stem.split("-扫描")[0]
+                        company = company.split("扫描")[0].strip("-")
+                    text = path.read_text(encoding="utf-8")
+                    if not re.search(r"(?m)^\s*run_id:\s*\S+", text):
+                        print(
+                            f"  {path.parent.name}/{path.name}: "
+                            "skipped (legacy note without run_id); not a pass"
+                        )
+                        continue
+                    result = audit_report(conn, text, log_lines, company)
+                    print(f"  {path.parent.name}/{path.name}: {'OK' if result['ok'] else 'FAIL'}")
+                    for issue in result["issues"]:
+                        print(f"    {issue}")
+                    if not result["ok"]:
+                        audit_fails += 1
+            finally:
+                conn.close()
+            if audit_fails:
+                failed.append("audit-report")
 
     if not args.skip_notes:
         print("[coverage_matrix]")
