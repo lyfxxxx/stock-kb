@@ -13,7 +13,7 @@ items:
   - id: cash_five
     section: 现金流
     indicator: operating_cashflow
-    # 已付股息，以及资本开支或购买物业，任一能在活报告三表里查到即算有数。
+    # 已付股息，以及资本开支或购买物业，任一能在当前使用文档三表里查到即算有数。
     statement_keywords: [已付股息, 资本开支, 购买物业]
   - id: dividend
     section: 分红

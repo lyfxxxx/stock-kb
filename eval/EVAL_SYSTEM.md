@@ -20,13 +20,13 @@
 | 生成 | 笔记数字与引用 | freeze `end2end` | 组稿 `eval-generation` + `audit_notes.py` + 材料覆盖 |
 | 路由 | 问句该走哪把工具 | freeze `route` | `stock_kb.route`（不检索） |
 
-不要用「总 Recall」概括所有层。keyword 高不代表语义强；结构化 26/26 只说明三表查询和 PDF golden 一致。
+不要用「总 Recall」概括所有层。keyword 高不代表语义强；结构化 29/29 只说明三表查询和 PDF golden 一致。
 
-当前题集 **146 道**：
+当前题集 **159 道**：
 
 | split | type | n | 进回归门禁 |
 |---|---|---:|---|
-| freeze | exact | 20 | 结构化 26/26（与部分 cross 合计） |
+| freeze | exact | 23 | 结构化 29/29（与部分 cross 合计） |
 | freeze | keyword | 20 | FTS Recall / Neg@5 |
 | freeze | semantic | 20 | hybrid Recall / Neg@5 |
 | freeze | cross | 12 | 其中检索约 6 道，其余走结构化 |
@@ -38,7 +38,7 @@
 | diag | semantic | 13 | 否（对照脚本） |
 | diag | cross | 15 | 否（对照脚本） |
 
-`split` 缺省视为 freeze。`--split freeze` 才进 `tools/run_eval_regression.py` 的检索/结构化门槛。diag 只把 **指标** 和 **无答案** 纳入回归，真语义 / 跨语言只做诊断。回归另输出 `recall_soft_at_k`（期望页在 top-k 内仅页码 ±5 的 near-miss 计半分，仅展示不设门）与「公司×年份×指标」覆盖矩阵（`tools/coverage_matrix.py`）。题集 2026-09-13 扩至 156 道（+5 英文 cross、+5 中报 semantic，全部 diag）。
+`split` 缺省视为 freeze。`--split freeze` 才进 `tools/run_eval_regression.py` 的检索/结构化门槛。diag 只把 **指标** 和 **无答案** 纳入回归，真语义 / 跨语言只做诊断。回归另输出 `recall_soft_at_k`（期望页在 top-k 内仅页码 ±5 的 near-miss 计半分，仅展示不设门）与「公司×年份×指标」覆盖矩阵（`tools/coverage_matrix.py`）。题集 2026-09-13 扩至 156 道（+5 英文 cross、+5 中报 semantic，全部 diag）；2026-10-04 再加 freeze exact-021–023（2026 中报），结构化 29 道。
 
 ---
 
@@ -162,7 +162,7 @@ python tools/audit_notes.py
 | FTS keyword Neg@5 | ≤ 0.65 | 0.55 |
 | hybrid semantic Recall@5 | ≥ 0.20 | 0.15 |
 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 |
-| 结构化 hit / parse_hit | 26/26 | 26/26 |
+| 结构化 hit / parse_hit | 29/29 | 29/29 |
 | FTS diag indicators | 12/12 | 12/12 |
 | FTS diag no_answer empty_rate | ≥ 0.75 | 1.00 |
 | hybrid diag no_answer empty_rate | ≥ 0.75 | 1.00 |

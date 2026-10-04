@@ -159,16 +159,68 @@ def _pick_metric_row(metric: str, items: list[dict[str, Any]]) -> dict[str, Any]
     )
 
 
+_OCR_VALUE_TOLERANCE = 0.0001
+
+
+def _values_agree(left: Any, right: Any) -> bool:
+    try:
+        return abs(float(left) - float(right)) <= _OCR_VALUE_TOLERANCE
+    except (TypeError, ValueError):
+        return False
+
+
+def _pick_by_source_tier(metric: str, items: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """当年干净页 → 次年比较列（干净）→ 当年 OCR=1 且与比较列一致（无比较列则直接用）。
+
+    is_ocr=2 与 OCR 比较列永不入选。OCR 与比较列数值不一致时留比较列，避免把
+    错位行名（Total Lial）或未复核 OCR 写进指标。
+    """
+    clean_own = [
+        x
+        for x in items
+        if int(x.get("_is_ocr") or 0) == 0 and x.get("_report_year") == x.get("year")
+    ]
+    clean_cmp = [
+        x
+        for x in items
+        if int(x.get("_is_ocr") or 0) == 0 and x.get("_report_year") != x.get("year")
+    ]
+    ocr_own = [
+        x
+        for x in items
+        if int(x.get("_is_ocr") or 0) == 1 and x.get("_report_year") == x.get("year")
+    ]
+    if clean_own:
+        picked = _pick_metric_row(metric, clean_own)
+        picked["source_kind"] = "own_year"
+        return picked
+    if clean_cmp:
+        cmp = _pick_metric_row(metric, clean_cmp)
+        if ocr_own:
+            ocr = _pick_metric_row(metric, ocr_own)
+            if _values_agree(ocr.get("value"), cmp.get("value")):
+                ocr["source_kind"] = "ocr_own"
+                return ocr
+        cmp["source_kind"] = "comparative"
+        return cmp
+    if ocr_own:
+        ocr = _pick_metric_row(metric, ocr_own)
+        ocr["source_kind"] = "ocr_own"
+        return ocr
+    return None
+
+
 def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
     conn = db.connect(cfg["db_path"])
+    live = db.live_report_sql("r")
     rows = conn.execute(
-        """
+        f"""
         SELECT r.company, r.id AS report_id, r.title, r.period_type, r.year AS report_year,
                s.statement_type, s.year, s.line_name_norm, s.value,
                s.unit, s.currency, s.page_no, s.line_no, s.is_subtotal, s.is_ocr
         FROM statements s JOIN reports r ON r.id = s.report_id
         WHERE s.year IS NOT NULL AND s.value IS NOT NULL
-          AND COALESCE(s.is_ocr, 0) = 0
+          AND {live}
         """
     ).fetchall()
 
@@ -208,12 +260,16 @@ def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
                 "report_id": row["report_id"],
                 "page_no": row["page_no"],
                 "line_name": row["line_name_norm"],
+                "_report_year": row["report_year"],
+                "_is_ocr": int(row["is_ocr"] or 0),
             }
         )
 
     output: list[dict[str, Any]] = []
     for (company, year, _pt, metric), items in sorted(buckets.items()):
-        base = _pick_metric_row(metric, items)
+        base = _pick_by_source_tier(metric, items)
+        if base is None:
+            continue
         item = {k: v for k, v in base.items() if not k.startswith("_")}
         output.append(item)
 
@@ -270,8 +326,9 @@ def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
         conn.execute(
             """
             INSERT INTO indicators(company, year, period_type, name, value, unit,
-                                   currency, report_id, page_no, line_name, source_id)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                                   currency, report_id, page_no, line_name, source_id,
+                                   source_kind)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 item["company"],
@@ -285,6 +342,7 @@ def compute_indicators(cfg: dict[str, Any]) -> dict[str, int]:
                 item.get("page_no"),
                 item.get("line_name"),
                 source_id,
+                item.get("source_kind"),
             ),
         )
         inserted += 1
@@ -307,6 +365,7 @@ def _derived(
         "report_id": None,
         "page_no": None,
         "line_name": None,
+        "source_kind": "derived",
     }
 
 
@@ -323,6 +382,8 @@ def _haidilao_total_assets(
     groups: dict[tuple[int, int], list[dict[str, Any]]] = {}
     for row in rows:
         if row["company"] != "海底捞" or row["statement_type"] != "balance":
+            continue
+        if int(row["is_ocr"] or 0) != 0:
             continue
         if row["year"] is None or row["value"] is None:
             continue
@@ -378,6 +439,9 @@ def _haidilao_total_assets(
         chosen = same_year[0] if same_year else max(
             cands, key=lambda c: c["_report_year"] or 0
         )
-        chosen.pop("_report_year", None)
+        report_year = chosen.pop("_report_year", None)
+        chosen["source_kind"] = (
+            "own_year" if report_year == chosen["year"] else "comparative"
+        )
         result.append(chosen)
     return result

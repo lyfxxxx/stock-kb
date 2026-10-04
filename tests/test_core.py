@@ -9,6 +9,7 @@ from stock_kb.classify import classify_report
 from stock_kb.indicators import (
     METRIC_RULES,
     _candidate_score,
+    _pick_by_source_tier,
     _pick_metric_row,
     compute_indicators,
 )
@@ -244,6 +245,218 @@ def test_extract_statements_subtotal_and_wrapped_label():
     )
 
 
+def test_extract_statements_fvtpl_wrap_keeps_current_liabilities_subtotal():
+    """2026 中报：FVTPL 折在「…的金融」/「負債」，不得顶掉「流动负债」小节标题。"""
+    page = {
+        "page_no": 53,
+        "content": "\n".join(
+            [
+                "Condensed Consolidated Statement of Financial Position",
+                "As at June 30, 2026",
+                "Notes 2026 2025",
+                "RMB’000 RMB’000",
+                "Current Liabilities 流動負債",
+                "Trade payables 貿易應付款項 18 1,668,363 1,910,661",
+                "Financial liabilities at FVTPL 按公允值計入損益的金融",
+                "負債 21 98,004 121,152",
+                "Contract liabilities 合約負債 22 867,460 895,767",
+                "8,816,002 9,266,374",
+                "Total Assets less Current Liabilities 資產總額減流動負債 12,330,706 12,766,240",
+            ]
+        ),
+    }
+    page["content_orig"] = page["content"]
+    rows = extract_statements_from_pages([page], "测试", "r", report_year=2026)
+    by = {(r["line_name_norm"], r["year"]): r for r in rows}
+    assert by[("Current Liabilities 流动负债", 2026)]["is_subtotal"] == 1
+    assert by[("Current Liabilities 流动负债", 2026)]["value"] == 8816002.0
+    assert by[("Current Liabilities 流动负债", 2025)]["value"] == 9266374.0
+    stitched = [
+        r
+        for r in rows
+        if "fvtpl" in _norm(r["line_name_norm"]) and not r["is_subtotal"]
+    ]
+    assert stitched
+    assert all("負債" in r["line_name_orig"] for r in stitched)
+    assert all(
+        by[("Total Assets less Current Liabilities 资产总额减流动负债", y)]["value"] == val
+        for y, val in ((2026, 12330706.0), (2025, 12766240.0))
+    )
+
+
+def test_extract_statements_prepayment_wrap_and_june_header():
+    page = {
+        "page_no": 52,
+        "content": "\n".join(
+            [
+                "Condensed Consolidated Statement of Financial Position",
+                "As at June 30, 2026",
+                "Notes 2026 2025",
+                "RMB’000 RMB’000",
+                "Current Assets 流動資產",
+                "June 30, December 31,",
+                "Trade and other receivables and prepayments 貿易及其他應收款項及預",
+                "付款項 17 1,339,741 1,503,657",
+                "Financial assets at FVTPL 按公允值計入損",
+                "益的金融資產 126,638 182,671",
+                "loss (“FVTPL”) 允值計入損益」）的金融",
+                "資產 41,171 57,451",
+                "Purchase of other financial assets 購買其他金融資",
+                "產 57 -819,368 -296,787",
+                "10,775,998 12,290,803",
+            ]
+        ),
+        "is_ocr": 0,
+    }
+    page["content_orig"] = page["content"]
+    rows = extract_statements_from_pages([page], "测试", "r", report_year=2026)
+    names = {r["line_name_orig"] for r in rows}
+    assert not any(n.strip() in {"June", "付款項", "益的金融資產", "產"} for n in names)
+    assert not any(n.lstrip().startswith("loss") for n in names)
+    recv = [
+        r
+        for r in rows
+        if "prepayments" in r["line_name_orig"].lower() and not r["is_subtotal"]
+    ]
+    assert recv
+    assert any("付款項" in r["line_name_orig"] for r in recv)
+    assert {(r["year"], r["value"]) for r in recv} == {
+        (2026, 1339741.0),
+        (2025, 1503657.0),
+    }
+    fvtpl = [r for r in rows if "fvtpl" in _norm(r["line_name_norm"]) and not r["is_subtotal"]]
+    assert fvtpl
+    assert all("益的金融資產" in r["line_name_orig"] for r in fvtpl)
+    assert {(r["year"], r["value"]) for r in fvtpl} == {
+        (2026, 126638.0),
+        (2025, 182671.0),
+    }
+    sub = [r for r in rows if r["is_subtotal"] and r["year"] == 2026]
+    assert sub and sub[0]["value"] == 10775998.0
+
+
+def test_extract_statements_ocr_pairs_label_and_number_blocks():
+    page = {
+        "page_no": 174,
+        "is_ocr": 1,
+        "content": """
+Consolidated Balance Sheets
+Yum China Holdings, Inc.
+December 31, 2017 and 2016
+(in US$ millions, except for number of shares)
+
+ASSETS
+Current Assets
+Cash and cash equivalents
+Short-term investments
+Accounts receivable, net
+Inventories, net
+Prepaid expenses and other current assets
+Total Current Assets
+Property, plant and equipment, net
+Goodwill
+Intangible assets, net
+Investments in unconsolidated affiliates
+Other assets
+Deferred income taxes
+Total Assets
+LIABILITIES, REDEEMABLE NONCONTROLLING INTEREST AND EQUITY
+Current Liabilities
+Accounts payable and other current liabilities
+Income taxes payable
+Total Current Liabilities
+Capital lease obligations
+Other liabilities and deferred credits
+Total Liabilities
+Redeemable Noncontrolling Interest
+Equity
+Common stock, $0.01 par value; 1,000,000,000 shares authorized;
+388,860,534.42 shares and 383,344,835.42 shares issued at December 31,
+2017 and December 31, 2016, respectively; 384,720,152 shares and
+383,344,835.42 shares outstanding at December 31, 2017 and December 31,
+2016, respectively
+Treasury stock
+Additional paid-in capital
+Retained earnings
+Accumulated other comprehensive income
+Total Equity - Yum China Holdings, Inc.
+Noncontrolling interests
+Total Equity
+Total Lial
+ities, Redeemable Noncontrolling Interest and Equity
+
+2017                         2016
+
+1,059                            885
+205                          79
+81                           74
+297                         268
+160                            120
+1,802                          1,426
+1,691                          1,647
+108                              79
+101                              88
+89                          71
+373                         254
+99                            162
+4,263                      3,727
+978                         971
+39                          33
+1,017                             1,004
+28                          28
+354                         252
+1,399                          1,284
+5                                一
+4                            4
+(148)                            (20)
+2,383                      2,352
+405                          40
+138                                1
+2,782                      2,377
+77                          66
+2,859                      2,443
+4,263                      3,727
+""",
+    }
+    page["content_orig"] = page["content"]
+    rows = extract_statements_from_pages([page], "百胜中国", "r", report_year=2017)
+    assert all(r["is_ocr"] == 1 for r in rows)
+    assets = [
+        r
+        for r in rows
+        if r["year"] == 2017 and "totalassets" in _norm(r["line_name_norm"])
+    ]
+    assert assets and assets[0]["value"] == 4263.0
+    assert not any("Total Lial" == r["line_name_orig"] for r in rows)
+    cash = [
+        r
+        for r in rows
+        if r["year"] == 2017 and r["line_name_orig"].startswith("Cash and cash")
+    ]
+    assert cash and cash[0]["value"] == 1059.0
+
+
+def test_extract_statements_ocr_fail_page_keeps_is_ocr_2():
+    page = {
+        "page_no": 171,
+        "is_ocr": 2,
+        "content": "\n".join(
+            [
+                "Consolidated and Combined Statements of Income",
+                "2017 2016",
+                "(in US$ millions)",
+                "Income Before Income Taxes (cid:3) 810 700",
+                "Basic Earnings Per Common Share $ 1.04 0.90",
+            ]
+        ),
+    }
+    page["content_orig"] = page["content"]
+    rows = extract_statements_from_pages([page], "百胜中国", "r", report_year=2017)
+    assert rows
+    assert all(r["is_ocr"] == 2 for r in rows)
+    assert not any("cid" in (r["line_name_orig"] or "").lower() for r in rows)
+
+
 def _norm(text: str) -> str:
     import re as _re
 
@@ -349,6 +562,132 @@ def test_compute_indicators_uses_owners_profit(tmp_path):
     assert row["value"] == 4499080.0
     assert row["page_no"] == 279
     assert "owners" in (row["line_name"] or "").lower()
+
+
+def test_compute_indicators_skips_superseded_report(tmp_path):
+    db_path = tmp_path / "live.db"
+    conn = db.connect(db_path)
+    conn.execute("INSERT INTO companies(name) VALUES('海底捞')")
+    conn.execute(
+        "INSERT INTO reports(company, report_type, year, period_type, title, path, status) "
+        "VALUES('海底捞','annual',2024,'annual','旧2024年报','/old.pdf','superseded')"
+    )
+    old_id = conn.execute("SELECT id FROM reports WHERE title='旧2024年报'").fetchone()["id"]
+    conn.execute(
+        "INSERT INTO reports(company, report_type, year, period_type, title, path, status) "
+        "VALUES('海底捞','annual',2024,'annual','2024年报','/new.pdf','ok')"
+    )
+    new_id = conn.execute("SELECT id FROM reports WHERE title='2024年报'").fetchone()["id"]
+    conn.execute(
+        "INSERT INTO statements(report_id, statement_type, line_name_orig, line_name_norm, "
+        "value, unit, currency, year, page_no, table_index) VALUES(?,?,?,?,?,?,?,?,?,0)",
+        (old_id, "income", "Revenue 收入", "Revenue 收入", 111.0, "千元", "CNY", 2024, 1),
+    )
+    conn.execute(
+        "INSERT INTO statements(report_id, statement_type, line_name_orig, line_name_norm, "
+        "value, unit, currency, year, page_no, table_index) VALUES(?,?,?,?,?,?,?,?,?,0)",
+        (new_id, "income", "Revenue 收入", "Revenue 收入", 42754687.0, "千元", "CNY", 2024, 142),
+    )
+    conn.commit()
+    conn.close()
+    compute_indicators({"db_path": str(db_path)})
+    conn = db.connect(db_path)
+    row = conn.execute(
+        "SELECT value, report_id, page_no FROM indicators WHERE name='revenue'"
+    ).fetchone()
+    conn.close()
+    assert row["value"] == 42754687.0
+    assert row["report_id"] == new_id
+    assert row["page_no"] == 142
+
+
+def _indicator_item(**kwargs):
+    base = {
+        "_score": 100,
+        "company": "百胜中国",
+        "year": 2017,
+        "period_type": "annual",
+        "name": "revenue",
+        "value": 7769.0,
+        "unit": "百万美元",
+        "currency": "USD",
+        "report_id": 1,
+        "page_no": 170,
+        "line_name": "Totalrevenues",
+        "_report_year": 2017,
+        "_is_ocr": 0,
+    }
+    base.update(kwargs)
+    return base
+
+
+def test_pick_by_source_tier_own_year_beats_comparative_and_ocr():
+    items = [
+        _indicator_item(value=7700.0, report_id=1, _report_year=2017, _is_ocr=0),
+        _indicator_item(value=7769.0, report_id=2, _report_year=2018, _is_ocr=0),
+        _indicator_item(value=7700.0, report_id=3, _report_year=2017, _is_ocr=1),
+    ]
+    picked = _pick_by_source_tier("revenue", items)
+    assert picked["report_id"] == 1
+    assert picked["source_kind"] == "own_year"
+
+
+def test_pick_by_source_tier_ocr_promoted_when_agrees_with_comparative():
+    items = [
+        _indicator_item(value=7769.0, report_id=2, page_no=170, _report_year=2018, _is_ocr=0),
+        _indicator_item(value=7769.0, report_id=1, page_no=171, _report_year=2017, _is_ocr=1),
+    ]
+    picked = _pick_by_source_tier("revenue", items)
+    assert picked["report_id"] == 1
+    assert picked["source_kind"] == "ocr_own"
+
+
+def test_pick_by_source_tier_keeps_comparative_when_ocr_disagrees():
+    items = [
+        _indicator_item(value=7769.0, report_id=2, _report_year=2018, _is_ocr=0),
+        _indicator_item(value=4263.0, report_id=1, _report_year=2017, _is_ocr=1),
+    ]
+    picked = _pick_by_source_tier("revenue", items)
+    assert picked["report_id"] == 2
+    assert picked["source_kind"] == "comparative"
+
+
+def test_pick_by_source_tier_ignores_ocr_quality_fail():
+    items = [
+        _indicator_item(value=810.0, report_id=1, _report_year=2017, _is_ocr=2),
+        _indicator_item(value=7769.0, report_id=2, _report_year=2018, _is_ocr=0),
+    ]
+    picked = _pick_by_source_tier("revenue", items)
+    assert picked["report_id"] == 2
+    assert picked["source_kind"] == "comparative"
+
+
+def test_compute_indicators_writes_source_kind(tmp_path):
+    db_path = tmp_path / "kind.db"
+    conn = db.connect(db_path)
+    conn.execute("INSERT INTO companies(name) VALUES('百胜中国')")
+    conn.execute(
+        "INSERT INTO reports(company, report_type, year, period_type, title, path, status) "
+        "VALUES('百胜中国','annual',2018,'annual','2018年报','/2018.pdf','ok')"
+    )
+    rid = conn.execute("SELECT id FROM reports").fetchone()["id"]
+    conn.execute(
+        "INSERT INTO statements(report_id, statement_type, line_name_orig, line_name_norm, "
+        "value, unit, currency, year, page_no, table_index, is_ocr) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+        (rid, "income", "Total revenues", "Total revenues", 7769.0, "百万美元", "USD", 2017, 170, 0, 0),
+    )
+    conn.commit()
+    conn.close()
+    compute_indicators({"db_path": str(db_path)})
+    conn = db.connect(db_path)
+    row = conn.execute(
+        "SELECT value, source_kind, report_id FROM indicators WHERE name='revenue'"
+    ).fetchone()
+    conn.close()
+    assert row["value"] == 7769.0
+    assert row["source_kind"] == "comparative"
+    assert row["report_id"] == rid
 
 
 def test_like_search_orders_by_term_frequency(conn):

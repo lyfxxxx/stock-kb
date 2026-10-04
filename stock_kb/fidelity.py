@@ -1,4 +1,4 @@
-"""页文本保真抽检：标注原句是否还在活报告的 content_orig 里。"""
+"""页文本保真抽检：标注原句是否还在当前使用文档的 content_orig 里。"""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def load_page_spec(path: str | Path) -> list[dict[str, Any]]:
 
 
 def run_fidelity(conn, pages: list[dict[str, Any]]) -> dict[str, Any]:
-    """对照活报告检查 needles。空清单是 skipped，不是通过。"""
+    """对照当前使用文档检查 needles。空清单是 skipped，不是通过。"""
     if not pages:
         return {"skipped": True, "passed": False, "message": SKIPPED_LINE, "items": []}
 

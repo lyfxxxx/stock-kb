@@ -43,7 +43,7 @@ def test_contract_gate_table_matches_eval_system_20260830():
         ("FTS keyword Neg@5", "≤ 0.65", "0.55"),
         ("hybrid semantic Recall@5", "≥ 0.20", "0.15"),
         ("hybrid semantic Neg@5", "≤ 0.20", "0.00"),
-        ("结构化 hit / parse_hit", "26/26", "26/26"),
+        ("结构化 hit / parse_hit", "29/29", "29/29"),
         ("FTS diag indicators", "12/12", "12/12"),
         ("no_answer empty_rate", "1.00", "1.00"),
         ("route accuracy", "1.0", "1.00"),
@@ -60,7 +60,7 @@ def test_contract_gate_table_matches_eval_system_20260830():
     assert re.search(r"FTS keyword Neg@5.*0\.55", contract)
     assert re.search(r"hybrid semantic Recall@5.*0\.15", contract)
     assert re.search(r"hybrid semantic Neg@5.*0\.00", contract)
-    assert "26/26" in contract and "12/12" in contract
+    assert "29/29" in contract and "12/12" in contract
     assert "1.00 faithful" in contract
 
 

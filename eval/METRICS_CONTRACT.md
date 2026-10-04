@@ -33,7 +33,7 @@ flowchart TB
 | G2 | FTS keyword Neg@5 | ≤ 0.65 | 0.55 | 过 |
 | G3 | hybrid semantic Recall@5 | ≥ 0.20 | 0.15 | **2026-09-04 复测 0.30，过**（2026-08-30 点估计 0.15；CI 当时 0.052–0.36） |
 | G4 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 | 过 |
-| G5 | 结构化 hit / parse_hit | 26/26 | 26/26 | 过 |
+| G5 | 结构化 hit / parse_hit | 29/29 | 29/29 | 过 |
 | G6 | FTS diag indicators | 12/12 | 12/12 | 过 |
 | G7 | FTS diag no_answer empty_rate | ≥ 0.75 | 1.00 | 过 |
 | G8 | hybrid diag no_answer empty_rate | ≥ 0.75 | 1.00 | 过 |

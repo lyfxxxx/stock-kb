@@ -294,7 +294,7 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
         metrics: list[str] | None = None,
         period_type: str | None = None,
     ) -> list[dict[str, Any]]:
-        """获取财务指标。metrics 如 revenue / net_profit / total_assets / total_equity / operating_cashflow / gross_profit / net_margin / roe。period_type=annual/interim，默认全部；locator 为《报告》第N页，派生指标（比率）无页码时为 "derived"。"""
+        """获取财务指标。metrics 如 revenue / net_profit / total_assets / total_equity / operating_cashflow / gross_profit / net_margin / roe。period_type=annual/interim，默认全部；locator 为《报告》第N页，派生指标（比率）无页码时为 "derived"。source_kind 为 own_year / comparative / ocr_own / derived。"""
         sql = (
             "SELECT i.*, r.title FROM indicators i "
             "LEFT JOIN reports r ON r.id = i.report_id WHERE i.company=?"

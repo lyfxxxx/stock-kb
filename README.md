@@ -55,9 +55,11 @@ pip install -e ".[mcp,ml]"
 python -m stock_kb models download --model BAAI/bge-small-zh-v1.5
 ```
 
-按 `config.yaml` 填 NAS、公司、`collect.companies`（百胜中国的 CIK、海底捞的港股代码）。收集链接的步骤见 `skill/stock-collect/SKILL.md`：财报用 `fetch --source`，电话会和研报只用能直接打开的文件 URL。
+按 `config.yaml` 填 NAS、公司、`collect.companies`（百胜中国的 CIK、海底捞的港股代码）。收集顺序见 `skill/stock-collect/SKILL.md`：先 `scan` NAS，用 `stats` 看缺口，再只 `fetch` NAS 没有的类型。财报在两件最近年报和中报都没有时才用 `fetch --source`；电话会和研报只用能直接打开的文件 URL。
 
 ```powershell
+python -m stock_kb scan
+python -m stock_kb stats --json
 python -m stock_kb fetch --source sec --company 百胜中国
 python -m stock_kb fetch --source hkex --company 海底捞
 python -m stock_kb scan
@@ -97,7 +99,7 @@ python tools/audit_formal_notes.py            # 无参数时扫描 eval/generate
 # 公司×年份×指标覆盖矩阵（静默丢数据当天可见）
 python tools/coverage_matrix.py
 
-# 定向重扫指定报告（读 NAS；OCR 乱码页自动走质量闸门）
+# 定向重扫指定文档（读 NAS；OCR 乱码页自动走质量闸门）
 python tools/reprocess_reports.py 35 36
 
 # HTTP MCP 端到端测试（需先启动服务并设 STOCK_KB_MCP_URL/STOCK_KB_TOKEN）

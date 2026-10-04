@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "三类文件如何走完证据层",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 720],
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "external": { "label": "原文" },
+        "backend": { "label": "处理" },
+        "database": { "label": "目录" },
+        "security": { "label": "校验" }
+      }
+    },
+    "views": [
+      {
+        "id": "filing",
+        "label": "财报与招股",
+        "focus": ["ingest", "f_kind", "f_page", "f_stmt", "elect"],
+        "note": "年报、中报、招股写成页后，再从报表页抽出三表行。"
+      },
+      {
+        "id": "research-call",
+        "label": "研报与电话会",
+        "focus": ["ingest", "r_kind", "t_kind", "r_page", "t_page", "fidelity"],
+        "note": "这两类通常只成页、不抽三表。电话会关键词优先于研报。"
+      },
+      {
+        "id": "catalog",
+        "label": "出处、当前使用文档与验收",
+        "focus": ["ingest", "elect", "fidelity"],
+        "note": "scan 给 NAS 与 collect 都写出处 JSON。目录再选出当前使用文档。"
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "filing", "label": "财报与招股" },
+    { "id": "research", "label": "研报" },
+    { "id": "transcript", "label": "电话会" },
+    { "id": "catalog", "label": "目录与校验" }
+  ],
+  "phases": [
+    { "id": "land", "label": "落到本机", "fromCol": 0, "toCol": 1 },
+    { "id": "parse", "label": "成页与抽出", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "accept", "label": "目录与验收", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["ingest", "f_kind", "f_page", "f_stmt", "elect"],
+  "nodes": [
+    { "id": "ingest", "lane": "filing", "col": 0, "type": "external", "label": "落到本机", "sublabel": "NAS / raw，scan 写出处" },
+    { "id": "t_kind", "lane": "transcript", "col": 0, "type": "backend", "label": "认成电话会", "sublabel": "关键词优先" },
+    { "id": "f_kind", "lane": "filing", "col": 1, "type": "backend", "label": "认成财报", "sublabel": "年报 / 中报 / 招股" },
+    { "id": "r_kind", "lane": "research", "col": 1, "type": "backend", "label": "认成研报", "sublabel": "点评 / 评级 / 深度" },
+    { "id": "f_page", "lane": "filing", "col": 3, "type": "database", "label": "逐页成页", "sublabel": "简体检索，原文引用" },
+    { "id": "r_page", "lane": "research", "col": 3, "type": "database", "label": "只成页", "sublabel": "不抽三表" },
+    { "id": "t_page", "lane": "transcript", "col": 3, "type": "database", "label": "整篇成页", "sublabel": "保留说话人" },
+    { "id": "f_stmt", "lane": "filing", "col": 5, "type": "database", "label": "抽出三表", "sublabel": "数字保持原单位" },
+    { "id": "elect", "lane": "catalog", "col": 5, "type": "security", "label": "当前使用文档", "sublabel": "三表题 29/29", "tag": "挡回归" },
+    { "id": "fidelity", "lane": "catalog", "col": 3, "type": "security", "label": "页保真", "sublabel": "空清单不算通过" }
+  ],
+  "edges": [
+    { "id": "ingest-f", "from": "ingest", "to": "f_kind", "variant": "emphasis" },
+    { "id": "ingest-r", "from": "ingest", "to": "r_kind", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "id": "ingest-t", "from": "ingest", "to": "t_kind", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "id": "f-page", "from": "f_kind", "to": "f_page", "variant": "emphasis" },
+    { "id": "r-page", "from": "r_kind", "to": "r_page" },
+    { "id": "t-page", "from": "t_kind", "to": "t_page" },
+    { "id": "f-stmt", "from": "f_page", "to": "f_stmt", "variant": "emphasis" },
+    { "id": "stmt-elect", "from": "f_stmt", "to": "elect", "variant": "emphasis", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "id": "t-fid", "from": "t_page", "to": "fidelity", "variant": "security", "route": "drop", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "三类文件",
+      "items": [
+        "财报和招股：页 + 三表，科目数字走这里",
+        "研报和电话会：通常只成页，靠检索引用"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "出处与目录",
+      "items": [
+        "scan 给 NAS 与 collect 都写出处 JSON",
+        "同一份文档只留最新为当前使用文档"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "验收",
+      "items": [
+        "三表题核对原值、页码和来源文件",
+        "页保真抽检原文；空清单不算通过"
+      ]
+    }
+  ]
+}

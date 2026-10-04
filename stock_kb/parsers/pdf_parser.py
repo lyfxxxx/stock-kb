@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -239,93 +240,200 @@ def extract_statements_from_pages(
         text = page.get("content_orig") or page["content"]
         years = _detect_year_columns(text, report_year=report_year)
         unit, currency = _detect_unit_currency(text)
-        # 无数字的行有两种：小节标题（「Current Assets 流動資產」，持久，用于命名
-        # 其后的小计行）与折行标签上半行（一次性，与下一行标签拼接）。
-        section_header: str | None = None
-        wrap_head: str | None = None
-        section_stack: list[str | None] = []
-        for line_no, line in enumerate(text.splitlines(), 1):
-            line = line.strip()
-            if not line:
-                continue
-            if "(cid:" in line.casefold():
-                continue
-            if re.match(r"^[ivx]+\.\s", line, re.IGNORECASE):
-                continue
-            if line.casefold().startswith("notes:"):
-                # 报表标题之后进入附注说明区，后面的数字不是报表行项目。
-                break
-            if _is_header_or_junk_line(line):
-                continue
-            matches = list(CELL_RE.finditer(line))
-            if not matches:
-                if _is_junk_name(line):
-                    section_header = None
-                    wrap_head = None
-                    section_stack.clear()
-                    continue
-                wrap_head = line
-                # 以未闭合括号/连词结尾、或以小写字母/连词开头的行是折行片段，
-                # 不应顶掉小节标题。
-                if not _ends_mid_phrase(line) and not _starts_as_fragment(line):
-                    section_stack.append(section_header)
-                    section_header = line
-                continue
-            k = len(years) if years else 1
-            if len(matches) < k:
-                continue
-            value_matches = matches[-k:]
-            label = line[: value_matches[0].start()].strip()
-            label = re.sub(r"\s+\d{1,3}$", "", label).strip()
-            is_subtotal = 0
-            if not label:
-                # 无标签小计行（港式资产负债表小节合计不带行名），挂最近的小节标题。
-                # 整行必须是纯数字/括号/短横，防止把「22001188 AAnnnn…」之类
-                # 页脚行误判成小计；同一小节可能有多版小计，标题不清空。
-                if (
-                    not section_header
-                    or not re.fullmatch(r"[0-9,.\s()\[\]{}–—‒―−%+]+", line)
-                ):
-                    continue
-                label = section_header
-                is_subtotal = 1
-                wrap_head = None
-            else:
-                if wrap_head and _looks_like_continuation(wrap_head, label):
-                    label = f"{wrap_head} {label}"
-                    # 折行头被消费：若它此前被误当作小节标题，恢复上一层。
-                    if section_header == wrap_head and section_stack:
-                        section_header = section_stack.pop()
-                wrap_head = None
-            if _is_junk_name(label):
-                continue
-            for idx, m in enumerate(value_matches):
-                cell = m.group(0)
-                if not re.search(r"\d", cell):
-                    continue  # 「–」零值列：不产生行项目
-                value = _parse_number(cell)
-                if value is None:
-                    continue
-                year = years[idx] if idx < len(years) else None
-                rows.append(
-                    {
-                        "statement_type": stmt,
-                        "line_name_orig": label,
-                        "line_name_norm": to_simplified(label),
-                        "value": value,
-                        "unit": unit,
-                        "currency": currency,
-                        "year": year,
-                        "page_no": page["page_no"],
-                        "line_no": line_no,
-                        "is_subtotal": is_subtotal,
-                        # OCR 成功页(1)与乱码页(2)上提取的行都视为低可靠
-                        "is_ocr": 1 if page.get("is_ocr") else 0,
-                        "table_index": 0,
-                        "source_id": None,
-                    }
-                )
+        page_ocr = int(page.get("is_ocr") or 0)
+        page_no = page["page_no"]
+        # is_ocr=2 页只保留能对上标签+数字的稀疏行，供审计；不参与无标签小计，
+        # 也不做 OCR 标签块/数字块配对。is_ocr=1 在行对齐失败时再试配对。
+        page_rows = _extract_aligned_statement_rows(
+            text=text,
+            stmt=stmt,
+            years=years,
+            unit=unit,
+            currency=currency,
+            page_no=page_no,
+            is_ocr=page_ocr,
+            allow_unlabeled_subtotal=page_ocr == 0,
+        )
+        if page_ocr == 1:
+            paired = _pair_ocr_label_number_columns(
+                text=text,
+                stmt=stmt,
+                years=years,
+                unit=unit,
+                currency=currency,
+                page_no=page_no,
+                is_ocr=page_ocr,
+            )
+            if _prefer_ocr_pairing(paired, page_rows):
+                page_rows = paired
+        rows.extend(page_rows)
     return rows
+
+
+def _extract_aligned_statement_rows(
+    *,
+    text: str,
+    stmt: str,
+    years: list[int],
+    unit: str | None,
+    currency: str | None,
+    page_no: int,
+    is_ocr: int,
+    allow_unlabeled_subtotal: bool,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    # 无数字的行有两种：小节标题（「Current Assets 流動資產」，持久，用于命名
+    # 其后的小计行）与折行标签上半行（一次性，与下一行标签拼接）。
+    # 小节标题只允许资产负债表白名单，避免折行残片顶掉小计挂名。
+    section_header: str | None = None
+    wrap_head: str | None = None
+    section_stack: list[str | None] = []
+    for line_no, line in enumerate(text.splitlines(), 1):
+        line = line.strip()
+        if not line:
+            continue
+        if "(cid:" in line.casefold():
+            continue
+        if re.match(r"^[ivx]+\.\s", line, re.IGNORECASE):
+            continue
+        if line.casefold().startswith("notes:"):
+            break
+        if _is_header_or_junk_line(line):
+            continue
+        matches = list(CELL_RE.finditer(line))
+        if not matches:
+            if _is_junk_name(line) or _is_orphan_fragment(line):
+                wrap_head = None
+                continue
+            wrap_head = line
+            if _is_section_header(line):
+                section_stack.append(section_header)
+                section_header = line
+            continue
+        k = len(years) if years else 1
+        if len(matches) < k:
+            continue
+        value_matches = matches[-k:]
+        label = line[: value_matches[0].start()].strip()
+        label = re.sub(r"\s+\d{1,3}$", "", label).strip()
+        is_subtotal = 0
+        if not label:
+            if not allow_unlabeled_subtotal:
+                wrap_head = None
+                continue
+            # 无标签小计行（港式资产负债表小节合计不带行名），挂最近的小节标题。
+            # 整行必须是纯数字/括号/短横；小节标题必须在白名单内。
+            if (
+                not section_header
+                or not _is_section_header(section_header)
+                or not re.fullmatch(r"[0-9,.\s()\[\]{}–—‒―−%+]+", line)
+            ):
+                continue
+            label = section_header
+            is_subtotal = 1
+            wrap_head = None
+        else:
+            if wrap_head and _looks_like_continuation(wrap_head, label):
+                label = f"{wrap_head} {label}"
+                if section_header == wrap_head and section_stack:
+                    section_header = section_stack.pop()
+            wrap_head = None
+        if (
+            _is_junk_name(label)
+            or _is_orphan_fragment(label)
+            or _starts_as_fragment(label)
+        ):
+            continue
+        rows.extend(
+            _emit_value_rows(
+                stmt=stmt,
+                label=label,
+                value_matches=value_matches,
+                years=years,
+                unit=unit,
+                currency=currency,
+                page_no=page_no,
+                line_no=line_no,
+                is_subtotal=is_subtotal,
+                is_ocr=is_ocr,
+            )
+        )
+    return rows
+
+
+_WRAP_ENDINGS = (
+    "的",
+    "及",
+    "與",
+    "与",
+    "或",
+    "和",
+    "以",
+    "金融",
+    "預",
+    "预",
+    "付",
+    "損",
+    "损",
+    "資",
+    "负",
+    "負",
+    "（",
+    "(",
+)
+_WRAP_STARTS = {
+    "的",
+    "及",
+    "與",
+    "与",
+    "或",
+    "和",
+    "以",
+    "產",
+    "产",
+    "債",
+    "债",
+    "益",
+    "付",
+    "損",
+    "损",
+    "款",
+}
+_ORPHAN_FRAG_RE = re.compile(
+    r"^(?:的|及|與|与|或|和|以|益|產|产|債|债|損|损|付款項|付款项|"
+    r"金融資產|金融资产|金融負債|金融负债).{0,12}$"
+)
+_SECTION_HEADER_EXACT = {
+    "assets",
+    "liabilities",
+    "equity",
+    "资产",
+    "负债",
+    "权益",
+    "currentassets",
+    "currentliabilities",
+    "noncurrentassets",
+    "noncurrentliabilities",
+    "流动资产",
+    "流动负债",
+    "非流动资产",
+    "非流动负债",
+}
+_SECTION_HEADER_PARTS = (
+    "currentassets",
+    "currentliabilities",
+    "noncurrentassets",
+    "noncurrentliabilities",
+    "流动资产",
+    "流动负债",
+    "非流动资产",
+    "非流动负债",
+)
+_MONTH_NAME_RE = re.compile(
+    r"january|february|march|april|may|june|july|august|september|"
+    r"october|november|december",
+    re.IGNORECASE,
+)
 
 
 def _ends_mid_phrase(line: str) -> bool:
@@ -335,7 +443,9 @@ def _ends_mid_phrase(line: str) -> bool:
         return False
     if s.count("（") > s.count("）") or s.count("(") > s.count(")"):
         return True
-    return s.endswith(("的", "及", "與", "与", "或", "和", "以", "（", "("))
+    # 「金融」：港股把 FVTPL 折成「…的金融」/「負債」。
+    # 「預/資/負/損/付」：預付款項、資產、負債、損益在格子里折开。
+    return s.endswith(_WRAP_ENDINGS)
 
 
 def _starts_as_fragment(line: str) -> bool:
@@ -343,7 +453,7 @@ def _starts_as_fragment(line: str) -> bool:
     head = (line or "").strip()[:1]
     if head.isascii() and head.isalpha() and head.islower():
         return True
-    return head in {"的", "及", "與", "与", "或", "和", "以"}
+    return head in _WRAP_STARTS
 
 
 def _looks_like_continuation(prev: str, label: str) -> bool:
@@ -353,6 +463,256 @@ def _looks_like_continuation(prev: str, label: str) -> bool:
     if _ends_mid_phrase(prev):
         return True
     return _starts_as_fragment(label)
+
+
+def _is_section_header(line: str) -> bool:
+    """资产负债表白名单小节标题。不含 Total Current Assets 这类合计行。"""
+    n = re.sub(r"\s+", " ", to_simplified(line or "").strip().casefold())
+    compact = n.replace(" ", "").replace("-", "")
+    if not compact or compact.startswith("total"):
+        return False
+    if compact in _SECTION_HEADER_EXACT:
+        return True
+    for left in _SECTION_HEADER_PARTS:
+        for right in _SECTION_HEADER_PARTS:
+            if compact == left + right:
+                return True
+    return False
+
+
+def _is_orphan_fragment(name: str) -> bool:
+    """折行没拼上时留下的短残片，不当科目入库。"""
+    n = (name or "").strip()
+    if not n:
+        return True
+    if re.search(r"[A-Za-z]", n):
+        return False
+    if _ORPHAN_FRAG_RE.match(n):
+        return True
+    cjk = re.sub(r"\s+", "", n)
+    return bool(re.fullmatch(r"[\u4e00-\u9fff]{1,2}", cjk))
+
+
+def _is_month_day_header(line: str) -> bool:
+    """``June 30, December 31,`` 这类只有月+日、没有科目的表头。"""
+    n = to_simplified(line or "").strip()
+    months = _MONTH_NAME_RE.findall(n)
+    if len(months) < 2:
+        return False
+    rest = _MONTH_NAME_RE.sub("", n)
+    rest = re.sub(r"[\s,./\-–—]", "", rest)
+    return bool(rest) and re.fullmatch(r"\d+", rest) is not None
+
+
+def _emit_value_rows(
+    *,
+    stmt: str,
+    label: str,
+    value_matches: list[re.Match[str]],
+    years: list[int],
+    unit: str | None,
+    currency: str | None,
+    page_no: int,
+    line_no: int,
+    is_subtotal: int,
+    is_ocr: int,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for idx, m in enumerate(value_matches):
+        cell = m.group(0)
+        if not re.search(r"\d", cell):
+            continue
+        value = _parse_number(cell)
+        if value is None:
+            continue
+        year = years[idx] if idx < len(years) else None
+        rows.append(
+            {
+                "statement_type": stmt,
+                "line_name_orig": label,
+                "line_name_norm": to_simplified(label),
+                "value": value,
+                "unit": unit,
+                "currency": currency,
+                "year": year,
+                "page_no": page_no,
+                "line_no": line_no,
+                "is_subtotal": is_subtotal,
+                "is_ocr": is_ocr,
+                "table_index": 0,
+                "source_id": None,
+            }
+        )
+    return rows
+
+
+def _is_pure_year_header(line: str) -> bool:
+    found = list(dict.fromkeys(int(m.group(0)) for m in YEAR_RE.finditer(line)))
+    if len(found) < 2:
+        return False
+    rest = YEAR_RE.sub("", line)
+    rest = re.sub(r"[\s,.$]", "", rest)
+    return rest == ""
+
+
+def _is_pure_number_line(line: str) -> bool:
+    s = (line or "").strip()
+    if not s:
+        return False
+    tmp = CELL_RE.sub(" ", s)
+    tmp = re.sub(rf"[{_DASH_CHARS}一—–$]", " ", tmp)
+    tmp = re.sub(r"[\s,]", "", tmp)
+    return tmp == "" and bool(
+        CELL_RE.search(s) or re.search(rf"[{_DASH_CHARS}一]", s)
+    )
+
+
+def _ocr_label_continues(prev: str, line: str) -> bool:
+    if _looks_like_continuation(prev, line):
+        return True
+    low = (line or "").strip().casefold()
+    if low.startswith(("respectively", "shares ", "and ")):
+        return True
+    if (prev or "").rstrip().endswith((",", ";", "and", "the")):
+        return True
+    last = re.search(r"([A-Za-z]+)$", (prev or "").strip())
+    first = re.search(r"^([a-z]+)", (line or "").strip())
+    return bool(last and first and 2 <= len(last.group(1)) <= 8)
+
+
+def _is_banner_line(line: str) -> bool:
+    """全大写横幅（ASSETS / LIABILITIES, REDEEMABLE …）不是科目。"""
+    letters = [ch for ch in (line or "") if ch.isalpha()]
+    return len(letters) >= 4 and all(ch.isupper() for ch in letters)
+
+
+def _looks_like_account_label(line: str) -> bool:
+    n = (line or "").strip()
+    if not n or _is_section_header(n) or _is_orphan_fragment(n) or _is_banner_line(n):
+        return False
+    if _starts_as_fragment(n) or _is_header_or_junk_line(n):
+        return False
+    low = n.casefold()
+    if low in {"yum china holdings, inc.", "form 10-k", "part ii"}:
+        return False
+    if _STATEMENT_TITLE_TYPES.get(_normalize_title_line(n)):
+        return False
+    if low.startswith("(in ") and ("million" in low or "thousand" in low):
+        return False
+    return bool(re.search(r"[A-Za-z\u4e00-\u9fff]", n))
+
+
+def _collect_ocr_account_labels(lines: list[str]) -> list[str]:
+    glued: list[str] = []
+    wrap: str | None = None
+
+    def _flush() -> None:
+        nonlocal wrap
+        if wrap and _looks_like_account_label(wrap):
+            glued.append(wrap)
+        wrap = None
+
+    for line in lines:
+        if _is_section_header(line) or _is_banner_line(line):
+            _flush()
+            continue
+        if _is_header_or_junk_line(line) and not _looks_like_account_label(line):
+            _flush()
+            continue
+        if wrap and _ocr_label_continues(wrap, line):
+            wrap = f"{wrap} {line}"
+            continue
+        if glued and not wrap and _ocr_label_continues(glued[-1], line):
+            glued[-1] = f"{glued[-1]} {line}"
+            continue
+        _flush()
+        if _ends_mid_phrase(line) or line.rstrip().endswith((",", ";")):
+            wrap = line
+            continue
+        if _looks_like_account_label(line):
+            glued.append(line)
+        else:
+            wrap = line
+    _flush()
+    return glued
+
+
+def _pair_ocr_label_number_columns(
+    *,
+    text: str,
+    stmt: str,
+    years: list[int],
+    unit: str | None,
+    currency: str | None,
+    page_no: int,
+    is_ocr: int,
+) -> list[dict[str, Any]]:
+    """OCR 页把标签列和数字列拆成上下两块时，按行序配对。"""
+    raw_lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    year_idx = None
+    for i, ln in enumerate(raw_lines):
+        if _is_pure_year_header(ln):
+            year_idx = i
+    if year_idx is None:
+        return []
+    num_rows: list[tuple[int, str]] = []
+    for offset, ln in enumerate(raw_lines[year_idx + 1 :], start=year_idx + 2):
+        low = ln.casefold()
+        if low.startswith("see accompanying") or low.startswith("notes"):
+            break
+        if _is_pure_number_line(ln):
+            num_rows.append((offset, ln))
+            continue
+        if num_rows:
+            break
+    if len(num_rows) < 8:
+        return []
+    labels = _collect_ocr_account_labels(raw_lines[:year_idx])
+    if abs(len(labels) - len(num_rows)) > 3:
+        return []
+    n = min(len(labels), len(num_rows))
+    if n < 8:
+        return []
+    k = len(years) if years else 1
+    rows: list[dict[str, Any]] = []
+    for i in range(n):
+        label = labels[i]
+        line_no, ln = num_rows[i]
+        matches = list(CELL_RE.finditer(ln))
+        if not matches:
+            continue
+        value_matches = matches[-k:] if len(matches) >= k else matches
+        rows.extend(
+            _emit_value_rows(
+                stmt=stmt,
+                label=label,
+                value_matches=value_matches,
+                years=years,
+                unit=unit,
+                currency=currency,
+                page_no=page_no,
+                line_no=line_no,
+                is_subtotal=0,
+                is_ocr=is_ocr,
+            )
+        )
+    return rows
+
+
+def _prefer_ocr_pairing(
+    paired: list[dict[str, Any]], fallback: list[dict[str, Any]]
+) -> bool:
+    if len(paired) < 8:
+        return False
+    if not fallback:
+        return True
+    names = [r["line_name_orig"] for r in fallback]
+    _common, cnt = Counter(names).most_common(1)[0]
+    if cnt >= 8 and cnt / max(len(fallback), 1) >= 0.5:
+        return True
+    non_sub_p = sum(1 for r in paired if not r["is_subtotal"])
+    non_sub_f = sum(1 for r in fallback if not r["is_subtotal"])
+    return non_sub_p > non_sub_f + 3
 
 
 def _parse_table(table: list[list[Any]]) -> list[list[str]]:
@@ -562,6 +922,8 @@ def _is_header_or_junk_line(line: str) -> bool:
     if _DATE_LINE_RE.search(n):
         # 「于2019年6月30日及2020年…」「August 27, 2020」等表头日期行，
         # 其中的年份数字不是行项目数值。
+        return True
+    if _is_month_day_header(line):
         return True
     if not re.search(r"[\u4e00-\u9fff]|[a-z]", n):
         # 无字母/CJK 的行通常是页脚页码等噪声；但纯数字行（港式小计

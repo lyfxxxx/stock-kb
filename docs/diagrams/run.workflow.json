@@ -9,8 +9,8 @@
       {
         "id": "main",
         "label": "一次跑通",
-        "focus": ["fetch", "scan", "store", "index", "mcp", "draft", "audit"],
-        "note": "收集、入库、查询、写稿、审计按这个顺序走。"
+        "focus": ["scan", "fetch", "store", "index", "mcp", "draft", "audit"],
+        "note": "先扫 NAS，按缺口 fetch，再扫一次收进 raw。"
       }
     ]
   },
@@ -25,10 +25,10 @@
     { "id": "build", "label": "建库", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
     { "id": "write", "label": "成稿", "fromCol": 4, "toCol": 5 }
   ],
-  "mainPath": ["fetch", "scan", "store", "index", "mcp", "draft", "audit"],
+  "mainPath": ["scan", "fetch", "store", "index", "mcp", "draft", "audit"],
   "nodes": [
-    { "id": "fetch", "lane": "collect", "col": 0, "type": "backend", "label": "fetch", "sublabel": "stock-collect", "width": 96, "height": 52 },
-    { "id": "scan", "lane": "evidence", "col": 0, "type": "backend", "label": "scan", "sublabel": "NAS 与 raw", "width": 96, "height": 52 },
+    { "id": "scan", "lane": "evidence", "col": 0, "type": "backend", "label": "scan", "sublabel": "先扫 NAS", "width": 96, "height": 52 },
+    { "id": "fetch", "lane": "collect", "col": 1, "type": "backend", "label": "fetch", "sublabel": "只补缺口", "width": 96, "height": 52 },
     { "id": "store", "lane": "evidence", "col": 2, "type": "database", "label": "三表", "sublabel": "页文本", "width": 96, "height": 52 },
     { "id": "index", "lane": "kb", "col": 2, "type": "backend", "label": "index", "sublabel": "向量与指标", "width": 96, "height": 52 },
     { "id": "mcp", "lane": "kb", "col": 4, "type": "backend", "label": "MCP", "sublabel": "只读", "width": 96, "height": 52 },
@@ -36,8 +36,8 @@
     { "id": "audit", "lane": "report", "col": 5, "type": "security", "label": "审计", "sublabel": "audit-report", "width": 96, "height": 52 }
   ],
   "edges": [
-    { "id": "fetch-scan", "from": "fetch", "to": "scan", "label": "本机文件", "variant": "emphasis" },
-    { "id": "scan-store", "from": "scan", "to": "store", "variant": "emphasis", "route": "straight" },
+    { "id": "scan-fetch", "from": "scan", "to": "fetch", "label": "缺口", "variant": "emphasis" },
+    { "id": "fetch-store", "from": "fetch", "to": "store", "label": "再扫 raw", "variant": "emphasis" },
     { "id": "store-index", "from": "store", "to": "index", "label": "建索引", "variant": "emphasis" },
     { "id": "index-mcp", "from": "index", "to": "mcp", "variant": "emphasis", "route": "straight" },
     { "id": "mcp-draft", "from": "mcp", "to": "draft", "label": "查询", "variant": "emphasis" },
@@ -48,9 +48,9 @@
       "dot": "cyan",
       "title": "收集与入库",
       "items": [
-        "财报一件都没落到则 fetch 失败",
-        "研报和电话会单条失败只记日志",
-        "公司目录都不存在时 scan 退出码 2"
+        "先 scan NAS，用 stats 看类型缺口",
+        "只 fetch NAS 没有的年报、中报；电话会为主",
+        "再 scan 收进 data/raw；空目录退出码 2"
       ]
     },
     {

@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS indicators (
     page_no INTEGER,
     line_name TEXT,
     source_id INTEGER,
+    source_kind TEXT,
     UNIQUE(company, year, period_type, name)
 );
 
@@ -172,7 +173,7 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE pages ADD COLUMN page_kind TEXT")
 
     indicator_cols = [row[1] for row in conn.execute("PRAGMA table_info(indicators)").fetchall()]
-    for col in ("currency", "report_id", "page_no", "line_name"):
+    for col in ("currency", "report_id", "page_no", "line_name", "source_kind"):
         if col not in indicator_cols:
             conn.execute(f"ALTER TABLE indicators ADD COLUMN {col}")
 
@@ -291,7 +292,7 @@ def _init_fts(conn: sqlite3.Connection) -> None:
 
 
 def live_report_sql(alias: str = "") -> str:
-    """默认检索只看活报告：非重复，且 status 为空或 ok。"""
+    """默认检索只看当前使用文档：非重复，且 status 为空或 ok。"""
     prefix = f"{alias}." if alias else ""
     return (
         f"COALESCE({prefix}is_duplicate, 0) = 0 "
@@ -367,7 +368,9 @@ def query_statements(
     不要次年报比较列。比较列需显式 ``include_comparatives=True``。
     未指定 ``period_type`` 时默认只取年报（r.period_type='annual'），中报/招股书
     行项目需显式传 ``period_type``，避免与年报正文混排。
-    OCR 页提取的行（s.is_ocr=1）数字可靠性有限，默认排除，需 ``include_ocr=True``。
+    OCR 页提取的行（s.is_ocr 为 1 或 2）数字可靠性有限，默认排除，需 ``include_ocr=True``。
+    指标挑选见 ``indicators._pick_by_source_tier``：当年干净页优先，OCR=1 仅在
+    与干净比较列一致（或没有比较列）时提升；OCR=2 永不入选。
     """
     sql = """
         SELECT s.id AS statement_id, r.id AS report_id, s.statement_type,

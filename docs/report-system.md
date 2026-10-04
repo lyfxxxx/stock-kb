@@ -6,12 +6,14 @@
 
 - [三层结构](diagrams/layers.html)
 - [从原文到审计稿](diagrams/run.html)
+- [证据层：输入、产物与校验](diagrams/evidence-io.html)
+- [三类文件如何走完证据层](diagrams/evidence-files.html)
 
 ## 三层各回答什么
 
 | 层 | 回答的问题 | 主要产物 | 评测 |
 |---|---|---|---|
-| 证据层 | 这句话还在不在原文里 | `reports` 目录、`pages`、`statements`、版本链 | 三表 26/26；`fidelity` 抽检 `content_orig` |
+| 证据层 | 这句话还在不在原文里 | `reports` 文档目录、`pages`、`statements`、版本链 | 三表 29/29；`fidelity` 抽检 `content_orig` |
 | 知识库层 | 问句该查科目、哪一页，还是没有答案 | `indicators`、FTS5、向量、MCP | 路由 24/24；keyword / hybrid semantic 的 Recall@5；分桶只报告、不足 5 题不设门 |
 | 报告层 | 稿子里的数能不能回到这次查询 | 扫描稿、`retrieval_log.jsonl` | `audit-report`。无 `run_id` 的旧稿只跳过，不算通过 |
 
@@ -22,14 +24,15 @@
 ```mermaid
 flowchart TB
   subgraph evidence [证据层：原文变成可引用的页，财报再抽出三表行]
-    fetch[fetch：SEC、披露易或文件直链<br/>字节落到 data/raw<br/>出处 JSON 落到 data/meta]
+    nas[NAS 原文<br/>年报、中报、招股、研报]
+    scanNas[scan：先扫 NAS<br/>写出处 JSON，不发 HTTP]
+    nGap[stats 看类型缺口]
+    fetch[fetch：只补缺口<br/>字节落到 data/raw]
     nFetch[财报必须落到<br/>研报和电话会<br/>单条失败只记日志]
-    files[原始文件：NAS 目录或 data/raw<br/>扫描不发 HTTP]
-    nScan[只读扫描<br/>空目录退出码 2]
-    scan[scan：按文件名分类<br/>写入 reports 目录<br/>简体 content 供检索<br/>原文 content_orig 供引用]
-    nPages[见下文<br/>三类文件怎么落成页和三表]
+    scan[再扫：按文件名分类<br/>写入 reports 文档目录<br/>简体 content 供检索<br/>原文 content_orig 供引用]
+    nPages[见下文<br/>三类文件怎么走完这一层]
     pages[pages 三种文件都有<br/>statements 主要来自<br/>财报里页首像报表的页]
-    fetch --> nFetch --> files --> nScan --> scan --> nPages --> pages
+    nas --> scanNas --> nGap --> fetch --> nFetch --> scan --> nPages --> pages
   end
   subgraph knowledge [" "]
     kcap[知识库层：不改原文<br/>下面三条并列，汇入 MCP]
@@ -63,28 +66,37 @@ flowchart TB
   end
 ```
 
-证据层的活报告条件是 `COALESCE(is_duplicate,0)=0 AND COALESCE(status,'ok')='ok'`。`superseded`、`missing`、`failed` 不进默认检索。MCP `list_reports` 仍返回全部状态。
+证据层的当前使用文档条件是 `COALESCE(is_duplicate,0)=0 AND COALESCE(status,'ok')='ok'`。`superseded`、`missing`、`failed` 不进默认检索。MCP `list_reports` 仍返回全部状态。
 
 ## 运行流程
 
 ```mermaid
 flowchart TB
-  collect[stock-collect<br/>财报找 SEC 或披露易<br/>电话会先找 IR，再找不登录的非官方直链<br/>研报只收能打开的文件 URL] --> fetch[fetch<br/>字节写入 data/raw<br/>出处写入 data/meta<br/>财报一件都没有则失败]
-  fetch --> scan[scan<br/>NAS 与 raw 只读<br/>meta_dir 读写出处 JSON<br/>写入 reports 目录]
-  scan --> store[写入<br/>财报：页 + 三表行<br/>研报、电话会：页文本<br/>通常无三表]
-  store --> fid[fidelity<br/>抽检 content_orig<br/>空清单不算通过]
-  store --> index[index 与 indicators<br/>向量和 FTS 用全部页<br/>指标只用三表行]
-  index --> mcp[MCP 只读<br/>科目、短术语<br/>长问句分三条]
-  mcp --> draft[stock-note<br/>先设 STOCK_KB_RUN_ID<br/>再自己拟查询写稿]
-  draft --> qlog[retrieval_log.jsonl<br/>只记标题和页码]
-  draft --> audit[audit-report<br/>数字、必备节、事实清单]
-  qlog --> audit
+  scanNas[scan：先扫 NAS 与已有 raw<br/>给两边写出处 JSON]
+  stats[stats --json<br/>看 reports_by_type 和 origin]
+  collect[stock-collect<br/>只补 NAS 没有的类型<br/>电话会先找 IR，再找不登录直链]
+  fetch[fetch<br/>字节写入 data/raw<br/>出处写入 data/meta<br/>财报一件都没有则失败]
+  scanIn[scan：收进新文件]
+  store[写入<br/>财报：页 + 三表行<br/>研报、电话会：页文本<br/>通常无三表]
+  fid[fidelity<br/>抽检 content_orig<br/>空清单不算通过]
+  index[index 与 indicators<br/>向量和 FTS 用全部页<br/>指标只用三表行]
+  mcp[MCP 只读<br/>科目、短术语<br/>长问句分三条]
+  draft[stock-note<br/>先设 STOCK_KB_RUN_ID<br/>再自己拟查询写稿]
+  qlog[retrieval_log.jsonl<br/>只记标题和页码]
+  audit[audit-report<br/>数字、必备节、事实清单]
+  scanNas --> stats --> collect --> fetch --> scanIn --> store
+  store --> fid
+  store --> index --> mcp --> draft
+  draft --> qlog --> audit
+  draft --> audit
 ```
 
 对应命令：
 
 ```powershell
 python -m stock_kb models download --model BAAI/bge-small-zh-v1.5
+python -m stock_kb scan
+python -m stock_kb stats --json
 python -m stock_kb fetch --source sec --company 百胜中国
 python -m stock_kb fetch --source hkex --company 海底捞
 python -m stock_kb fetch --url "<文件直链>" --company 海底捞 --kind research --optional
@@ -94,6 +106,8 @@ python -m stock_kb indicators
 python -m stock_kb fidelity
 python -m stock_kb mcp --transport http --host 127.0.0.1 --port 8931
 ```
+
+`fetch --source` 只在 NAS 没有最近一份年报、也没有最近一份中报时跑。只缺一件时用 `--url` 下那一份。规则见 `skill/stock-collect/SKILL.md`。
 
 写稿前设置 `STOCK_KB_RUN_ID`。稿子里写一行 `run_id:`。然后：
 
@@ -107,65 +121,148 @@ python -m stock_kb audit-report <稿子路径> --company 海底捞
 
 ## 证据层
 
-这一层把原文变成可引用的页和三表行。数值不在这里换算成人读单位。文件可以待在不同目录；一旦扫过，目录只认 SQLite `reports`。各字段事后做什么，见「文件 metadata 做什么」。
+证据层回答：这句话还在不在原文里。它把 NAS 和 `data/raw` 里的文件写成可引用的页；财报再抽出三表行。校验门用来证明这些产物还对得上原文。数值不在这一层换算成人读单位。
 
-### 原文件怎么落库
+完整交互图见 [证据层：输入、产物与校验](diagrams/evidence-io.html)。
 
-原文有两个根目录：NAS `nas.root/{公司}/`，以及 `collect.raw_dir/{公司}/`（默认 `data/raw/{公司}/`）。两边不互拷。`scan` 对这两处都只读，不发 HTTP。出处 JSON 集中在 `collect.meta_dir`（默认 `data/meta`），键是 `{origin}/{公司}/{相对路径}.source.json`。某一侧原文目录不存在时只跳过该侧。公司目录都不存在、也没有因未变更而跳过的文件时，退出码 2。
-
-`fetch` 把网络文件的字节写入 `raw_dir`，把出处 JSON 写入 `meta_dir/collect/{公司}/`。JSON 含 `source_url`、`retrieved_at`、`sha256`、`origin`，以及可选的 `kind`。`--kind transcript` 在文件名没有电话会关键词时加 `transcript-` 前缀，给后面的文件名分类用。`--kind` 本身只写进 JSON，扫描不读它。
+### 输入、产物和校验门
 
 ```mermaid
 flowchart TB
-  src[原文待在两个根目录<br/>nas.root 与 collect.raw_dir<br/>scan 对这两处都只读]
-  fetch[fetch 把字节写入 raw_dir<br/>出处 JSON 写入 meta_dir<br/>含 source_url、retrieved_at、sha256]
-  nas[NAS 原文留在 NAS<br/>scan 不往 NAS 或 raw_dir 写 JSON]
-  scan[scan 同时遍历两个公司目录<br/>不发 HTTP<br/>先按已存路径回填 origin]
-  side[每个文件先读 meta_dir<br/>没有则读原文旁旧 sidecar<br/>取 source_url 与 retrieved_at]
-  origin[origin 按路径前缀判定<br/>在 NAS 上是 nas<br/>在 raw_dir 上是 collect]
-  act[按 sha、size、mtime、PARSE_VERSION<br/>以及 manifest 是否 ok<br/>决定 skip、重解析或新版本]
-  skip[skip：不读正文<br/>仍回填 origin 和出处]
-  parse[重解析或新版本：读正文<br/>先按文件名分类<br/>再写 content 与 content_orig]
-  rep[upsert reports 一行目录<br/>path 唯一<br/>写入 origin、logical_key、出处、parse_version]
-  disk[NAS 和网络文件都把 JSON<br/>写回 meta_dir<br/>键含 origin 和相对路径]
-  body[再写 pages<br/>财报 pdf 与 xls 再写 statements]
-  live[同一 logical_key 只留一条 status=ok<br/>相同 sha 标 is_duplicate<br/>目录里消失的标 missing]
-  src --> fetch
-  src --> nas
-  fetch ~~~ nas
-  fetch --> scan
-  nas --> scan
-  scan --> side --> origin --> act
-  act --> skip
-  act --> parse
-  skip ~~~ parse
-  skip --> disk
-  parse --> rep --> body --> disk
-  disk --> live
+  nas[NAS 原文<br/>年报、中报、招股、研报]
+  scanNas[scan：先扫 NAS<br/>写出处 JSON，不发 HTTP]
+  stats[stats 看类型缺口]
+  web[网络直链<br/>SEC、披露易、公司 IR]
+  fetch[fetch：只补缺口<br/>字节落到 data/raw]
+  scanIn[scan：收进新文件<br/>NAS 与 collect 都写出处]
+  catalog[文档目录<br/>这是哪一份、从哪来<br/>出处 JSON 在 data/meta]
+  pages[页文本<br/>简体供检索，原文供引用]
+  stmts[三表行<br/>财报才有，数字保持原单位]
+  live[当前使用文档<br/>同一份文档只留最新可查]
+  fid[页保真<br/>抽检原文句子<br/>空清单不算通过]
+  st[三表评测<br/>L1 解析命中<br/>L3 值、页、来源一致<br/>freeze 29/29 挡回归]
+  cov[覆盖矩阵<br/>公司 × 年 × 科目<br/>只报告，不挡回归]
+  kb[交给知识库层<br/>指标、FTS、向量]
+
+  nas --> scanNas --> stats
+  web --> fetch
+  stats --> fetch --> scanIn
+  scanIn --> catalog --> live --> kb
+  scanIn --> pages --> fid
+  scanIn --> stmts --> st
+  live --> cov
 ```
 
-按代码顺序，metadata 在这些点设立：
-
-| 步骤 | 写入位置 | 设立的字段 |
+| 方向 | 是什么 | 作用 |
 |---|---|---|
-| `fetch` | `meta_dir/collect/{公司}/{相对路径}.source.json` | `source_url`、`retrieved_at`、`sha256`、`origin=collect`、可选 `kind` |
-| `scan` 开场 | 已有 `reports` 行 | 按 `path` 相对两个根目录回填 `origin` |
-| 每个文件 | 先读 `meta_dir`，没有则读原文旁旧 sidecar | `source_url`、`retrieved_at`；都没有则沿用库里旧值 |
-| 判断 skip 之前 | 由路径算出 | `origin`：`nas` 或 `collect` |
-| skip | `UPDATE reports`，并写回 `meta_dir` | 回填 `origin` 和出处；不分类、不读正文 |
-| 决定解析之后 | `classify_report(path)` | `report_type`、`year`、`period_type`、文件名上的 `language` |
-| 读完正文 | 覆盖 `reports.language` | 页内汉字占比 ≥2% 为 `zh`，否则 `en` |
-| `upsert_report` | `reports` 一行 | `path`、`sha256`、`size`、`mtime`、`origin`、`source_url`、`retrieved_at`、`logical_key`、`parse_version`、`supersedes_id`、`status` |
-| 扫过的 NAS 与网络文件 | `meta_dir/{origin}/{公司}/{相对路径}.source.json` | 与 `reports` 对齐的出处和身份字段 |
-| `replace_pages` | `pages` | `content_orig`、`content`、`char_count`、`is_ocr`、`page_kind` |
-| 财报 pdf / xls | `statements` | 行名、原值、单位、币种、年份、页码、`is_ocr` |
-| 扫完 | `reports` / `manifest` | 同一 `logical_key` 选举 `ok`；相同 sha 标 `is_duplicate`；源文件消失标 `missing` |
+| 输入 | NAS 公司目录；按缺口 `fetch` 到 `data/raw` 的直链 | 先扫 NAS，再补缺失类型。原文待在两个根目录，互不拷贝。`scan` 对两边都只读 |
+| 产物 | `reports` 文档目录、出处 JSON、`pages`、财报的 `statements` | 下游只认库里的目录行。页同时留下简体和原文。三表行保持千元或百万美元 |
+| 校验 | 三表 29/29；`fidelity` 抽检；覆盖矩阵 | 前两道挡回归或明确「不算通过」。覆盖矩阵只报告缺口 |
 
-分类看文件名和父目录。电话会关键词（电话会、业绩会、earnings call、transcript、纪要）优先于研报；研报关键词再优先于年报、中报，避免「2023年报费用管控效果显著」被收成年报。
+当前使用文档条件是 `COALESCE(is_duplicate,0)=0 AND COALESCE(status,'ok')='ok'`。`superseded`、`missing`、`failed` 不进默认检索。MCP `list_reports` 仍返回全部状态。
 
-`PARSE_VERSION` 在 `stock_kb/versioning.py`，当前是 `2026-10-02.1`。同一路径、sha、大小、mtime 都没变，且已经按这个版本扫成功，就跳过。sha 相同但 `parse_version` 旧了，就地重解析，不新插一行。sha 变了才新开版本。
+### 入库每一步在做什么
 
-`reports.path` 仍然唯一。同一路径内容变了：旧行路径改成 `{原路径}::superseded::{旧 sha 前 12 位}`，`status` 改为 `superseded`。新行占用原路径，`supersedes_id` 指向旧行。
+原文有两个根：NAS `nas.root/{公司}/`，以及 `collect.raw_dir/{公司}/`（默认 `data/raw/{公司}/`）。某一侧不存在就跳过该侧。公司目录都没有、也没有因未变更而跳过的文件时，`scan` 退出码 2。操作顺序见上文「运行流程」：先 `scan` NAS，用 `stats` 看缺口，再 `fetch`，再 `scan` 一次。
+
+1. **先 `scan` NAS 和已有 `data/raw`。** 只读遍历，不发 HTTP，不往 NAS 或 `raw_dir` 写原文。按路径判定 `origin` 是 `nas` 还是 `collect`。出处 JSON 写到 `data/meta/{origin}/{公司}/{相对路径}.source.json`。跳过解析时也回填。
+2. **用 `stats --json` 看缺口。** 看 `reports_by_origin` 和 `reports_by_type`。NAS 已有最近一份年报和中报，就不要跑 `fetch --source`。
+3. **`fetch` 只补 NAS 没有的类型。** 字节写入 `raw_dir`，出处 JSON 写入 `data/meta/collect/{公司}/`。财报一件都没落到则失败。研报、电话会单条失败只记日志。
+4. **再 `scan` 一次，收进新文件。** 先读 `meta_dir`；没有则读原文旁旧 sidecar，并写回 `meta_dir`。路径、sha、大小、mtime 都没变，且已按当前 `PARSE_VERSION`（`stock_kb/versioning.py`，现在是 `2026-10-02.1`）扫成功，就跳过。sha 相同但解析规则旧了，就地重解析。sha 变了才新开版本。
+5. **读正文时按文件名分类。** 分类看文件名和父目录，不读 JSON 里的 `kind`。`--kind transcript` 的实际作用是给文件名加 `transcript-` 前缀。电话会关键词优先于研报；研报关键词再优先于年报、中报。
+6. **写入文档目录，再写页和三表。** `reports.path` 唯一。查询、引用、版本选举都读这行。页和三表跟在后面，见下一节。
+7. **同一份文档只留一条当前使用文档。** `logical_key` 不含 sha。同一键下，`(retrieved_at, mtime, id)` 最大的一条保持 `ok`。相同 sha 标 `is_duplicate`。源文件从本次扫描的公司目录消失时，标 `missing`，不删行。
+
+`manifest` 只服务扫描：记住某条路径上次的 sha、大小、mtime。给人查询用的目录是 `reports`。
+
+### 三类文件怎么走完这一层
+
+交互图：[三类文件如何走完证据层](diagrams/evidence-files.html)。三类文件共享「落到本机 → 分类 → 成页 → 写入目录」；只有财报和招股再抽出三表。`scan` 给 NAS 和 collect 两边都写出处 JSON。
+
+```mermaid
+flowchart TB
+  subgraph filing [财报与招股]
+    fIn[落到本机：NAS 或 data/raw<br/>scan 写出处 JSON]
+    fKind[按文件名认成年报、中报、招股]
+    fPage[逐页写成可引用文本<br/>简体供检索，原文供引用]
+    fStmt[报表页抽出三表行<br/>数字保持原单位]
+    fLive[当前使用文档<br/>同一份只留最新]
+    fIn --> fKind --> fPage --> fStmt --> fLive
+  end
+  subgraph research [研报]
+    rIn[落到本机]
+    rKind[点评、评级、深度等认成研报]
+    rPage[只成页，通常不抽三表]
+    rLive[同一下载地址才替换旧文件]
+    rIn --> rKind --> rPage --> rLive
+  end
+  subgraph calls [电话会]
+    cIn[落到本机]
+    cKind[电话会、业绩会、transcript 优先于研报]
+    cPage[整篇成页，保留原文里的说话人]
+    cLive[按会议日期区分场次]
+    cIn --> cKind --> cPage --> cLive
+  end
+```
+
+**财报与招股**要同时交出页和科目行。PDF 逐页提取；字少或 `(cid:` 过密的页走 OCR。xls 把整张矩阵当成第 1 页。页首能对上报表标题的页，再按行抽出三表。`exact-001` 走这条路：海底捞 2024 年报第 142 页的 42,754,687 千元，先写成 `statements`，再归到 `indicators.revenue`。
+
+**研报**通常只有页。券商正文的页首对不上四表标题，`statements` 为空，不会因此多出一条营业收入。「翻台率」能命中研报页，是因为这些页进了 FTS。不同研报互不取代；只有同一 `source_url` 的新文件才替换旧的。
+
+**电话会**也是页文本，不进三表。文件名或父目录命中电话会关键词后，每一页的 `page_kind` 都是 `transcript`。文字稿整篇是第 1 页。扫描不编造「问：」「答：」。会议日期取自文件名，写进 `logical_key`。因此电话会只能被 `search_reports` 引用到页。
+
+页文本按扩展名来：
+
+| 扩展名 | 页怎么来 | 三表 |
+|---|---|---|
+| `.pdf` | pdfplumber 逐页。字数低于 `ocr.min_chars` 的页走 OCR。成功页 `is_ocr=1`，质量不合格 `is_ocr=2` | 只处理页首 8 行能对上报表标题的页 |
+| `.xls` | 整张矩阵拼成第 1 页 | 按文件名归利润表、现金流量表或资产负债表 |
+| `.txt` `.md` `.html` `.htm` `.csv` | 整个文件是第 1 页，`is_ocr=0` | 不抽取 |
+
+### 出处和目录在每一步做什么
+
+也许你会先想到 metadata 就是一堆字段。顺着入库看，它们各自在替后面某一步说话。
+
+- **落到本机时**：`fetch` 给网络文件写下地址和取回时间。`scan` 给 NAS 和 collect 都写或回填同一套 JSON。研报、电话会用地址区分「是不是同一份」。当前使用文档选举时先比取回时间。
+- **决定重读时**：sha、大小、mtime、`PARSE_VERSION` 和 `manifest` 一起判断。字节没变但解析规则旧了，就地重解析，避免目录膨胀。
+- **分类之后**：类型、年份、期间、语言写进目录行。检索可以按这些过滤；三表默认当年年报正文；指标按公司、年、期间归集。
+- **写成页之后**：`content_orig` 给引用和保真抽检；`content` 给 FTS 和向量。`page_kind` 区分封面、目录、报表页、正文、电话会。
+- **选出当前使用文档之后**：默认检索和指标只看非重复且 `status=ok` 的行。旧版仍在库里，MCP `list_reports` 仍能看到。
+
+`origin` 区分文件在 NAS 还是 `data/raw`。`stats` 的 `reports_by_origin` 用它。检索、写稿目前不读这一列。笔记引用写 `《title》第N页`，不写 URL。
+
+`--kind` 会写进 JSON，扫描不读。分类只看文件名和父目录。
+
+### 报表页怎样抽出可引用的行
+
+财报 PDF 是三表的主要来源。某一页要同时满足：
+
+1. 页首 8 行里有一行，去掉「Consolidated」「Condensed」这类前后缀之后，能对上利润表、资产负债表、现金流量表或权益变动表的标题。附注页整页跳过。
+2. 标题之下按行读取。行尾数字列要和该页识别出的年份列对齐。数字原样进 `value`。单位和币种从页首识别，海底捞常见千元、人民币，百胜常见百万美元。
+3. 独立短横「–」占一个零值列，用来对齐，但不生成行项目。
+4. 行名折行会拼回上一行。没有行名、整行只有数字的小计，只挂资产负债表白名单里的小节标题。`June 30` / `December 31` 这类月日表头不当科目。
+5. `statements.is_ocr` 与页一致（0/1/2）。默认三表查询不返回 OCR 行。`indicators` 优先当年干净页，其次干净比较列；当年 OCR=1 仅当与比较列一致（或没有比较列）时提升。OCR=2 永不入选。OCR=1 页若标签列和数字列上下分开，按行序配对。
+
+所以一份年报会同时有封面、目录、正文页，以及若干报表页和对应的三表行。后面的 `indicators` 只从这些三表行归收入、归母净利、资产、经营现金流。
+
+### 产物怎样验收
+
+证据层的评测在扫描之后、知识库检索之前。它们验证产物，不改原文。
+
+| 门 | 看什么 | 门槛 | 命令 |
+|---|---|---|---|
+| 结构化 L1 `parse_hit` | 黄金页的 `statements` 里有这个数 | freeze 29/29，容差 0.0001，`golden_source: pdf` | `python -m stock_kb eval` |
+| 结构化 L3 `hit` | 按科目词查出的行，值、来源、页与黄金一致 | 同上，两列都要报 | 同上 |
+| 页保真 | 非 OCR 页的句子必须出现在 `content_orig` | 缺了退出码 1。清单为空打印 `page_fidelity: skipped ...; not a pass`，退出码 0，这不是通过 | `python -m stock_kb fidelity` |
+| 覆盖矩阵 | 公司 × 年份 × 五个核心科目是否有数 | 只报告，不挡回归 | `python tools/coverage_matrix.py` |
+
+当前 `eval/page_fidelity.yaml` 是 2026-10-03 首批财报 8、研报 8、电话会 1、OCR 4，2026-10-04 补招股书 2。库里目前只有一份当前使用的电话会文字稿。OCR 缺句只列入保真报告。
+
+指标 12/12 在知识库层回归里，根仍是这里抽出的三表行。
+
+### 字段速查
+
+扫过之后，一份原文对应 `reports` 里的一行。NAS 和网络文件的出处 JSON 都在 `collect.meta_dir`。`sources` 表存三表页的引用定位（`《title》第N页`），目前由查询现场拼接。
 
 `logical_key` 不含 sha。
 
@@ -174,116 +271,22 @@ flowchart TB
 - 研报：`{company}|research|{locator}`
 - 其他：`{company}|other|{path}`，不同路径互不取代
 
-研报和电话会的 `locator` 优先用 `source_url`，没有 URL 时用路径。同一键下，`(retrieved_at` 或空串, `mtime` 或 0, `id`) 最大的一条保持 `ok`。更旧的文件再扫进来，不会把更新的版本打回 ok。相同 sha 仍按 `is_duplicate` 标记。源文件从本次扫描的公司目录消失时，报告和 `manifest` 标 `missing`，不删行。
-
-`manifest` 是扫描清单（路径、sha、大小、mtime、状态），用来判断这次读不读文件。给人查询用的目录是 `reports`。
-
-### 三类文件怎么落成页和三表
-
-每份支持的文件都先成为一行 `reports`（公司、类型、年份、语言、路径、`origin`、sha256、`logical_key`）。页和三表在这之后才分叉。
-
-```mermaid
-flowchart TB
-  subgraph filing [财报：年报、中报、三季报、招股]
-    fIn[PDF 逐页提取；字少的页走 OCR<br/>xls 把整张矩阵当成第 1 页]
-    fRep[reports 一行<br/>类型、年份、期间、语言、市场<br/>同一逻辑键只留最新一份<br/>为活报告]
-    fPage[pages：content 简体，content_orig 原文<br/>对上报表标题的页 page_kind=statement<br/>其余是封面、目录或正文]
-    fStmt[statements：<br/>行名、原值、单位、币种、年份、页码<br/>页首 8 行要像四表标题<br/>短横只对齐<br/>OCR 行默认不进指标查询]
-    fInd[indicators 从这些行归收入、归母净利等<br/>exact-001 的 42754687 千元走这条]
-    fIn --> fRep --> fPage --> fStmt --> fInd
-  end
-  subgraph research [研报：点评、评级、深度、跟踪]
-    rIn[PDF 同样逐页<br/>txt、md、html 整篇算第 1 页]
-    rRep[reports：report_type=research<br/>不同研报互不取代<br/>只有同一 URL 的新文件<br/>才替换旧的]
-    rPage[pages 标成封面、目录或正文<br/>简体正文进入 FTS 和向量<br/>翻台率命中研报页<br/>就是在查这些页]
-    rStmt[页首通常对不上报表标题<br/>statements 为空，indicators 不新增科目<br/>数字只能带着页码从检索引用]
-    rIn --> rRep --> rPage --> rStmt
-  end
-  subgraph calls [电话会：电话会、业绩会、transcript、纪要]
-    cIn[这些词优先于研报<br/>避免业绩会点评被收成研报]
-    cRep[reports：transcript<br/>会议日期取自文件名，写进 logical_key<br/>不另做发言人表]
-    cPage[每一页 page_kind=transcript<br/>文字稿整篇是第 1 页<br/>说话人只保留原文里已有的]
-    cStmt[不写三表行，也不进 indicators<br/>只能 search_reports<br/>引用到页]
-    cIn --> cRep --> cPage --> cStmt
-  end
-  fInd ~~~ rIn
-  rStmt ~~~ cIn
-```
-
-页文本三种扩展名不一样：
-
-| 扩展名 | 页怎么来 | 三表 |
-|---|---|---|
-| `.pdf` | pdfplumber 一页一行。字数低于 `ocr.min_chars` 的页走 OCR。成功页 `is_ocr=1`，质量不合格 `is_ocr=2` | 只处理页首 8 行能对上报表标题的页。见下文 |
-| `.xls` | 整张矩阵拼成第 1 页文本 | 文件名含 profit / benefit 归利润表，cash 归现金流量表，debt / balance 归资产负债表。表头里的四位年份写入行的 `year` |
-| `.txt` `.md` `.html` `.htm` `.csv` | 整个文件是第 1 页，`is_ocr=0` | 不抽取。`statements` 为空 |
-
-每一页都写两份文本：`content_orig` 是原文，供引用和保真抽检；`content` 是简体，供 FTS 和向量。`page_kind` 在写入前定好。
-
-财报 PDF 是三表的主要来源。某一页要同时满足：
-
-1. 页首 8 行里有一行，去掉「Consolidated」「Condensed」这类前后缀之后，能对上利润表、资产负债表、现金流量表或权益变动表的标题。附注页（行首是 Notes / APPENDIX，且后面没有独立报表标题）整页跳过。
-2. 标题之下按行读取。行尾要有足够的数字列，和该页识别出的年份列对齐。行名进 `line_name_orig`，简体进 `line_name_norm`。数字原样进 `value`，不换成亿元或亿美元。单位和币种从页首约 30 行识别，海底捞常见千元、人民币，百胜常见百万美元。
-3. 独立短横「–」占一个零值列，用来对齐，但不生成行项目。真没有数字的年份就留空。
-4. 行名折行会拼回上一行。没有行名、整行只有数字的小计，挂最近的小节标题，并标 `is_subtotal=1`。标题之后若出现 `notes:`，后面的数字不再当报表行。
-5. OCR 页上抽出的行 `statements.is_ocr=1`。这些行默认不进 `indicators`，`get_financial_statements` 默认也不返回，除非显式 `include_ocr=True`。
-
-所以一份年报会同时有：封面、目录、正文页（`page_kind` 为 cover / toc / body），以及若干 `statement` 页和对应的三表行。后面的 `indicators` 只从这些三表行归收入、归母净利、资产、经营现金流。`exact-001` 就是这条路径：第 142 页损益表上的 42,754,687 千元写成一行 `statements`，再归到 `indicators.revenue`。
-
-研报几乎总是只有页、没有三表。PDF 仍会逐页抽取，也会试报表标题；券商正文的页首通常对不上那套标题，于是 `statements` 为空，`indicators` 也不会因此多出一条收入。页的 `page_kind` 按封面、目录、正文来标。这些页的简体文本随后进入 FTS 和向量，所以「翻台率」能命中研报页，但不能靠 `get_indicators` 查到。`.txt` 研报则是单页正文，同样没有三表行。
-
-电话会也是页文本，不进三表。文件名或父目录命中电话会关键词后，`report_type=transcript`，`period_type=other`。每一页的 `page_kind` 都是 `transcript`，不再标成报表页，即使某页碰巧有数字。PDF 仍会尝试三表标题匹配，对不上就不写行；文字稿（txt / md / html）整篇是第 1 页，抽取直接跳过。原文里已有的说话人保留，扫描不补「问：」「答：」。会议日期来自文件名里的第一个日期，写进 `logical_key`，不单独做一张发言表。因此电话会只能被 `search_reports` 引用到页，不能提供营业收入这类科目数字。
-
-`pages.page_kind` 取 `cover`、`toc`、`statement`、`body`、`transcript`。电话会的页都是 `transcript`。报表页用 `is_statement_page()`，和三表同一套标题。电话会里已经写了说话人的行原样保留，扫描不编造「问：」「答：」。
-
-评测：
-
-- 三表 L1 / L3 维持 26/26，容差 0.0001，`golden_source: pdf`。命令是 `python -m stock_kb eval`。
-- `python -m stock_kb fidelity` 读 `eval/page_fidelity.yaml`。非 OCR 页的 needle 必须出现在 `content_orig`，缺了退出码 1。OCR 缺句只列入报告。清单为空时打印 `page_fidelity: skipped (no labeled pages); not a pass`，退出码 0。这不是通过。当前清单是空的。
-
-## 文件 metadata 做什么
-
-扫过之后，一份原文对应 `reports` 里的一行。磁盘位置可以是 NAS 或 `data/raw`。查询、版本选举、写稿引用都读这行。NAS 和网络文件的出处 JSON 都在 `collect.meta_dir`（默认 `data/meta`）。`fetch` 先给网络文件写一份；`scan` 把两边都更新成与 `reports` 对齐的字段。
-
-`manifest` 只服务扫描：记住某条路径上次的 sha、大小、mtime。查询和写稿读 `reports`。`sources` 表存三表页的引用定位（`《title》第N页`）。
-
-### 目录字段
+研报和电话会的 `locator` 优先用 `source_url`，没有 URL 时用路径。内容变了：旧行路径改成 `{原路径}::superseded::{旧 sha 前 12 位}`，新行占用原路径。
 
 | 字段 | 作用 |
 |---|---|
-| `path` | 这份文件现在的位置。表内唯一。内容变了，旧路径改成带 `::superseded::` 的归档名，新行占用原路径 |
-| `sha256` / `size` / `mtime` | 认是不是同一份字节。扫描用来决定 skip、重解析还是新开版本；相同 sha 的另一份标 `is_duplicate` |
-| `origin` | 文件在 NAS 还是 `collect.raw_dir`。`stats` 的 `reports_by_origin` 用它。检索、MCP `list_reports`、写稿目前不读这一列 |
-| `source_url` | 下载地址。编进研报和电话会的 `logical_key`，让不同 URL 互不取代。笔记引用仍写 `《title》第N页`，不写 URL |
-| `retrieved_at` | 取回时间。同一 `logical_key` 选举活报告时，先比这一列，再比 `mtime` 和 `id` |
-| `report_type` / `year` / `period_type` / `language` | 分类。检索可按类型、年份、语言过滤；三表默认当年年报正文；指标按公司、年、期间归集 |
-| `logical_key` | 同一份文档的版本链，不含 sha。年报按公司+类型+年+期间+语言+市场；研报、电话会把 `source_url`（没有则用路径）编进去 |
-| `parse_version` | 解析规则版本。字节没变但版本旧了，就地重解析 |
-| `status` / `supersedes_id` / `is_duplicate` | 活文档闸门。默认检索和指标只要非重复且 `status=ok`。`superseded`、`missing`、`failed` 不进默认检索。MCP `list_reports` 仍返回全部状态 |
+| `path` | 这份文件现在的位置。表内唯一 |
+| `sha256` / `size` / `mtime` | 认是不是同一份字节；扫描用来决定 skip、重解析还是新开版本 |
+| `origin` | 文件在 NAS 还是 `collect.raw_dir`。`stats` 用它 |
+| `source_url` / `retrieved_at` | 下载地址和取回时间。编进研报、电话会的 `logical_key`；选举当前使用文档时先比取回时间 |
+| `report_type` / `year` / `period_type` / `language` | 分类。检索和三表、指标按这些收窄 |
+| `logical_key` / `parse_version` / `status` | 版本链、解析规则版本、当前使用文档闸门 |
 | `title` | 给人看的文件名，也是引用里的书名号 |
-
-`meta_dir` 里的 `kind` 会写上，扫描不读。分类只看文件名和父目录。`--kind transcript` 的实际作用是给文件名加前缀。原文旁若还有旧的 `.source.json`，`scan` 在 `meta_dir` 没有对应文件时仍会读它，并写回 `meta_dir`。
-
-### 页和三表上的字段
-
-这些字段跟着正文走，不写回原文旁边。
-
-| 字段 | 作用 |
-|---|---|
-| `pages.content_orig` | 原文。引用和 `fidelity` 抽检读这一列 |
-| `pages.content` | 简体。FTS 和向量索引读这一列 |
-| `pages.page_kind` | `cover` / `toc` / `statement` / `body` / `transcript`。电话会每一页都是 `transcript` |
-| `pages.is_ocr` | `1` 是 OCR 成功页；`2` 是质量不合格，默认检索排除 |
-| `statements` 的行名、原值、单位、币种、年份、页码 | 科目数字的来源。`indicators` 从这里归收入、归母净利等 |
-| `statements.is_ocr` | OCR 行默认不进指标和三表查询 |
-
-### 下游怎么用
-
-扫描用 `sha256`、`parse_version`、`manifest` 决定读不读文件，用 `logical_key` 和 `retrieved_at` 决定哪份保持 `ok`。
-
-查询先过滤活报告（非重复且 `status=ok`），再按公司、`year`、`report_type`、`language` 收窄。科目走 `indicators` / `statements`，短术语走页文本。
-
-写稿里的数字跟 `title` 加页码走。审计核的是这次 `run_id` 日志里的命中，以及该页或三表行里有没有这个数。
+| `pages.content_orig` / `content` | 原文供引用；简体供检索 |
+| `pages.page_kind` | `cover` / `toc` / `statement` / `body` / `transcript` |
+| `pages.is_ocr` | `1` 成功；`2` 质量不合格，默认检索排除 |
+| `statements` 行名、原值、单位、币种、年份、页码 | 科目数字的来源 |
+| `indicators.source_kind` | `own_year` / `comparative` / `ocr_own` / `derived` |
 
 现有库可用 `python -m stock_kb stats --json` 看 `reports_by_origin`。写作本文时是 60 份 `nas`、4 份 `collect`。
 
@@ -291,7 +294,7 @@ flowchart TB
 
 这一层决定问句走哪条查询，不改页文本。科目和全文检索是两条路。收入、归母净利、资产、经营现金流走 `get_indicators` / `get_financial_statements`（CLI 是 `indicators` 与 `statements`）。这些数先查表，不先做下面的混合检索。
 
-`indicators` 从三表行名归出上述科目。`net_profit` 是归母：港股取「本公司拥有人应占」，美国取 `Net income — Yum China Holdings`。年内溢利合计不写入这个字段。派生比率没有单独页码时，locator 为 `derived`。
+`indicators` 从三表行名归出上述科目。`net_profit` 是归母：港股取「本公司拥有人应占」，美国取 `Net income — Yum China Holdings`。年内溢利合计不写入这个字段。挑选顺序是当年干净页、干净比较列、当年 OCR=1（须与比较列一致或没有比较列）。`source_kind` 标明 `own_year` / `comparative` / `ocr_own`；派生比率没有单独页码时 locator 为 `derived`，`source_kind` 同为 `derived`。
 
 全文检索的实现在 `stock_kb/vector.py` 的 `hybrid_search`，关键词侧在 `stock_kb/search.py` 的 `fts_search`。入口决定会不会走进这个函数。
 
@@ -319,7 +322,7 @@ flowchart TB
   gate[否<br/>长度达到 6<br/>或短查询的 FTS 为空]
   ftsN[FTS 侧：pages_fts 用 trigram，单位是整页<br/>3 字及以上把内容词用 AND 连起来<br/>是多少、怎么样这类虚词不参加 AND<br/>问句没有年份时，BM25 再除以每年 1.5% 的新近度，用来打散跨年重复页<br/>短于 3 字走整页 LIKE。两字中文 LIKE 为空，才查 pages_bigram_fts<br/>这一侧不拼中英别名]
   vecN[向量侧：默认模型 BAAI/bge-small-zh-v1.5<br/>sqlite-vec，距离是 L2<br/>页按约 800 字、不重叠、按行切块<br/>先在块上找近邻，再每页只留距离最小的一块<br/>嵌入前把中英和口语别名拼进问句，这些别名不进 FTS<br/>非常见词必须出现在块正文里，否则丢掉该页<br/>带了公司或年份等过滤时，块候选大约是页候选的 10 倍，否则约 5 倍]
-  rrf[两侧各先取候选页：top_k 的 4 倍和 20 里较大的那个。默认 top_k=5，所以每侧最多 20 页<br/>过滤相同：活报告是非重复且 status=ok，is_ocr 小于 2<br/>可再限公司、报告类型、语言<br/>参数 year 或问句里的年份按 reports.year 硬过滤<br/>问句里任一四位年份超出该公司活报告的年份范围时，两侧都直接空<br/>然后做 RRF。名次从 1 起，默认两侧权重都是 1，k=60<br/>fusion 等于 1 除以 fts_rank 加 60，再加上 1 除以 vec_rank 加 60<br/>只出现在一侧的页只加那一侧。没有另一套分数加权，也没有 reranker<br/>先按 fusion_score 从高到低，再按向量 L2 从小到大<br/>两侧都命中的页没有把 L2 写进 score，并列时这一项按很大的距离处理<br/>截到 top_k 页，hybrid_fused=true]
+  rrf[两侧各先取候选页：top_k 的 4 倍和 20 里较大的那个。默认 top_k=5，所以每侧最多 20 页<br/>过滤相同：当前使用文档是非重复且 status=ok，is_ocr 小于 2<br/>可再限公司、文档类型、语言<br/>参数 year 或问句里的年份按 reports.year 硬过滤<br/>问句里任一四位年份超出该公司当前使用文档的年份范围时，两侧都直接空<br/>然后做 RRF。名次从 1 起，默认两侧权重都是 1，k=60<br/>fusion 等于 1 除以 fts_rank 加 60，再加上 1 除以 vec_rank 加 60<br/>只出现在一侧的页只加那一侧。没有另一套分数加权，也没有 reranker<br/>先按 fusion_score 从高到低，再按向量 L2 从小到大<br/>两侧都命中的页没有把 L2 写进 score，并列时这一项按很大的距离处理<br/>截到 top_k 页，hybrid_fused=true]
   out[返回的是页，不是块<br/>locator 仍是《title》第N页<br/>融合结果带 fts_rank、vec_rank、fusion_score]
 
   q --> entry
@@ -349,7 +352,7 @@ flowchart TB
 
 长度达到 6，或者短查询的 FTS 为空，才同时取两侧。候选池是 `max(top_k * 4, 20)` 页。默认 `top_k=5` 时，每侧最多 20 页，融完再截回 5 页。向量索引还没建时，向量侧返回空列表，融合结果只含 FTS 页，但 `hybrid_fused` 仍是 true。这和长度门提前返回时的 false 不同。
 
-两侧用同一组过滤。活报告条件是 `COALESCE(is_duplicate,0)=0 AND COALESCE(status,'ok')='ok'`。`is_ocr=2` 的乱码页不进结果。`year=` 是硬过滤。未传 `year` 时，问句里的四位年份同样按 `reports.year` 过滤。其中任何一个年份落到该公司活报告的最小年与最大年之外，检索直接返回空。问句没有年份时，FTS 的 BM25 `rank`（越小越好）再除以 `1 + 0.015 * (今年 - 报告年)`，每年大约 1.5%，用来把近乎并列的跨年重复页分开。
+两侧用同一组过滤。当前使用文档条件是 `COALESCE(is_duplicate,0)=0 AND COALESCE(status,'ok')='ok'`。`is_ocr=2` 的乱码页不进结果。`year=` 是硬过滤。未传 `year` 时，问句里的四位年份同样按 `reports.year` 过滤。其中任何一个年份落到该公司当前使用文档的最小年与最大年之外，检索直接返回空。问句没有年份时，FTS 的 BM25 `rank`（越小越好）再除以 `1 + 0.015 * (今年 - 文档年)`，每年大约 1.5%，用来把近乎并列的跨年重复页分开。文档年取自 `reports.year`。
 
 FTS 对 3 字及以上的问句把内容词 AND 起来。`是多少`、`怎么样`、`如何`、`是否` 等虚词不进 AND，年份本身也不进 AND。短于 3 字走 `pages.content LIKE`。恰好 2 个汉字且 LIKE 为空时，才查 `pages_bigram_fts`。bigram 不参与有结果时的排序。FTS 查询文本保持原句，不拼别名。
 

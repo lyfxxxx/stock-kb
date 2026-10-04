@@ -7,19 +7,38 @@ description: 只查找并下载财报、电话会文字稿和研报直链。不�
 
 本技能和 `skill/stock-note` 分开。这里只负责把文件下载到本机；笔记和报告仍由 stock-note 写。
 
-下载落在配置 `collect.raw_dir`（默认 `data/raw/{公司}/`）。出处 JSON 落在 `collect.meta_dir`（默认 `data/meta/collect/{公司}/{相对路径}.source.json`，含 `source_url`、`retrieved_at`、`sha256`）。`scan` 会把 NAS 和网络文件的 metadata 都写进 `meta_dir`；查询目录仍是 `reports`。入库用已经存在的扫描命令，不要另造 prepare：
-
-```powershell
-python -m stock_kb scan
-```
-
-`scan` 会读 `nas.root/{公司}/`，也会读 `collect.raw_dir/{公司}/`，这两处都只读。下载完成后直接 scan，不必把文件再拷进 NAS。出处只写 `meta_dir`。某一侧原文目录不存在时只跳过该侧。
+下载落在配置 `collect.raw_dir`（默认 `data/raw/{公司}/`）。出处 JSON 落在 `collect.meta_dir`（默认 `data/meta/collect/{公司}/{相对路径}.source.json`，含 `source_url`、`retrieved_at`、`sha256`）。`scan` 会把 NAS 和网络文件的 metadata 都写进 `meta_dir`；查询目录仍是 `reports`。不要另造 prepare。
 
 网页上怎么找到链接，不进入黄金回归。目标年份就是这次命令实际下载到的最近一份年报和最近一份中报，不用另填年份清单。
 
+## 操作顺序
+
+先扫 NAS，再按缺口下载，再扫一次。不要一上来就 `fetch` 年报。
+
+```powershell
+python -m stock_kb scan --company <公司>
+python -m stock_kb stats --json
+```
+
+看 `reports_by_origin` 和 `reports_by_type`。再只下载 NAS 没有的类型。下完后必须再扫一次，收进 `data/raw`：
+
+```powershell
+python -m stock_kb scan --company <公司>
+```
+
+`scan` 会读 `nas.root/{公司}/`，也会读 `collect.raw_dir/{公司}/`，这两处都只读。不必把文件再拷进 NAS。出处只写 `meta_dir`。某一侧原文目录不存在时只跳过该侧。
+
+怎样判断缺口：
+
+- **年报 / 中报**：目录里已有最近一份年报和最近一份中报，就不要跑 `fetch --source`。`--source` 会把两件都下下来；只缺一件时，用 `--url` 只下缺失那份。
+- **电话会**：NAS 上通常没有，这是 collect 的主用途。按下面顺序找直链。
+- **研报**：NAS 已有则跳过。有能打开的文件 URL 才加 `--kind research --optional`。
+
+NAS 已经有的年报、中报不要再下到 `collect.raw_dir`。同一 `logical_key` 上，collect 副本会因为 `retrieved_at` 更新把 NAS 那份标成 `superseded`，指标和检索就会指到网络副本。collect 里的财报只保留 NAS 还没有的文件（例如尚未进 NAS 的最新中报）。
+
 ## 财报
 
-按公司用对应来源，不要混用：
+两件最近的年报和中报都没有时，按公司用对应来源，不要混用：
 
 ```powershell
 python -m stock_kb fetch --source sec --company 百胜中国
@@ -28,6 +47,8 @@ python -m stock_kb fetch --source hkex --company 海底捞
 
 - SEC 只走 `stock_kb/collectors/sec.py`：最近一份 10-K，有 10-Q 再下一份。没有 10-Q 时不要把 6-K 猜成中报。
 - 披露易只走 `stock_kb/collectors/hkex.py`。这个接口会变。失败写入 `{data_dir}/collect_log.jsonl`。一件年报或中期报告都没有时，命令退出码非 0。
+
+只缺年报或只缺中报时，找到该文件直链，用 `--url` 下载，不要跑 `--source`。
 
 财报下载失败则这次收集失败，不要用研报或电话会的失败去掩盖，也不要因为研报失败把已经成功的财报命令改成非 0。
 

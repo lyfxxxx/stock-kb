@@ -25,7 +25,7 @@ run_id: <与环境变量相同的值>
 2. 短术语走 FTS：`search_reports(..., engine="fts")` 或 `python -m stock_kb search`。
 3. 问句达到上面的融合长度，或 FTS 无命中，走 `engine="hybrid"`。
 
-`eval/fact_checklist.yaml` 里某一项在活报告上查得到，对应节就要写出数字，并在文末给出 `《文件》第N页`。库里没有，该节写「暂无数据」，不要编。
+`eval/fact_checklist.yaml` 里某一项在当前使用文档上查得到，对应节就要写出数字，并在文末给出 `《文件》第N页`。库里没有，该节写「暂无数据」，不要编。
 
 ## 硬性纪律
 

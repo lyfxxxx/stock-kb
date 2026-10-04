@@ -2,7 +2,9 @@ version: 2
 generated_at: 2026-08-15
 notes: >
   数据来源为本地 SQLite（只读查询 reports/pages/statements）。
-  26 道结构化题（exact 20 + cross 6）已于 2026-08-22 按 NAS PDF 独立核对（golden_source=pdf）。
+  29 道结构化题（exact 23 + cross 6）按 PDF 独立核对（golden_source=pdf）。
+  其中 exact-001–020 与 6 道 cross 于 2026-08-22 按 NAS PDF 核对；
+  exact-021–023 于 2026-10-04 按 2026 中报 PDF 核对。
   净利润/亏损口径为归母（本公司拥有人应占 / Net Income — Yum China Holdings, Inc.）；
   比较数字优先用当年年报正文页。file 对应 reports.title（不含扩展名）。
   2026-08-22 阶段 C：semantic 20 题已加负样本；新增 split=diag 的 indicator 12 /
@@ -10,7 +12,7 @@ notes: >
   2026-08-30：freeze 46 道检索 GT 按 pages.content 通读；8 道改 required 页，若干道改负样本。
   2026-08-30：新增 freeze route 24（工具路由）与 year_filter 4（问句带年份）。
 questions:
-  # ---------------- exact: 20 ----------------
+  # ---------------- exact: 23 ----------------
   - id: exact-001
     type: exact
     question: 海底捞 2024 年营业收入是多少？
@@ -611,6 +613,96 @@ questions:
       negatives:
         - file: "百胜中国_2023_HK_Annual_Report"
           page: 147
+  - id: exact-021
+    type: exact
+    question: 海底捞 2026 年中报营业收入是多少？
+    company: 海底捞
+    keywords: ["营业收入", "收入"]
+    statement:
+      type: income
+      year: 2026
+      period_type: interim
+      line_contains: ["收入", "Revenue"]
+      expected_value: 22336906
+      tolerance_ratio: 0.0001
+      expected_unit: 千元
+      expected_currency: CNY
+      golden_source: pdf
+      annotator: user
+      reviewed_at: "2026-10-04"
+    expected:
+      answer: 22336906
+      sources:
+        - file: "2026中期报告"
+          page: 50
+          table: "损益表"
+          required: true
+          annotator: user
+          evidence_snippet: 'Revenue 收入 3 22,336,906 20,703,294'
+          relevance: 2
+      negatives:
+        - file: "2025中报"
+          page: 48
+  - id: exact-022
+    type: exact
+    question: 海底捞 2026 年中报归母净利润（本公司拥有人应占期内溢利）是多少？
+    company: 海底捞
+    keywords: ['净利润', '溢利', '拥有人']
+    statement:
+      type: income
+      year: 2026
+      period_type: interim
+      line_contains: ['Owners of the Company', '本公司拥有人']
+      expected_value: 1766871
+      tolerance_ratio: 0.0001
+      expected_unit: 千元
+      expected_currency: CNY
+      golden_source: pdf
+      annotator: user
+      reviewed_at: "2026-10-04"
+    expected:
+      answer: 1766871
+      sources:
+        - file: "2026中期报告"
+          page: 51
+          table: "损益表"
+          required: true
+          annotator: user
+          evidence_snippet: 'Owners of the Company 本公司擁有人 1,766,871 1,758,525'
+          relevance: 2
+      negatives:
+        - file: "2025中报"
+          page: 49
+  - id: exact-023
+    type: exact
+    question: 海底捞 2026 年中报经营活动所得现金净额是多少？
+    company: 海底捞
+    keywords: ["经营现金流", "经营活动"]
+    statement:
+      type: cashflow
+      year: 2026
+      period_type: interim
+      line_contains: ["Net cash from operating activities", "经营活动所得现金净额"]
+      expected_value: 2281078
+      tolerance_ratio: 0.0001
+      expected_unit: 千元
+      expected_currency: CNY
+      golden_source: pdf
+      annotator: user
+      reviewed_at: "2026-10-04"
+    expected:
+      answer: 2281078
+      sources:
+        - file: "2026中期报告"
+          page: 57
+          table: "现金流量表"
+          required: true
+          annotator: user
+          evidence_snippet: 'Net cash from operating activities 經營活動所得現金淨額 2,281,078 2,626,232'
+          relevance: 2
+      negatives:
+        - file: "2025中报"
+          page: 53
 
   # ---------------- keyword: 20 ----------------
   - id: keyword-001

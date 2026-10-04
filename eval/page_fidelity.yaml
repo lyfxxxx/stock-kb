@@ -3,10 +3,209 @@
 #
 # 每项字段：
 #   company: 公司名，对应 reports.company
-#   title_contains: 活报告标题子串（reports.title）
+#   title_contains: 当前使用文档标题子串（reports.title）
 #   page_no: 页码
 #   report_type: annual / interim / q3 / prospectus / research / transcript / other
 #   is_ocr: 0 表示非 OCR，1 表示 OCR。OCR 缺句只列入报告，不因此把退出码设为 1
 #   needles: 字符串列表，每条都必须出现在该页 content_orig
 # 不要在这里编造尚未对照过原文的句子。
-pages: []
+#
+# 2026-10-03 首批：财报 8（年报/中报、港股繁体与美股 10-K）、研报 8、
+# 电话会 1（库里目前只有这一份当前使用的电话会文字稿）、OCR 4。2026-10-04 补招股书 2 页；
+# 2025 年报针改回 NAS 标题「2025年报」。针句从对应源文件页抽出，
+# 港股报表与招股书保留繁体原文。电话会不足 8 页，有新文字稿后再补。
+pages:
+  # ---------- 财报 8 ----------
+  - company: 海底捞
+    title_contains: "2024年报"
+    page_no: 142
+    report_type: annual
+    is_ocr: 0
+    needles:
+      - "綜合損益及其他全面收益表"
+      - "Revenue 收入 5 42,754,687 41,453,348"
+  - company: 海底捞
+    title_contains: "2024年报"
+    page_no: 149
+    report_type: annual
+    is_ocr: 0
+    needles:
+      - "綜合現金流量表"
+      - "Operating cash flows before movements"
+  - company: 海底捞
+    title_contains: "2025年报"
+    page_no: 152
+    report_type: annual
+    is_ocr: 0
+    needles:
+      - "截至2025年12月31日止年度"
+      - "Revenue 收入 5 43,225,355 42,754,687"
+  - company: 海底捞
+    title_contains: "2024中报"
+    page_no: 48
+    report_type: interim
+    is_ocr: 0
+    needles:
+      - "簡明綜合損益及其他全面收益表"
+      - "Revenue 收入 3 21,490,903 18,885,854"
+  - company: 海底捞
+    title_contains: "2022年报"
+    page_no: 244
+    report_type: annual
+    is_ocr: 0
+    needles:
+      - "本公司擁有人應佔年內"
+      - "1,374,477 (4,163,175)"
+  - company: 百胜中国
+    title_contains: "百胜中国_2025_HK_Annual_Report"
+    page_no: 153
+    report_type: annual
+    is_ocr: 0
+    needles:
+      - "Consolidated Statements of Income"
+      - "Net Income — Yum China Holdings, Inc. $ 929 $ 911 $ 827"
+  - company: 百胜中国
+    title_contains: "百胜中国_2024_Annual_Report"
+    page_no: 110
+    report_type: annual
+    is_ocr: 0
+    needles:
+      - "Consolidated Statements of Income"
+      - "NetIncome—YumChinaHoldings,Inc. $ 911 $ 827 $ 442"
+  - company: 百胜中国
+    title_contains: "百胜中国_2016_Annual_Report"
+    page_no: 153
+    report_type: annual
+    is_ocr: 0
+    needles:
+      - "Consolidated and Combined Statements of Income (Loss)"
+      - "Net Income (Loss) – Yum China Holdings, Inc. $ 502 $ 323 $ (7)"
+
+  # ---------- 研报 8 ----------
+  - company: 海底捞
+    title_contains: "研报-浦银国际-2024-翻台率估值承压"
+    page_no: 1
+    report_type: research
+    is_ocr: 0
+    needles:
+      - "翻台率趋势好于预"
+      - "我们维持海底捞的“持有”评级。"
+  - company: 海底捞
+    title_contains: "研报-国信证券-2021-阿米巴模式师徒制"
+    page_no: 1
+    report_type: research
+    is_ocr: 0
+    needles:
+      - "中餐赛道标杆龙头，未来成长边界几何？"
+      - "阿米巴模式打造强平台"
+  - company: 海底捞
+    title_contains: "研报-东吴-海底捞-20260302"
+    page_no: 1
+    report_type: research
+    is_ocr: 0
+    needles:
+      - "破局求变，征帆四海"
+      - "营业总收入（百万元） 41,622 42,755 42,969 45,545 48,547"
+  - company: 海底捞
+    title_contains: "研报-国信证券-2025-收入利润再创新高"
+    page_no: 1
+    report_type: research
+    is_ocr: 0
+    needles:
+      - "收入利润再创新高，新品牌孵化继续推进"
+      - "2024年，公司实现收入427.6亿元，"
+  - company: 海底捞
+    title_contains: "研报-东兴证券-2021-2020年报高速拓店下沉市场"
+    page_no: 1
+    report_type: research
+    is_ocr: 0
+    needles:
+      - "重点布局下沉市场"
+      - "全年实现收入286.1亿元，同比增长7.8%，"
+  - company: 百胜中国
+    title_contains: "国信证券_百胜中国_同店销售增速重新转正"
+    page_no: 1
+    report_type: research
+    is_ocr: 0
+    needles:
+      - "同店销售增速重新转正，运营效率持续提升"
+      - "2025Q2经营利润同增14.3%。"
+  - company: 百胜中国
+    title_contains: "海通国际_百胜中国_2025Q2经营利润创新高"
+    page_no: 1
+    report_type: research
+    is_ocr: 0
+    needles:
+      - "2Q25 经营利润创第二季度新高，同店销售额实现正增长"
+      - "维持优于大市Maintain OUTPERFORM"
+  - company: 百胜中国
+    title_contains: "2024_百胜中国_快餐业龙头多品牌布局"
+    page_no: 1
+    report_type: research
+    is_ocr: 0
+    needles:
+      - "国内连锁餐饮龙头，多措并举带动管理能力提升"
+      - "快餐业龙头，多品牌协同共筑高质量发展。"
+
+  # ---------- 电话会 1（库内目前仅此一份） ----------
+  - company: 海底捞
+    title_contains: "transcript-4845187"
+    page_no: 1
+    report_type: transcript
+    is_ocr: 0
+    needles:
+      - "直击海底捞业绩会：创始人张勇重掌帅印后，海底捞的破局与重构"
+      - "创始人张勇于2026年1月13日重任首席执行官"
+
+  # ---------- OCR 4 ----------
+  - company: 百胜中国
+    title_contains: "百胜中国_2017_Annual_Report"
+    page_no: 83
+    report_type: annual
+    is_ocr: 1
+    needles:
+      - "ANNUAL REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES"
+      - "Yum China Holdings, Inc."
+  - company: 百胜中国
+    title_contains: "百胜中国_2017_Annual_Report"
+    page_no: 86
+    report_type: annual
+    is_ocr: 1
+    needles:
+      - "Forward-Looking Statements"
+      - "Private Securities Litigation Reform Act of 1995."
+  - company: 百胜中国
+    title_contains: "百胜中国_2017_Annual_Report"
+    page_no: 174
+    report_type: annual
+    is_ocr: 1
+    needles:
+      - "Consolidated Balance Sheets"
+      - "Yum China Holdings, Inc."
+  - company: 海底捞
+    title_contains: "2020年报"
+    page_no: 88
+    report_type: annual
+    is_ocr: 1
+    needles:
+      - "Risk of the Quality of Our Dining Experience"
+      - "our Haidilao brand"
+
+  # ---------- 招股书 2 ----------
+  - company: 海底捞
+    title_contains: "2018招股说明书（全球发售）"
+    page_no: 130
+    report_type: prospectus
+    is_ocr: 0
+    needles:
+      - "Our overall table turnover rate was 4.9 times per day for the six months ended"
+      - "4.0 times per day in 2015 to 4.5 times per day in 2016 and 5.0"
+  - company: 百胜中国
+    title_contains: "百胜中国_招股书_中文版"
+    page_no: 1
+    report_type: prospectus
+    is_ocr: 0
+    needles:
+      - "百勝中國控股有限公司"
+      - "Yum China Holdings, Inc."
+

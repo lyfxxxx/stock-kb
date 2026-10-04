@@ -262,6 +262,28 @@ def test_missing_file_marked_without_deleting_or_touching_outside(conn, tmp_path
     assert manifest["status"] == "missing"
 
 
+def test_missing_newer_file_re_elects_older_same_key(conn, tmp_path):
+    company_dir = tmp_path / "海底捞"
+    older = company_dir / "2025年报.txt"
+    newer = company_dir / "2025年报_网络.txt"
+    _write(older, "旧年报营业收入甲", mtime=1_700_000_000)
+    _write(newer, "新年报营业收入乙", mtime=1_800_000_000)
+    _process_file(conn, {}, "海底捞", older, False, False)
+    _process_file(
+        conn, {}, "海底捞", newer, False, False, retrieved_at="2026-04-24T00:00:00"
+    )
+    rows = {r["path"]: r for r in _rows(conn)}
+    assert rows[str(older)]["logical_key"] == rows[str(newer)]["logical_key"]
+    assert rows[str(older)]["status"] == "superseded"
+    assert rows[str(newer)]["status"] == "ok"
+    newer.unlink()
+    marked = _mark_missing_sources(conn, company_dir, "海底捞")
+    assert marked == 1
+    rows = {r["path"]: r for r in _rows(conn)}
+    assert rows[str(newer)]["status"] == "missing"
+    assert rows[str(older)]["status"] == "ok"
+
+
 def test_logical_key_shapes_omit_sha():
     filing = build_logical_key(
         company="海底捞",

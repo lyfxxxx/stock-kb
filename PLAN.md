@@ -508,6 +508,10 @@ SQLite 主要表：
 
 原文仍分 NAS 与 `collect.raw_dir`。出处 JSON 集中在 `collect.meta_dir`（默认 `data/meta/{origin}/{公司}/{相对路径}.source.json`）。`fetch` 写网络 JSON；`scan` 给 NAS 和网络文件都更新，对两个证据根只读。查询目录仍是 SQLite `reports`。遗留的原文旁 sidecar 只作 fallback。
 
+### 2026-10-04 NAS-first、OCR 分层与当前使用文档
+
+收集顺序改为先 `scan` NAS，用 `stats` 看缺口，再只 `fetch` 缺失类型。指标挑选顺序：当年干净页 → 干净比较列 → 当年 OCR=1；OCR=2 不入选。港股折行胶水补残片规则。目录条目对外称「文档 / 当前使用文档」（代码仍 `live_report_sql`，表名仍 `reports`）。证据层图：`docs/diagrams/evidence-io.html`、`evidence-files.html`。当前规模 64 份文档（60 nas / 4 collect）、8,534 页、8,823 条三表行、237 条指标。结构化 29/29。
+
 ## 16. RAG 评测系统优化记录（2026-08-15）
 
 ### 16.1 为什么做这次优化

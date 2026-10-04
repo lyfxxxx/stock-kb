@@ -32,16 +32,16 @@ from stock_kb.eval_runner import run_eval
 
 FTS_MIN = {
     "keyword.recall_at_k": 0.75,
-    "structured.hit": 26,
-    "structured.n": 26,
+    "structured.hit": 29,
+    "structured.n": 29,
 }
 FTS_MAX = {
     "keyword.negative_hit_rate": 0.65,
 }
 HYBRID_MIN = {
     "semantic.recall_at_k": 0.20,
-    "structured.hit": 26,
-    "structured.n": 26,
+    "structured.hit": 29,
+    "structured.n": 29,
 }
 HYBRID_MAX = {
     "semantic.negative_hit_rate": 0.20,

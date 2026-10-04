@@ -401,7 +401,7 @@ def elect_logical_key(
     """同一 logical_key 上，(retrieved_at, mtime, id) 最大的一条保持 ok。
 
     刚被同路径归档的那一行不能在本轮选回 ok。supersedes_id 只写在本轮胜者上，
-    指向刚被它取代的那条。sha 相同的另一条活报告是重复文件，不改版本链。
+    指向刚被它取代的那条。sha 相同的另一条当前使用文档是重复文件，不改版本链。
     """
     if not logical_key:
         conn.execute("UPDATE reports SET status='ok' WHERE id=?", (incoming_id,))
@@ -496,9 +496,14 @@ def _company_scan_hint(cfg: dict[str, Any], company: str) -> str:
 
 
 def _mark_missing_sources(conn, company_dir: Path, company: str) -> int:
-    """公司目录里已经找不到的源文件标 missing。不删除行，也不动扫描根之外的报告。"""
+    """公司目录里已经找不到的源文件标 missing。不删除行，也不动扫描根之外的报告。
+
+    同一 logical_key 上若还有未 failed/missing 的行，重新选举，让被 superseded
+    的 NAS 副本可以回到 ok。
+    """
     root = company_dir.resolve()
     marked = 0
+    marked_ids: list[int] = []
     rows = conn.execute(
         "SELECT id, path, status FROM reports WHERE company=?",
         (company,),
@@ -512,6 +517,25 @@ def _mark_missing_sources(conn, company_dir: Path, company: str) -> int:
         conn.execute("UPDATE reports SET status='missing' WHERE id=?", (row["id"],))
         conn.execute("UPDATE manifest SET status='missing' WHERE path=?", (path_s,))
         marked += 1
+        marked_ids.append(int(row["id"]))
+    if marked_ids:
+        placeholders = ",".join("?" * len(marked_ids))
+        keys = [
+            r["logical_key"]
+            for r in conn.execute(
+                f"SELECT DISTINCT logical_key FROM reports WHERE id IN ({placeholders})",
+                marked_ids,
+            )
+            if r["logical_key"]
+        ]
+        for key in keys:
+            rest = conn.execute(
+                "SELECT id FROM reports WHERE logical_key=? "
+                "AND COALESCE(status, 'ok') NOT IN ('failed', 'missing')",
+                (key,),
+            ).fetchall()
+            if rest:
+                elect_logical_key(conn, key, incoming_id=int(rest[0]["id"]))
     manifests = conn.execute(
         "SELECT path FROM manifest WHERE company=? AND COALESCE(status, '') != 'missing'",
         (company,),

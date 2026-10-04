@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "证据层：输入、产物与校验",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 740],
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "emphasis": { "label": "主路径" },
+        "default": { "label": "产物" },
+        "security": { "label": "校验门" },
+        "dashed": { "label": "只报告" }
+      }
+    },
+    "views": [
+      {
+        "id": "ingest",
+        "label": "从原文到产物",
+        "focus": ["nas", "web", "fetch", "scan", "catalog", "pages", "stmts"],
+        "note": "先扫 NAS，stats 看缺口；只把缺失直链 fetch 到 data/raw，再扫一次。"
+      },
+      {
+        "id": "gates",
+        "label": "校验指标体系",
+        "focus": ["pages", "stmts", "live", "fidelity", "structured", "coverage"],
+        "note": "页保真抽检原文；三表题 29/29 挡回归；覆盖矩阵只报告，不挡回归。"
+      },
+      {
+        "id": "handoff",
+        "label": "交给知识库层",
+        "focus": ["live", "pages", "stmts", "kb"],
+        "note": "默认检索只读当前使用文档。页文本供全文检索，三表行供科目。"
+      }
+    ]
+  },
+  "stages": [
+    { "label": "原文" },
+    { "label": "入库" },
+    { "label": "产物" },
+    { "label": "校验" },
+    { "label": "交接" }
+  ],
+  "nodes": [
+    { "id": "nas", "type": "external", "label": "NAS 原文", "sublabel": "年报 / 研报", "stage": 0, "row": 0, "tag": "只读" },
+    { "id": "web", "type": "cloud", "label": "网络直链", "sublabel": "SEC / 披露易 / IR", "stage": 0, "row": 2, "tag": "stock-collect" },
+    { "id": "scan", "type": "backend", "label": "scan", "sublabel": "解析并写出处 JSON", "stage": 1, "row": 0, "tag": "不发 HTTP" },
+    { "id": "fetch", "type": "backend", "label": "fetch", "sublabel": "只补缺口", "stage": 1, "row": 2, "tag": "data/raw" },
+    { "id": "catalog", "type": "database", "label": "文档目录", "sublabel": "NAS 与 collect 都写", "stage": 2, "row": 0, "tag": "reports" },
+    { "id": "pages", "type": "database", "label": "页文本", "sublabel": "简体检索 / 原文引用", "stage": 2, "row": 1, "tag": "pages" },
+    { "id": "stmts", "type": "database", "label": "三表行", "sublabel": "数字保持原单位", "stage": 2, "row": 2, "tag": "statements" },
+    { "id": "live", "type": "security", "label": "当前使用文档", "sublabel": "同一份只留最新", "stage": 3, "row": 0, "tag": "status=ok" },
+    { "id": "fidelity", "type": "security", "label": "页保真", "sublabel": "抽检原文句子", "stage": 3, "row": 1, "tag": "fidelity" },
+    { "id": "structured", "type": "security", "label": "三表评测", "sublabel": "值 / 页 / 来源", "stage": 3, "row": 2, "tag": "29/29" },
+    { "id": "coverage", "type": "backend", "label": "覆盖矩阵", "sublabel": "公司 × 年 × 科目", "stage": 4, "row": 0, "tag": "不挡回归" },
+    { "id": "kb", "type": "backend", "label": "知识库层", "sublabel": "指标 / FTS / 向量", "stage": 4, "row": 1, "tag": "只读接手" }
+  ],
+  "flows": [
+    { "id": "web-fetch", "from": "web", "to": "fetch", "label": "文件字节", "classification": "网络原文", "variant": "emphasis", "route": "straight" },
+    { "id": "nas-scan", "from": "nas", "to": "scan", "label": "只读遍历", "classification": "本机文件", "variant": "emphasis", "route": "straight" },
+    { "id": "fetch-scan", "from": "fetch", "to": "scan", "label": "data/raw", "classification": "本机文件", "variant": "emphasis", "fromSide": "top", "toSide": "bottom" },
+    { "id": "scan-catalog", "from": "scan", "to": "catalog", "label": "目录与出处", "variant": "emphasis", "route": "straight", "labelDy": -22 },
+    { "id": "scan-pages", "from": "scan", "to": "pages", "label": "页", "variant": "emphasis", "labelDx": 28 },
+    { "id": "scan-stmts", "from": "scan", "to": "stmts", "label": "三表", "variant": "default", "labelDx": 28, "labelDy": -22 },
+    { "id": "catalog-live", "from": "catalog", "to": "live", "label": "版本选举", "classification": "默认可查", "variant": "security", "route": "straight" },
+    { "id": "pages-fidelity", "from": "pages", "to": "fidelity", "label": "原文句子", "classification": "content_orig", "variant": "security", "route": "straight" },
+    { "id": "stmts-structured", "from": "stmts", "to": "structured", "label": "科目原值", "classification": "golden_source pdf", "variant": "security", "route": "straight" },
+    { "id": "live-coverage", "from": "live", "to": "coverage", "label": "年份覆盖", "classification": "只报告", "variant": "dashed", "route": "straight", "labelDy": -18 },
+    { "id": "live-kb", "from": "live", "to": "kb", "label": "可查文档", "classification": "检索范围", "variant": "emphasis", "labelDy": 18 }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "输入",
+      "items": [
+        "先 scan NAS，stats 看缺口后再 fetch",
+        "scan 给 NAS 与 collect 都写 data/meta"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "产物",
+      "items": [
+        "目录登记身份、出处和当前使用文档",
+        "页留简体与原文；财报再抽出三表行"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "校验门",
+      "items": [
+        "三表 29/29 挡回归；页保真空清单不算通过",
+        "覆盖矩阵只报告，不挡回归"
+      ]
+    }
+  ]
+}

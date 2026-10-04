@@ -21,12 +21,13 @@ _HEAD = ("revenue", "net_profit", "op_cf", "total_assets", "total_equity")
 
 
 def coverage_matrix(conn) -> list[dict]:
+    live = db.live_report_sql("r")
     rows = conn.execute(
-        """
+        f"""
         SELECT r.company, r.year, r.report_type, r.id AS report_id,
                (SELECT COUNT(*) FROM statements s WHERE s.report_id=r.id) AS n_stmt
         FROM reports r
-        WHERE r.report_type IN ('annual','interim') AND COALESCE(r.is_duplicate,0)=0
+        WHERE r.report_type IN ('annual','interim') AND {live}
         ORDER BY r.company, r.report_type, r.year
         """
     ).fetchall()

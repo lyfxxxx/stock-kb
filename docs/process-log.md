@@ -353,6 +353,27 @@
 - 解决：新增 `collect.meta_dir`（默认 `data/meta`），键 `{origin}/{公司}/{相对路径}.source.json`。`fetch` 把网络 JSON 写到 `meta_dir/collect/...`，字节仍落 `raw_dir`。`scan` 对 NAS 和 `raw_dir` 都只读；扫过的 NAS 和网络文件都把 JSON 写回 `meta_dir`。先读 `meta_dir`，没有再读原文旁旧 sidecar 并拷进去。运行时查询仍读 `reports`。读写集中在 `stock_kb/source_meta.py`。
 - 教训：统一的是入库后的 metadata。原文继续待在 NAS 和 `raw_dir`。`fetch` 仍要写 `raw_dir`（下载落点）。`origin_for` 对 UNC 用字符串前缀、剥尾斜杠，不要 `resolve()`。
 
+### 51. 折行「…的金融 / 負債」顶掉流动负债小节标题（2026-10-03）
+
+- 现象：覆盖矩阵上海底捞 2026 中报 `total_assets` 为 `.`。锚点行「资产总额减流动负债」在，收入/净利/权益都有。
+- 原因：2026 中报把 `Financial liabilities at FVTPL` 折成「按公允值計入損益的金融」+「負債」。行尾「金融」原先不算折行，上半句变成小节标题，无标签小计挂到 FVTPL，组合口径找不到「流动负债」小计。2025 中报折在「…的」处，所以没踩。
+- 解决：`_ends_mid_phrase` 把「金融」当作折行未完成；补单测后 `reparse-statements --company 海底捞` 再 `indicators`。2026 中报总资产 21,146,708 千元。
+- 教训：小节标题只应被真正的 Current/Non-current 标题替换。新一年报表缩写（FVTPL）会改变折行切点，覆盖矩阵要在新报告入库后看一眼。
+
+### 52. collect 年报把 NAS 同键副本挤成 superseded，指标仍引用旧行（2026-10-04）
+
+- 现象：海底捞 2025 年报 NAS（id 16）与 collect `2025年报-2026042401134`（id 61）同一 `logical_key`。collect 因 `retrieved_at` 更新当选，NAS 被标 `superseded`。`indicators` 的 2025 年收入/净利等仍写 `report_id=16`。默认检索只看活报告，笔记若引用指标出处会对不上。
+- 原因：1）`fetch --source hkex` 把 NAS 已有的年报又下了一份。2）`compute_indicators` 与覆盖矩阵当初只排除 `is_duplicate`，不过滤 `status`。3）`_mark_missing_sources` 把失踪文件标 missing 后不重新选举，删掉 collect 副本会让 NAS 一直停在 superseded。
+- 解决：删掉 collect 里与 NAS 重复的 2025 年报，保留 NAS 没有的 2026 中报、电话会和东吴研报。scan 时 missing 后对同一 `logical_key` 再 `elect_logical_key`。指标和覆盖矩阵加上 `live_report_sql`。skill 写明：NAS 已有的年报/中报不要再下到 collect。
+- 教训：两个根上的同一份财报是版本链，不是简单多一份文件。网络侧更新会把本地 NAS 挤出活目录。指标必须只认活报告；文件从 collect 消失时要把旧胜者选回来。
+
+### 53. OCR 入库分层与折行残片（2026-10-04）
+
+- 现象：1）百胜 2017 年报利润表/现金流 OCR 失败（`is_ocr=2`），资产负债表 OCR 成功但标签列和数字列上下分开，行名全挂到 `Total Lial`；2017 五个核心指标只能引用 2018 比较列。2）港股中英对照表把科目折开，2026 中报留下 `June`、`付款項`、`益的金融資產`、`產` 等残片。
+- 原因：三表按视觉行「标签+行尾数字」抽取，OCR 页变成「先全部标签、再年份表头、再全部数字」；折行胶水原先只认「的/及/金融」等，行尾「預/資/負」和下半句「付款項/產」拼不上；小节标题没有白名单，折行残片会顶掉小计挂名。指标侧把所有 OCR 行一刀切排除，当年干净页与比较列也无法标注。
+- 解决：`statements.is_ocr` 保留页上的 0/1/2。`query_statements` 默认仍排除 OCR。`indicators` 按 `own_year`（干净当年）→ `comparative`（干净比较列）→ `ocr_own`（当年 OCR=1 且与比较列容差 0.0001 内一致，无比较列则直接用）；OCR=2 永不入选。`indicators.source_kind` 写入这三档（派生为 `derived`）。OCR=1 页若标签块与数字块分离，按行序配对。折行：小节标题只认资产负债表白名单；`June 30, December 31,` 当表头 junk；行尾补「預/資/負/損/付」；拼完后的短残片和小写开头行丢弃。`reparse-statements` 两家公司后 indicators 仍 237 条。2017 资产负债表自身抽出 Total Assets 4,263（`is_ocr=1`），与 2018 比较列 4,287 不一致（重述或口径差），指标留比较列并标 `comparative`。
+- 教训：当年财报优先，是挑选顺序，不是把 OCR 过滤关掉。OCR 成功页仍可能空间错位；提升必须过行名规则和比较列交叉验证。折行是 pdfplumber 视觉行，不是向量切片。
+
 ## 七、当前已知局限与下一步
 
 > 评测体系见 `eval/EVAL_SYSTEM.md`；三个产品目标到门的映射见 `eval/METRICS_CONTRACT.md`；过程记录见 `eval/EVAL_PLAN.md`；8-16 数据修复见 `docs/fix-record-20260816.md`。

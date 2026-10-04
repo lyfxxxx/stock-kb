@@ -21,7 +21,7 @@ python tools/audit_notes.py
 | FTS keyword Neg@5 | ≤ 0.65 | 0.55 |
 | hybrid semantic Recall@5 | ≥ 0.20 | 0.15（2026-09-04 复测 0.30） |
 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 |
-| 结构化 hit / parse_hit | 26/26 | 26/26 |
+| 结构化 hit / parse_hit | 29/29 | 29/29 |
 | FTS diag `indicators` | 12/12 | 12/12 |
 | FTS diag no_answer empty_rate | ≥ 0.75 | 1.00 |
 | hybrid diag no_answer empty_rate | ≥ 0.75 | 1.00 |
@@ -29,7 +29,7 @@ python tools/audit_notes.py
 | year_filter precision_mean | ≥ 0.60（4 题） | 1.00 |
 | generation_compose | fail_count = 0 | 1.00 faithful |
 
-题集：`eval/questions.yaml`。结构化 26 题已 `golden_source: pdf`。`split: diag` 的真语义 / 跨语言仍不进 freeze 检索门槛。
+题集：`eval/questions.yaml`。结构化 29 题已 `golden_source: pdf`。`split: diag` 的真语义 / 跨语言仍不进 freeze 检索门槛。
 
 ---
 
