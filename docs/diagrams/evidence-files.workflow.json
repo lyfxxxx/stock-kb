@@ -11,7 +11,7 @@
         "external": { "label": "原文" },
         "backend": { "label": "处理" },
         "database": { "label": "目录" },
-        "security": { "label": "校验" }
+        "security": { "label": "验收" }
       }
     },
     "views": [
@@ -39,7 +39,7 @@
     { "id": "filing", "label": "财报与招股" },
     { "id": "research", "label": "研报" },
     { "id": "transcript", "label": "电话会" },
-    { "id": "catalog", "label": "目录与校验" }
+    { "id": "catalog", "label": "目录与验收" }
   ],
   "phases": [
     { "id": "land", "label": "落到本机", "fromCol": 0, "toCol": 1 },
@@ -56,7 +56,7 @@
     { "id": "r_page", "lane": "research", "col": 3, "type": "database", "label": "只成页", "sublabel": "不抽三表" },
     { "id": "t_page", "lane": "transcript", "col": 3, "type": "database", "label": "整篇成页", "sublabel": "保留说话人" },
     { "id": "f_stmt", "lane": "filing", "col": 5, "type": "database", "label": "抽出三表", "sublabel": "数字保持原单位" },
-    { "id": "elect", "lane": "catalog", "col": 5, "type": "security", "label": "当前使用文档", "sublabel": "三表题 29/29", "tag": "挡回归" },
+    { "id": "elect", "lane": "catalog", "col": 5, "type": "security", "label": "当前使用文档", "sublabel": "三表题 29/29", "tag": "卡住回归测试" },
     { "id": "fidelity", "lane": "catalog", "col": 3, "type": "security", "label": "页保真", "sublabel": "空清单不算通过" }
   ],
   "edges": [

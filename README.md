@@ -48,7 +48,7 @@ python -m stock_kb models download --model BAAI/bge-m3 --mirror https://hf-mirro
 
 ## 运行顺序
 
-`data/` 和 `models/` 不入库。公司目录（`nas.root` 与 `collect.raw_dir`）都不存在、也没有任何已扫描文件时，`scan` 退出码为 2。已有文件但字节和解析版本都没变、因而被跳过时，退出码仍为 0。黄金回归 `python tools/run_eval_regression.py` 只在维护者本机、库里已经有试点数据时跑，不是别人安装后的完成条件。
+`data/` 和 `models/` 不入库。公司目录（`nas.root` 与 `collect.raw_dir`）都不存在、也没有任何已扫描文件时，`scan` 退出码为 2。已有文件但字节和解析版本都没变、因而被跳过时，退出码仍为 0。冻结回归测试 `python tools/run_eval_regression.py` 只在维护者本机、库里已经有试点数据时跑，不是别人安装后的完成条件。
 
 ```powershell
 pip install -e ".[mcp,ml]"
@@ -121,11 +121,11 @@ python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild
 # 按 config embedding.chunk_size 重切全部页面（会清空所有模型的向量）
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild-chunks
 
-# 黄金回归只在维护者本机、库内已有试点数据时跑（组稿不再当门；有 agent 终稿才 audit-report）
+# 冻结回归测试只在维护者本机、库内已有试点数据时跑（组稿不再卡住回归测试；有 agent 终稿才 audit-report）
 python tools/run_eval_regression.py
 python tools/run_eval_regression.py --write-baseline
 
-# embedding 模型筛选（vector@5/@50；不进 freeze 门禁）
+# embedding 模型筛选（vector@5/@50；不卡住冻结回归测试）
 python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger BAAI/bge-m3
 python -m stock_kb eval --split freeze
 python -m stock_kb eval --engine hybrid --model BAAI/bge-small-zh-v1.5 --split freeze
@@ -137,8 +137,8 @@ python -m stock_kb audit-report <稿子路径> --company 海底捞
 python -m stock_kb quote --company 海底捞 --json   # 最新价/市值/TTM PE（失败非零退出）
 
 # 评测体系与过程记录
-# eval/EVAL_SYSTEM.md      （现行分层、GT、门禁）
-# eval/METRICS_CONTRACT.md （三个产品目标到门的映射；换模/改 skill/加数据各走哪条测量路径）
+# eval/EVAL_SYSTEM.md      （现行分层、标注、回归测试门槛）
+# eval/METRICS_CONTRACT.md （三个产品目标到门槛的映射；换模/改 skill/加数据各走哪条测量路径）
 # eval/style-canon/        （雪球样稿《安井食品扫描》全文与结构对照）
 # eval/data_gaps.md        （报告数据面缺口诊断清单：根因/修复/待办）
 # eval/EVAL_PLAN.md        （过程中改掉的问题）
@@ -161,10 +161,13 @@ python -m stock_kb mcp --transport http --host 127.0.0.1 --port 8931
 stock-kb/
 ├── config.yaml
 ├── stock_kb/            # 核心代码（ingest/parse/index/serve）
+├── docs/
+│   ├── glossary.md            # 中文术语库
+│   └── report-system.md       # 三层架构与验收
 ├── eval/
 │   ├── questions.yaml         # 评测问题集
-│   ├── EVAL_SYSTEM.md         # 现行分层、GT、门禁
-│   ├── METRICS_CONTRACT.md    # 三个产品目标到门的映射
+│   ├── EVAL_SYSTEM.md         # 现行分层、标注、回归测试门槛
+│   ├── METRICS_CONTRACT.md    # 三个产品目标到门槛的映射
 │   ├── EVAL_PLAN.md           # 评测记录（过程中改掉的问题）
 │   ├── style-canon/           # 雪球样稿《安井食品扫描》
 │   └── reports/               # 评测报告

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "dataflow",
   "meta": {
-    "title": "证据层：输入、产物与校验",
+    "title": "证据层：输入、产物与验收",
     "quality_profile": "showcase",
     "viewBox": [1280, 740],
     "legend": {
@@ -10,8 +10,8 @@
       "entries": {
         "emphasis": { "label": "主路径" },
         "default": { "label": "产物" },
-        "security": { "label": "校验门" },
-        "dashed": { "label": "只报告" }
+        "security": { "label": "验收" },
+        "dashed": { "label": "只展示" }
       }
     },
     "views": [
@@ -23,9 +23,9 @@
       },
       {
         "id": "gates",
-        "label": "校验指标体系",
+        "label": "验收指标体系",
         "focus": ["pages", "stmts", "live", "fidelity", "structured", "coverage"],
-        "note": "页保真抽检原文；三表题 29/29 挡回归；覆盖矩阵只报告，不挡回归。"
+        "note": "页保真抽检原文；三表题 29/29 卡住回归测试；覆盖矩阵只展示，不卡住回归测试。"
       },
       {
         "id": "handoff",
@@ -39,7 +39,7 @@
     { "label": "原文" },
     { "label": "入库" },
     { "label": "产物" },
-    { "label": "校验" },
+    { "label": "验收" },
     { "label": "交接" }
   ],
   "nodes": [
@@ -53,7 +53,7 @@
     { "id": "live", "type": "security", "label": "当前使用文档", "sublabel": "同一份只留最新", "stage": 3, "row": 0, "tag": "status=ok" },
     { "id": "fidelity", "type": "security", "label": "页保真", "sublabel": "抽检原文句子", "stage": 3, "row": 1, "tag": "fidelity" },
     { "id": "structured", "type": "security", "label": "三表评测", "sublabel": "值 / 页 / 来源", "stage": 3, "row": 2, "tag": "29/29" },
-    { "id": "coverage", "type": "backend", "label": "覆盖矩阵", "sublabel": "公司 × 年 × 科目", "stage": 4, "row": 0, "tag": "不挡回归" },
+    { "id": "coverage", "type": "backend", "label": "覆盖矩阵", "sublabel": "公司 × 年 × 科目", "stage": 4, "row": 0, "tag": "不卡住回归测试" },
     { "id": "kb", "type": "backend", "label": "知识库层", "sublabel": "指标 / FTS / 向量", "stage": 4, "row": 1, "tag": "只读接手" }
   ],
   "flows": [
@@ -66,7 +66,7 @@
     { "id": "catalog-live", "from": "catalog", "to": "live", "label": "版本选举", "classification": "默认可查", "variant": "security", "route": "straight" },
     { "id": "pages-fidelity", "from": "pages", "to": "fidelity", "label": "原文句子", "classification": "content_orig", "variant": "security", "route": "straight" },
     { "id": "stmts-structured", "from": "stmts", "to": "structured", "label": "科目原值", "classification": "golden_source pdf", "variant": "security", "route": "straight" },
-    { "id": "live-coverage", "from": "live", "to": "coverage", "label": "年份覆盖", "classification": "只报告", "variant": "dashed", "route": "straight", "labelDy": -18 },
+    { "id": "live-coverage", "from": "live", "to": "coverage", "label": "年份覆盖", "classification": "只展示", "variant": "dashed", "route": "straight", "labelDy": -18 },
     { "id": "live-kb", "from": "live", "to": "kb", "label": "可查文档", "classification": "检索范围", "variant": "emphasis", "labelDy": 18 }
   ],
   "cards": [
@@ -88,10 +88,10 @@
     },
     {
       "dot": "rose",
-      "title": "校验门",
+      "title": "验收",
       "items": [
-        "三表 29/29 挡回归；页保真空清单不算通过",
-        "覆盖矩阵只报告，不挡回归"
+        "三表 29/29 卡住回归测试；页保真空清单不算通过",
+        "覆盖矩阵只展示，不卡住回归测试"
       ]
     }
   ]

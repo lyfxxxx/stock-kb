@@ -12,7 +12,7 @@
 
 ```mermaid
 flowchart TB
-    O1[目标1 笔记可追溯] --> G[现行回归门 G1-G11]
+    O1[目标1 笔记可追溯] --> G[现行回归测试门槛 G1-G11]
     O2[目标2 改动能测] --> M1[embedding: eval-embed vector@5/@50]
     O2 --> M2[data: stats + regression lost/gained]
     O2 --> M3[skill: compose + audit_notes]

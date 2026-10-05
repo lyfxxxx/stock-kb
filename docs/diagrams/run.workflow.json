@@ -64,11 +64,11 @@
     },
     {
       "dot": "rose",
-      "title": "成稿门",
+      "title": "成稿验收",
       "items": [
         "fidelity 抽检页文本，空清单不算通过",
         "命中写入 retrieval_log.jsonl",
-        "带 run_id 的稿审计失败才挡回归"
+        "带 run_id 的稿审计失败才卡住回归测试"
       ]
     }
   ]

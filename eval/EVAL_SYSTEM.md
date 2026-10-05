@@ -24,13 +24,13 @@
 
 当前题集 **159 道**：
 
-| split | type | n | 进回归门禁 |
+| split | type | n | 进回归测试 |
 |---|---|---:|---|
 | freeze | exact | 23 | 结构化 29/29（与部分 cross 合计） |
 | freeze | keyword | 20 | FTS Recall / Neg@5 |
 | freeze | semantic | 20 | hybrid Recall / Neg@5 |
 | freeze | cross | 12 | 其中检索约 6 道，其余走结构化 |
-| freeze | end2end | 8 | 材料覆盖自动分，不挡回归 |
+| freeze | end2end | 8 | 材料覆盖自动分，不卡住回归测试 |
 | freeze | route | 24 | accuracy = 1.0（wrong-tool rate = 0） |
 | freeze | year_filter | 4 | 命中页 `reports.year` 与问句年份一致 |
 | diag | indicator | 12 | 12/12 |
@@ -38,7 +38,7 @@
 | diag | semantic | 13 | 否（对照脚本） |
 | diag | cross | 15 | 否（对照脚本） |
 
-`split` 缺省视为 freeze。`--split freeze` 才进 `tools/run_eval_regression.py` 的检索/结构化门槛。diag 只把 **指标** 和 **无答案** 纳入回归，真语义 / 跨语言只做诊断。回归另输出 `recall_soft_at_k`（期望页在 top-k 内仅页码 ±5 的 near-miss 计半分，仅展示不设门）与「公司×年份×指标」覆盖矩阵（`tools/coverage_matrix.py`）。题集 2026-09-13 扩至 156 道（+5 英文 cross、+5 中报 semantic，全部 diag）；2026-10-04 再加 freeze exact-021–023（2026 中报），结构化 29 道。
+`split` 缺省视为 freeze。`--split freeze` 才进 `tools/run_eval_regression.py` 的检索/结构化门槛。diag 只把 **指标** 和 **无答案** 纳入回归测试，真语义 / 跨语言只做诊断。回归测试另输出 `recall_soft_at_k`（期望页在 top-k 内仅页码 ±5 的 near-miss 计半分，只展示、不卡住回归测试）与「公司×年份×指标」覆盖矩阵（`tools/coverage_matrix.py`）。题集 2026-09-13 扩至 156 道（+5 英文 cross、+5 中报 semantic，全部 diag）；2026-10-04 再加 freeze exact-021–023（2026 中报），结构化 29 道。
 
 ---
 
@@ -153,7 +153,7 @@ python tools/diag_retrieval.py
 python tools/audit_notes.py
 ```
 
-回归脚本现测：freeze FTS、freeze hybrid、FTS diag、hybrid diag（无答案）、路由、年份过滤、组稿生成、`audit_notes.py`。  
+回归测试脚本现测：freeze FTS、freeze hybrid、FTS diag、hybrid diag（无答案）、路由、年份过滤、组稿生成、`audit_notes.py`。  
 对照 `eval/regression_baseline.json` 打印每题翻红/翻绿（lost/gained）；翻题默认只打印，不单独当失败。改 GT 或题集后门槛通过再用 `--write-baseline`。
 
 | 检查 | 门槛 | 最近实测（2026-08-30） |

@@ -1,12 +1,12 @@
 # 报告系统
 
-入门说明在 [从零理解财报知识库与 RAG 评测](knowledge-base-rag-eval-tutorial.md)。这篇按代码里已经能跑的路径，写清三层各自做什么、数据怎么交到下一层、每层用什么门验收。
+入门说明在 [从零理解财报知识库与 RAG 评测](knowledge-base-rag-eval-tutorial.md)。这篇按代码里已经能跑的路径，写清三层各自做什么、数据怎么交到下一层、每层用什么检查验收。中文用词见 [术语库](glossary.md)。
 
 交互图：
 
 - [三层结构](diagrams/layers.html)
 - [从原文到审计稿](diagrams/run.html)
-- [证据层：输入、产物与校验](diagrams/evidence-io.html)
+- [证据层：输入、产物与验收](diagrams/evidence-io.html)
 - [三类文件如何走完证据层](diagrams/evidence-files.html)
 
 ## 三层各回答什么
@@ -14,7 +14,7 @@
 | 层 | 回答的问题 | 主要产物 | 评测 |
 |---|---|---|---|
 | 证据层 | 这句话还在不在原文里 | `reports` 文档目录、`pages`、`statements`、版本链 | 三表 29/29；`fidelity` 抽检 `content_orig` |
-| 知识库层 | 问句该查科目、哪一页，还是没有答案 | `indicators`、FTS5、向量、MCP | 路由 24/24；keyword / hybrid semantic 的 Recall@5；分桶只报告、不足 5 题不设门 |
+| 知识库层 | 问句该查科目、哪一页，还是没有答案 | `indicators`、FTS5、向量、MCP | 路由 24/24；keyword / hybrid semantic 的 Recall@5；分桶只展示、不足 5 题不卡住回归测试 |
 | 报告层 | 稿子里的数能不能回到这次查询 | 扫描稿、`retrieval_log.jsonl` | `audit-report`。无 `run_id` 的旧稿只跳过，不算通过 |
 
 三层之间是交接，不是同一次命令里混做。证据层不负责检索排序，知识库层不改原文，报告层不把判断写进财务表。
@@ -117,15 +117,15 @@ python -m stock_kb audit-report <稿子路径> --company 海底捞
 
 收集规则在 `skill/stock-collect/SKILL.md`，写稿规则在 `skill/stock-note/SKILL.md`。财报用 SEC 或披露易。电话会先用公司 IR 上的文字稿直链；没有时，按该技能再收不登录就能打开的非官方会纪。研报只接受能直接打开的文件 URL，并加 `--kind research --optional`。不登录券商站，不绕过付费墙。披露易适配器在 `stock_kb/collectors/hkex.py`，失败写入 `data/collect_log.jsonl`。
 
-公司目录都不存在、也没有因未变更而跳过的文件时，`scan` 退出码 2。目标年份的财报一件都没落到本机时，`fetch --source` 失败。研报或电话会单条失败只记日志。网页发现过程不进黄金回归。黄金回归只在维护者本机、库里已有试点数据时跑。
+公司目录都不存在、也没有因未变更而跳过的文件时，`scan` 退出码 2。目标年份的财报一件都没落到本机时，`fetch --source` 失败。研报或电话会单条失败只记日志。网页发现过程不进冻结回归测试。冻结回归测试只在维护者本机、库里已有试点数据时跑。
 
 ## 证据层
 
-证据层回答：这句话还在不在原文里。它把 NAS 和 `data/raw` 里的文件写成可引用的页；财报再抽出三表行。校验门用来证明这些产物还对得上原文。数值不在这一层换算成人读单位。
+证据层回答：这句话还在不在原文里。它把 NAS 和 `data/raw` 里的文件写成可引用的页；财报再抽出三表行。验收用来证明这些产物还对得上原文。数值不在这一层换算成人读单位。
 
-完整交互图见 [证据层：输入、产物与校验](diagrams/evidence-io.html)。
+完整交互图见 [证据层：输入、产物与验收](diagrams/evidence-io.html)。
 
-### 输入、产物和校验门
+### 输入、产物和验收
 
 ```mermaid
 flowchart TB
@@ -140,8 +140,8 @@ flowchart TB
   stmts[三表行<br/>财报才有，数字保持原单位]
   live[当前使用文档<br/>同一份文档只留最新可查]
   fid[页保真<br/>抽检原文句子<br/>空清单不算通过]
-  st[三表评测<br/>L1 解析命中<br/>L3 值、页、来源一致<br/>freeze 29/29 挡回归]
-  cov[覆盖矩阵<br/>公司 × 年 × 科目<br/>只报告，不挡回归]
+  st[三表评测<br/>L1 解析命中<br/>L3 值、页、来源一致<br/>freeze 29/29 卡住回归测试]
+  cov[覆盖矩阵<br/>公司 × 年 × 科目<br/>只展示，不卡住回归测试]
   kb[交给知识库层<br/>指标、FTS、向量]
 
   nas --> scanNas --> stats
@@ -157,7 +157,7 @@ flowchart TB
 |---|---|---|
 | 输入 | NAS 公司目录；按缺口 `fetch` 到 `data/raw` 的直链 | 先扫 NAS，再补缺失类型。原文待在两个根目录，互不拷贝。`scan` 对两边都只读 |
 | 产物 | `reports` 文档目录、出处 JSON、`pages`、财报的 `statements` | 下游只认库里的目录行。页同时留下简体和原文。三表行保持千元或百万美元 |
-| 校验 | 三表 29/29；`fidelity` 抽检；覆盖矩阵 | 前两道挡回归或明确「不算通过」。覆盖矩阵只报告缺口 |
+| 验收 | 三表 29/29；`fidelity` 抽检；覆盖矩阵 | 前两道卡住回归测试或明确「不算通过」。覆盖矩阵只展示缺口 |
 
 当前使用文档条件是 `COALESCE(is_duplicate,0)=0 AND COALESCE(status,'ok')='ok'`。`superseded`、`missing`、`failed` 不进默认检索。MCP `list_reports` 仍返回全部状态。
 
@@ -249,16 +249,16 @@ flowchart TB
 
 证据层的评测在扫描之后、知识库检索之前。它们验证产物，不改原文。
 
-| 门 | 看什么 | 门槛 | 命令 |
+| 检查 | 看什么 | 门槛 | 命令 |
 |---|---|---|---|
-| 结构化 L1 `parse_hit` | 黄金页的 `statements` 里有这个数 | freeze 29/29，容差 0.0001，`golden_source: pdf` | `python -m stock_kb eval` |
-| 结构化 L3 `hit` | 按科目词查出的行，值、来源、页与黄金一致 | 同上，两列都要报 | 同上 |
+| 结构化 L1 `parse_hit` | 对照页的 `statements` 里有这个数 | freeze 29/29，容差 0.0001，`golden_source: pdf` | `python -m stock_kb eval` |
+| 结构化 L3 `hit` | 按科目词查出的行，值、来源、页与对照答案一致 | 同上，两列都要写 | 同上 |
 | 页保真 | 非 OCR 页的句子必须出现在 `content_orig` | 缺了退出码 1。清单为空打印 `page_fidelity: skipped ...; not a pass`，退出码 0，这不是通过 | `python -m stock_kb fidelity` |
-| 覆盖矩阵 | 公司 × 年份 × 五个核心科目是否有数 | 只报告，不挡回归 | `python tools/coverage_matrix.py` |
+| 覆盖矩阵 | 公司 × 年份 × 五个核心科目是否有数 | 只展示，不卡住回归测试 | `python tools/coverage_matrix.py` |
 
 当前 `eval/page_fidelity.yaml` 是 2026-10-03 首批财报 8、研报 8、电话会 1、OCR 4，2026-10-04 补招股书 2。库里目前只有一份当前使用的电话会文字稿。OCR 缺句只列入保真报告。
 
-指标 12/12 在知识库层回归里，根仍是这里抽出的三表行。
+指标 12/12 在知识库层回归测试里，根仍是这里抽出的三表行。
 
 ### 字段速查
 
@@ -280,7 +280,7 @@ flowchart TB
 | `origin` | 文件在 NAS 还是 `collect.raw_dir`。`stats` 用它 |
 | `source_url` / `retrieved_at` | 下载地址和取回时间。编进研报、电话会的 `logical_key`；选举当前使用文档时先比取回时间 |
 | `report_type` / `year` / `period_type` / `language` | 分类。检索和三表、指标按这些收窄 |
-| `logical_key` / `parse_version` / `status` | 版本链、解析规则版本、当前使用文档闸门 |
+| `logical_key` / `parse_version` / `status` | 版本链、解析规则版本、当前使用文档条件 |
 | `title` | 给人看的文件名，也是引用里的书名号 |
 | `pages.content_orig` / `content` | 原文供引用；简体供检索 |
 | `pages.page_kind` | `cover` / `toc` / `statement` / `body` / `transcript` |
@@ -388,11 +388,11 @@ fusion = 1 / (fts_rank + 60) + 1 / (vec_rank + 60)
 - 无答案 empty_rate ≥ 0.75
 - 指标 12/12
 
-另外按桶打印 Recall@5：关键词、语义、跨语言、附注、无答案。某一桶少于 5 题时只打印 n，不因此让回归失败。`exact`、`indicator`、`route` 不进检索桶。命令是 `python -m stock_kb eval` 和 `python tools/run_eval_regression.py`。
+另外按桶打印 Recall@5：关键词、语义、跨语言、附注、无答案。某一桶少于 5 题时只打印 n，不因此让回归测试失败。`exact`、`indicator`、`route` 不进检索桶。命令是 `python -m stock_kb eval` 和 `python tools/run_eval_regression.py`。
 
 ## 报告层
 
-这一层的成品是 agent 按 `skill/stock-note` 写的扫描稿。给人打开的默认格式是同名单文件 HTML，由 `python -m stock_kb render-note` 从 Markdown 生成。Markdown 留下供改稿，`audit-report` 两份都能读。`compose-note` 仍可出材料底稿和 ECharts 图，但不是回归门。`charts.py` 继续把已引用的序列画成图。
+这一层的成品是 agent 按 `skill/stock-note` 写的扫描稿。给人打开的默认格式是同名单文件 HTML，由 `python -m stock_kb render-note` 从 Markdown 生成。Markdown 留下供改稿，`audit-report` 两份都能读。`compose-note` 仍可出材料底稿和 ECharts 图，但不是回归测试门槛。`charts.py` 继续把已引用的序列画成图。
 
 写稿前要有 `STOCK_KB_RUN_ID`。终稿要有：
 
@@ -406,7 +406,7 @@ fusion = 1 / (fts_rank + 60) + 1 / (vec_rank + 60)
 
 `audit-report` 还检查：注释里的数字能在该页 `content` / `content_orig` 或三表行里找到；每条出处出现在该 `run_id` 的日志命中，或出现在该次返回的指标、三表行里。有两个及以上四位年份的利润表、资产负债、现金流，节内要有「图」，图旁数字要来自已引用数字。
 
-回归里，`eval/generated_notes` 没有 `*扫描*` 稿时，打印 `audit-report: skipped (no agent report); not a pass`。已有稿但没有 `run_id:`，按旧稿跳过。这两种都不记失败，也不算通过。带 `run_id:` 的稿审计失败才挡住回归。措辞和观点仍按 `eval/HUMAN_RUBRIC.md` 人工看，不挡 `run_eval_regression.py`。
+回归测试里，`eval/generated_notes` 没有 `*扫描*` 稿时，打印 `audit-report: skipped (no agent report); not a pass`。已有稿但没有 `run_id:`，按旧稿跳过。这两种都不记失败，也不算通过。带 `run_id:` 的稿审计失败才卡住回归测试。措辞和观点仍按 `eval/HUMAN_RUBRIC.md` 人工看，不挡 `run_eval_regression.py`。
 
 ## 实例
 

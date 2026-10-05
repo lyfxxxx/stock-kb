@@ -63,6 +63,6 @@ python -m stock_kb render-note <稿子.md>
 
 公司简介与股权管理层 → 利润表 → 分业务/分产品 → 资产负债 → 现金流 → 分红 → 行业与同行 → 未来看点 → 总结 → 附：注释（数据出处）。☆节按公司特性取舍并明说。总判断与估值只在总结。
 
-## 人工过关（挡发布，不挡回归）
+## 人工过关（卡住发布，不卡住回归测试）
 
-清单见 `eval/HUMAN_RUBRIC.md`。回归门是 `audit-report`：没有 agent 终稿时跳过，且不算通过。
+清单见 `eval/HUMAN_RUBRIC.md`。卡住回归测试的是 `audit-report`：没有 agent 终稿时跳过，且不算通过。

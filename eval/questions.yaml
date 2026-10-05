@@ -8,7 +8,7 @@ notes: >
   净利润/亏损口径为归母（本公司拥有人应占 / Net Income — Yum China Holdings, Inc.）；
   比较数字优先用当年年报正文页。file 对应 reports.title（不含扩展名）。
   2026-08-22 阶段 C：semantic 20 题已加负样本；新增 split=diag 的 indicator 12 /
-  no_answer 8 / 真语义 8 / 跨语言检索 10。回归请用 --split freeze。
+  no_answer 8 / 真语义 8 / 跨语言检索 10。回归测试请用 --split freeze。
   2026-08-30：freeze 46 道检索 GT 按 pages.content 通读；8 道改 required 页，若干道改负样本。
   2026-08-30：新增 freeze route 24（工具路由）与 year_filter 4（问句带年份）。
 questions:

@@ -459,7 +459,7 @@ SQLite 主要表：
 - 全量入库：60 份报告（海底捞 34 + 百胜中国 26）、8,128 页、5,570 条三表行项目、117 条指标、118 条 sources；
   `statements.unit/currency` 已回填（2026-08-16 解析器修复后重新 reparse）
 - 检索：FTS5（trigram + 繁简归一化）+ 向量索引（bge-small-zh、多语言 MiniLM、BGE-M3；已从整页嵌入升级为约 800 字/块的段落分块嵌入，使用 sentence-transformers + CUDA）
-- 评测：`eval/questions.yaml` + `eval/EVAL_SYSTEM.md`（现行体系）+ `eval/EVAL_PLAN.md`（过程）。结构化 26 题 PDF golden；freeze/diag 分集；回归见 `tools/run_eval_regression.py`。
+- 评测：`eval/questions.yaml` + `eval/EVAL_SYSTEM.md`（现行体系）+ `eval/EVAL_PLAN.md`（过程）。结构化 26 题 PDF golden；freeze/diag 分集；回归测试见 `tools/run_eval_regression.py`。
 - MCP：只读工具（含 `route_query`），stdio + Streamable HTTP 双传输，HTTP 支持 Bearer token 鉴权；stdio 与 HTTP 均已端到端验证
 - 增量扫描：`scan --watch-interval 秒数` 开关，默认关闭
 - 模型下载：`models download` 支持 hf-mirror 镜像 + hf_transfer 多线程 + snapshot_download 断点续传；缓存完整后离线加载可用
@@ -502,7 +502,7 @@ SQLite 主要表：
 
 ### 2026-10-02 三层流水线落地
 
-本次落地了版本链（`parse_version` / `logical_key` / `page_kind`）、`fidelity`、`fetch`（SEC 与披露易分开，另有 `skill/stock-collect`）、检索分桶、`retrieval_log`、`audit-report`，以及收紧后的 `skill/stock-note`。`compose-note` 仍保留作材料底稿，回归门改为有 agent 终稿才跑 `audit-report`；没有终稿只打印跳过，不算通过。检索桶题数不足 5 只报告 n，不因此失败。
+本次落地了版本链（`parse_version` / `logical_key` / `page_kind`）、`fidelity`、`fetch`（SEC 与披露易分开，另有 `skill/stock-collect`）、检索分桶、`retrieval_log`、`audit-report`，以及收紧后的 `skill/stock-note`。`compose-note` 仍保留作材料底稿，有 agent 终稿才跑 `audit-report`；没有终稿只打印跳过，不算通过。检索桶题数不足 5 只展示 n，不因此失败。
 
 ### 2026-10-03 catalog-first 与 meta_dir
 

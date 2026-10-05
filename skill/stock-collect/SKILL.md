@@ -9,7 +9,7 @@ description: 只查找并下载财报、电话会文字稿和研报直链。不�
 
 下载落在配置 `collect.raw_dir`（默认 `data/raw/{公司}/`）。出处 JSON 落在 `collect.meta_dir`（默认 `data/meta/collect/{公司}/{相对路径}.source.json`，含 `source_url`、`retrieved_at`、`sha256`）。`scan` 会把 NAS 和网络文件的 metadata 都写进 `meta_dir`；查询目录仍是 `reports`。不要另造 prepare。
 
-网页上怎么找到链接，不进入黄金回归。目标年份就是这次命令实际下载到的最近一份年报和最近一份中报，不用另填年份清单。
+网页上怎么找到链接，不进入冻结回归测试。目标年份就是这次命令实际下载到的最近一份年报和最近一份中报，不用另填年份清单。
 
 ## 操作顺序
 

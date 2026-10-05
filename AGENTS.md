@@ -1,6 +1,6 @@
 # AGENTS.md — stock-kb 项目开发指引
 
-本文件写给后续在本仓库工作的 agent（Codex / Claude 等）。开始改动前先读完本文件，并按需查看 `README.md`、`PLAN.md`、`docs/report-system.md` 和 `docs/process-log.md`。三层数据流和每层评测见 `docs/report-system.md`。其中 `PLAN.md` 是早期设计方案，**以第 15 节「当前实施状态」为准**；其余章节描述的是设计意图，不一定与代码完全一致。
+本文件写给后续在本仓库工作的 agent（Codex / Claude 等）。开始改动前先读完本文件，并按需查看 `README.md`、`PLAN.md`、`docs/glossary.md`、`docs/report-system.md` 和 `docs/process-log.md`。读者能看见的中文用词以 `docs/glossary.md` 为准。三层数据流和每层评测见 `docs/report-system.md`。其中 `PLAN.md` 是早期设计方案，**以第 15 节「当前实施状态」为准**；其余章节描述的是设计意图，不一定与代码完全一致。
 
 ## 1. 项目是什么
 
@@ -12,7 +12,7 @@ scan（NAS 与已有 raw_dir）→ stats 看缺口 → stock-collect / fetch 只
 ```
 
 - 试点公司：海底捞（06862.HK）、百胜中国（YUMC/09987.HK），已在 `config.yaml` 配置。
-- 当前规模：64 份文档、8,534 页、8,823 条三表行项目、237 条指标（2026-10-04：60 nas / 4 collect；OCR 分层与折行胶水后。评测体系见 `eval/EVAL_SYSTEM.md`，目标到门的映射见 `eval/METRICS_CONTRACT.md`，过程记录见 `eval/EVAL_PLAN.md`，数据缺口清单见 `eval/data_gaps.md`）。
+- 当前规模：64 份文档、8,534 页、8,823 条三表行项目、237 条指标（2026-10-04：60 nas / 4 collect；OCR 分层与折行胶水后。评测体系见 `eval/EVAL_SYSTEM.md`，目标到门槛的映射见 `eval/METRICS_CONTRACT.md`，过程记录见 `eval/EVAL_PLAN.md`，数据缺口清单见 `eval/data_gaps.md`）。
 - 核心目标：笔记中的关键数字必须能追溯到「文件 + 页码/表名」，不允许凭记忆编数。
 
 ## 2. 环境与安装
@@ -21,7 +21,7 @@ scan（NAS 与已有 raw_dir）→ stats 看缺口 → stock-collect / fetch 只
 - 开发安装：`pip install -e ".[mcp,ml]"`；GPU 嵌入用 `pip install -e ".[gpu]"`（本机 4070 Ti SUPER）。
 - **本项目已纳入 Git 版本管理**（2026-08-15 初始化并完成首次提交；远端：`https://github.com/lyfxxxx/stock-kb`，私有仓库）。`data/`、`models/`、日志与 pid 由 `.gitignore` 排除、不入库；`data/stock_kb.db` 仍不属于源码，破坏性操作前先备份。
 - 嵌入模型缓存在 `models/`，索引、查询全程离线；`models/`、`data/` 属于数据，不要当源码修改。
-- 语言与文档统一用中文；代码注释/标识符现状为中英混合，新代码跟随所在模块风格。
+- 语言与文档统一用简体中文；读者用词以 `docs/glossary.md` 为准，新概念先补术语库再写正文。代码注释/标识符现状为中英混合，新代码跟随所在模块风格。
 
 ## 3. 常用命令（修改前先确认基线）
 
@@ -50,8 +50,8 @@ python -m stock_kb render-note <扫描.md>            # 终稿默认格式：同
 python -m stock_kb quote --company 海底捞 --json   # 最新价/市值/TTM PE；失败则非零退出
 python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json
 python tools/check_vec.py                           # 快速检查向量索引健康度
-python tools/coverage_matrix.py                     # 公司×年份×指标覆盖矩阵（已接入回归）
-python tools/audit_formal_notes.py [md...]          # 正式稿程序化审计（已接入回归；无参=扫全部样张）
+python tools/coverage_matrix.py                     # 公司×年份×指标覆盖矩阵（已接入回归测试）
+python tools/audit_formal_notes.py [md...]          # 正式稿程序化审计（已接入回归测试；无参=扫全部样张）
 python tools/backfill_ocr_quality.py                # 一次性：回填 OCR 噪声/乱码页 is_ocr=2
 python tools/reprocess_reports.py <report_id...>    # 定向重扫指定文档（读 NAS，走 OCR 闸门）
 ```
@@ -99,11 +99,12 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 | `stock_kb/generation_eval.py` | 组稿产出：引用页是否含该数字 + 趋势句口径一致性 |
 | `stock_kb/serve/mcp_server.py` | FastMCP 服务：8 个只读工具（含 `route_query`）+ HTTP Bearer 鉴权 |
 | `tools/` | 一次性/运维脚本（审计、检查、迁移、下载模型、生成人工复核底稿） |
-| `eval/` | `questions.yaml` 评测集、`EVAL_SYSTEM.md` 门禁、`METRICS_CONTRACT.md` 目标到门、`reports/` 历史报告、人工审核表 |
+| `eval/` | `questions.yaml` 评测集、`EVAL_SYSTEM.md` 回归测试门槛、`METRICS_CONTRACT.md` 目标到门槛、`reports/` 历史评测报告、人工审核表 |
 | `data/` | SQLite 库、出处 JSON（`meta/`）、下载原文（`raw/`）、日志、pid 文件（运行时产物） |
 | `models/` | Hugging Face 模型缓存（运行时产物） |
 | `skill/stock-collect/` | 收集 skill：发现财报、电话会、研报直链并调用 `fetch` |
 | `skill/stock-note/` | 报告 skill：agent 按框架写扫描稿 |
+| `docs/glossary.md` | 读者文档与示意图的中文术语库 |
 | `docs/report-system.md` | 三层架构、数据转换、每层评测和 exact-001 实例 |
 | `docs/process-log.md` | 历次踩坑记录与解法（现象/原因/解决/教训），改相关模块前必读；简历过程记录指定此文件 |
 
@@ -207,7 +208,7 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 
 ### 新增评测题
 
-在 `eval/questions.yaml` 追加。`type`：exact / keyword / semantic / cross / end2end / indicator / no_answer / route / year_filter。`split` 缺省为 freeze（进回归）；诊断题写 `split: diag`。`expected[].file` 为不含扩展名的 `reports.title` 片段。结构化题必须 `golden_source: pdf`，禁止从 DB 抄 `expected_value`。diag 分析/跨语言题可列多条 `sources`（均 `required: true`，命中任一即算）；`authority` 为 `annual` / `interim` / `research` / `prospectus`，评测另报年报/中报召回。回归：`python tools/run_eval_regression.py`（freeze 检索/结构化 + diag 指标/无答案 + `audit_notes.py`）。翻题对照 `eval/regression_baseline.json`。体系见 `eval/EVAL_SYSTEM.md`，目标到门见 `eval/METRICS_CONTRACT.md`，过程见 `eval/EVAL_PLAN.md`。
+在 `eval/questions.yaml` 追加。`type`：exact / keyword / semantic / cross / end2end / indicator / no_answer / route / year_filter。`split` 缺省为 freeze（进回归测试）；诊断题写 `split: diag`。`expected[].file` 为不含扩展名的 `reports.title` 片段。结构化题必须 `golden_source: pdf`，禁止从 DB 抄 `expected_value`。diag 分析/跨语言题可列多条 `sources`（均 `required: true`，命中任一即算）；`authority` 为 `annual` / `interim` / `research` / `prospectus`，评测另报年报/中报召回。回归测试：`python tools/run_eval_regression.py`（freeze 检索/结构化 + diag 指标/无答案 + `audit_notes.py`）。翻题对照 `eval/regression_baseline.json`。体系见 `eval/EVAL_SYSTEM.md`，目标到门槛见 `eval/METRICS_CONTRACT.md`，过程见 `eval/EVAL_PLAN.md`。
 
 ### 改扫描报告输出（note_builder / report_html / charts / note_template / SKILL）
 
@@ -219,7 +220,7 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 
 ### 更新文档
 
-改动影响命令、schema、流程、已知限制时，同步更新 `README.md`、`AGENTS.md`；踩坑记录追加到 `docs/process-log.md`。
+改动影响命令、schema、流程、已知限制时，同步更新 `README.md`、`AGENTS.md`；踩坑记录追加到 `docs/process-log.md`。读者中文用词必须在 `docs/glossary.md`；新术语先补术语库，再写正文和示意图。
 
 ## 10. 完成标准（改完必须全部通过）
 
@@ -235,8 +236,8 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 - 出处 JSON 写在 `collect.meta_dir`，不要贴在原文旁。遗留 sidecar 只作 fallback。`origin_for` 对 UNC 用字符串前缀比较，剥 pathlib 尾斜杠，不要 `resolve()`。
 - 港股繁体、中英混排：先归一化再索引，引用用原文。
 - FTS5 默认分词器对中文无效，必须 trigram；<3 字查询走 LIKE。
-- `index --rebuild` 曾误删所有模型索引——回归时重点检查「按 model 隔离」。
-- 整页嵌入语义效果差，当前是 800 字分块。400 已试：diag 上 027 进 top-5，但 freeze hybrid semantic 0.10→0.05，已回滚。改粒度必须 `--rebuild-chunks` 并跑回归。
+- `index --rebuild` 曾误删所有模型索引——回归测试时重点检查「按 model 隔离」。
+- 整页嵌入语义效果差，当前是 800 字分块。400 已试：diag 上 027 进 top-5，但 freeze hybrid semantic 0.10→0.05，已回滚。改粒度必须 `--rebuild-chunks` 并跑回归测试。
 - CUDA/onnxruntime 依赖脆弱，当前推理走 sentence-transformers + torch；非必要不要切回 onnxruntime-gpu。
 - 模型缓存后仍可能联网：离线环境变量必须在相关库 import 之前设置。
 - `mcp` 锁定 1.x；`streamable_http_app()` 路径默认 `/mcp`；客户端 header 通过 `httpx.AsyncClient` 传。
@@ -256,7 +257,7 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 
 - 评测现状见 `eval/EVAL_PLAN.md`。`indicators.net_profit` 已改为归母；no_answer 带引擎健康哨兵（engine_error 不计入 empty_rate）。问句带年份时检索硬过滤 `reports.year`；三表 `year=` 默认当年正文且默认排除 OCR 行、未指定 `period_type` 时只取年报。路由 24/24；组稿 faithful_rate=1.0（含趋势句口径一致性自检）。freeze hybrid semantic Recall@5 为 0.30（含近失软分 `recall_soft_at_k` 字段）。真语义/跨语言仍是 diag 盲区（已扩英文+中报题；2026-10-04 加 freeze exact-021–023 后题集 159 道，其中 48 diag）。行情走 `python -m stock_kb quote`，不入库；TTM 已能用中报拼 `interim_plus_stub`。
 - 扫描报告数据面：中报三表、百胜 2016–2018、海底捞总资产、折行残片均已修复；OCR 指标分层已落地（2017 五个核心仍标 comparative）。剩余缺口（两家无毛利率序列、分部收入未结构化、美/港双版本 canonical）见 `eval/data_gaps.md` 待办。
-- 正式稿程序化审计已落地（`tools/audit_formal_notes.py`，接入回归；样张缺失时自动跳过），但 R1/R2/R11（判断段分布、心算复核）仍靠人工 rubric。
+- 正式稿程序化审计已落地（`tools/audit_formal_notes.py`，接入回归测试；样张缺失时自动跳过），但 R1/R2/R11（判断段分布、心算复核）仍靠人工 rubric。
 - 两字查询已建 `pages_bigram_fts`，但 bigram 排序暂未启用（避免牺牲 keyword 基线），需独立评测集调权。
 - reranker / jina 对比未完成（可选）。
 - US/HK 年报等“内容不同但语义重复”的 canonical 标记未实现；SHA 完全重复已自动标记并排除。

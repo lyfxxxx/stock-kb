@@ -2,7 +2,7 @@
 
 现行体系（分层、GT、打分、门禁、命令）见 **`eval/EVAL_SYSTEM.md`**。本文只记**过程中改掉的问题**和对照实验，不当施工清单。
 
-日常回归：
+日常回归测试：
 
 ```powershell
 python tools/run_eval_regression.py          # freeze + FTS/hybrid diag + audit_notes
@@ -73,7 +73,7 @@ FTS freeze cross 因此从 0.167 升到 0.333（整句检索，不是系统变�
 
 ### 2.5 语义题没有负样本，Neg@k 一直是 0
 
-freeze 语义 20 题补了难负样本后，Neg@5 从 0 变成 0.10。去泄漏改写之后，这些负样本不再容易被新问句命中，Neg@5 回到 0。回归仍保留 Neg@k 上限，防止以后再把负样本评掉。
+freeze 语义 20 题补了难负样本后，Neg@5 从 0 变成 0.10。去泄漏改写之后，这些负样本不再容易被新问句命中，Neg@5 回到 0。回归测试仍保留 Neg@k 上限，防止以后再把负样本评掉。
 
 ### 2.6 两字 LIKE 按页面长度排序
 
@@ -156,7 +156,7 @@ FTS 长句曾用 trigram OR 硬填 top-k，无答案 empty_rate=0。已去掉这
 | 召不回 | 13 | 13 |
 | hybrid 无答案填满 | 8/8 | 8/8 |
 
-同文件、错页：024 的文件排到向量第 1，但 GT 页仍不在 50 名；026 同文件 40→7；013 同文件命中消失。freeze hybrid semantic **0.10 → 0.05**（20 题里只剩 semantic-008「啄木鸟」@3），keyword 仍 0.80、结构化仍 26/26。按回归门禁回滚到 800。
+同文件、错页：024 的文件排到向量第 1，但 GT 页仍不在 50 名；026 同文件 40→7；013 同文件命中消失。freeze hybrid semantic **0.10 → 0.05**（20 题里只剩 semantic-008「啄木鸟」@3），keyword 仍 0.80、结构化仍 26/26。按回归测试门槛回滚到 800。
 
 更小块能把个别已进候选的题推上 top-5，**捞不起那 13 道召不回**，还会丢掉 freeze 上那 1 道语义命中。下一步不要再切块；hybrid 无答案做距离门槛，跨语言另处理问句，两者都不要和分块绑在一起。
 
@@ -166,7 +166,7 @@ FTS 长句曾用 trigram OR 硬填 top-k，无答案 empty_rate=0。已去掉这
 
 diag 的 semantic / cross 从「唯一文件+唯一页」改成证据清单：`sources` 里每条都 `required: true`，top-5 命中任一即算；`authority` 标明 `annual` / `interim` / `research` / `prospectus`。报告多一列 **年报/中报证据@5**（仅当清单里有年报或中报）。027 利润与 028 咖啡不再共用海通 Q2 封面。Coverage / Diversity 不做成指标。
 
-对照脚本：`python tools/diag_retrieval.py`（`vector_rank` 已按清单任一源）。回归脚本不读这些列。
+对照脚本：`python tools/diag_retrieval.py`（`vector_rank` 已按清单任一源）。回归测试脚本不读这些列。
 
 重测（vector@50 / hybrid@5 / FTS@5，任一证据）：
 
@@ -206,7 +206,7 @@ freeze keyword 测不到向量。新增 `python -m stock_kb eval-embed`：44 道
 
 按「先稳住评测再改 RAG」的下一刀：
 
-1. **组稿生成**：`stock_kb/note_builder.py` 按 skill 顺序取数填模板（无 LLM）。`eval-generation` 检查财务摘要每个数字是否出现在引用页。手写 `audit_notes.py` 仍保留。二者进回归。
+1. **组稿生成**：`stock_kb/note_builder.py` 按 skill 顺序取数填模板（无 LLM）。`eval-generation` 检查财务摘要每个数字是否出现在引用页。手写 `audit_notes.py` 仍保留。二者进回归测试。
 2. **问句带年份**：FTS/向量把年份从 MATCH 里拿掉，改为过滤 `reports.year`；超出入库年则空（与无答案 2026 题一致）。无年份问句不按新近排序，freeze keyword 0.80 不变。4 道 `year_filter` precision_mean=1.0。
 3. **三表正文**：`query_statements(year=)` 默认 `r.year = s.year`。2023 经营现金流不再带回 2024 年报比较列。
 4. **路由**：`stock_kb.route` + freeze 24 道 `route`，accuracy=1.0。MCP `route_query`。减值主走三表，可 fallback 到 search。
@@ -217,8 +217,8 @@ freeze keyword 测不到向量。新增 `python -m stock_kb eval-embed`：44 道
 
 1. **数据面**：报表页识别剥 `Condensed/简明` 前缀与 `(Loss)/（未经审核）` 后缀、补 `Consolidated and Combined` 变体——海底捞 7 份中报三表从 0 恢复（每份 258–298 行），百胜 2016/2018 恢复；无标签小计行挂小节标题（`is_subtotal`）+ 折行标签拼接，`indicators` 分桶键扩到 period_type（中报指标 48 条）并新增海底捞总资产组合规则（30 期勾稽恒等式全过）。指标 117→230，原有值零漂移。
 2. **OCR 闸门**：触发加 `(cid:` 密度、输出加质量校验（失败 `is_ocr=2` 不进检索）；tesseract 自动推导 tessdata。OCR 行标 `statements.is_ocr=1`，默认隔离于 indicators 与 `query_statements`。百胜 2017 重扫 122 页 OCR 成功。
-3. **审计**：`tools/audit_formal_notes.py` 程序化审计正式稿（接入回归，含阴性验证）；MCP locator 统一《title》第N页；`quotes` 币种缺失改报错。
+3. **审计**：`tools/audit_formal_notes.py` 程序化审计正式稿（接入回归测试，含阴性验证）；MCP locator 统一《title》第N页；`quotes` 币种缺失改报错。
 4. **检索**：hybrid 短查询 FTS 零命中走向量兜底（评测改读 `hybrid_fused` 标志）；FTS 无年份问句 1.5%/年新近度软排序（keyword Neg@5 0.55→0.45）；MCP/组稿零命中升引擎。
-5. **评测**：no_answer 引擎哨兵（engine_error 不计 empty_rate）；`recall_soft_at_k` 软分；题集 146→156（+5 英文 cross、+5 中报 semantic，全 diag）；回归新增覆盖矩阵。回归全过后已 `--write-baseline`。
+5. **评测**：no_answer 引擎哨兵（engine_error 不计 empty_rate）；`recall_soft_at_k` 软分；题集 146→156（+5 英文 cross、+5 中报 semantic，全 diag）；回归测试新增覆盖矩阵。回归测试全过后已 `--write-baseline`。
 
 遗留：分部收入结构化、美/港双版本 canonical、OCR 行数字人工复核、观点层（R1/R2/R11）仍靠人工 rubric。

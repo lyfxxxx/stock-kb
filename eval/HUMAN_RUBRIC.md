@@ -1,7 +1,7 @@
 # 人工 rubric：扫描稿发布门
 
 审核人：用户。  
-本清单**挡发布、不挡** `python tools/run_eval_regression.py`。自动回归仍只看 G1–G11（组稿引用页含该数、检索/结构化门槛）。文笔是否像 modest_ 也只走本清单，不设 LLM judge。
+本清单**卡住发布、不卡住** `python tools/run_eval_regression.py`。自动回归测试仍只看 G1–G11（组稿引用页含该数、检索/结构化门槛）。文笔是否像 modest_ 也只走本清单，不设 LLM judge。
 
 两家试点（海底捞、百胜中国）都要过关才算可发布：
 
