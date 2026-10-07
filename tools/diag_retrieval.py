@@ -22,7 +22,7 @@ def _gt_snippet(conn, company: str | None, file_frag: str, page: int | None) -> 
     sql = (
         "SELECT r.title, p.page_no, substr(p.content, 1, 280) AS snippet "
         "FROM pages p JOIN reports r ON r.id = p.report_id "
-        "WHERE instr(r.title, ?) > 0 AND COALESCE(r.is_duplicate, 0) = 0"
+        f"WHERE instr(r.title, ?) > 0 AND {db.live_report_sql('r')}"
     )
     params: list = [file_frag]
     if company:

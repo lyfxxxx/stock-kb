@@ -22,12 +22,12 @@
 
 不要用「总 Recall」概括所有层。keyword 高不代表语义强；结构化 29/29 只说明三表查询和 PDF golden 一致。
 
-当前题集 **159 道**：
+当前题集 **161 道**：
 
 | split | type | n | 进回归测试 |
 |---|---|---:|---|
 | freeze | exact | 23 | 结构化 29/29（与部分 cross 合计） |
-| freeze | keyword | 20 | FTS Recall / Neg@5 |
+| freeze | keyword | 22 | FTS Recall / Neg@5 |
 | freeze | semantic | 20 | hybrid Recall / Neg@5 |
 | freeze | cross | 12 | 其中检索约 6 道，其余走结构化 |
 | freeze | end2end | 8 | 材料覆盖自动分，不卡住回归测试 |
@@ -58,7 +58,8 @@ GT 是 yaml 里「怎样算对」的标注，不是模型输出。
 - `expected.sources[]`：`file` 为 `reports.title` 不含扩展名的片段，`page` 为页码。
 - freeze 语义 / 关键词：通常一页；难负样本写在 `negatives`。
 - diag 分析 / 跨语言：证据清单，多条均可 `required: true`，**命中任一即算**。`authority` 为 `annual` / `interim` / `research` / `prospectus`。有年报或中报时另报 **年报/中报证据@5**。
-- 文件匹配是 `title` 包含 `file` 片段，美股 `2022_Annual_Report` 与港股 `2022_HK_Annual_Report` 不算同一文件。
+- 文件匹配是 `title` 包含 `file` 片段。美股 `2022_Annual_Report` 与港股年报不是同一文件。港股英文年报的当前使用文档标题是 `百胜中国_2022年报` 至 `百胜中国_2025年报`。
+- 关键词题写 `accept_phrases`。问句带四位年份时，检索仍按文档的 `reports.year` 过滤。前 5 页里，标出的页算命中；另一页在去掉空白和千分位后含有其中一条短语，也算同一个事实。纯数字短语按整段数字比对。
 
 **无答案**
 

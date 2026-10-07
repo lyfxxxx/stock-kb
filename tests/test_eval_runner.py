@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from stock_kb.eval_runner import (
     classify_retrieval_errors,
+    fact_phrase_hit,
     primary_query,
+    promote_fact_match,
     _retrieval_result,
     _summarize,
     _value_within,
@@ -21,6 +23,27 @@ def test_bootstrap_ci_mean():
     lo, hi = bootstrap_ci([1.0, 1.0, 1.0, 0.0], n_resample=2000, seed=1)
     assert 0.0 <= lo <= hi <= 1.0
     assert lo < 0.75 < hi
+
+
+def test_fact_phrase_accepts_same_number_on_another_page():
+    assert fact_phrase_hit("净增 336 家，另有 1,336 家在建", ["336"]) is True
+    assert fact_phrase_hit("只有 1336 家", ["336"]) is False
+    assert fact_phrase_hit("已付股息 (6,071,486)", ["已付股息(6071486)"]) is True
+    assert fact_phrase_hit("翻台率为3.9次╱天", ["翻台率为3.9次"]) is True
+    retrieval = {"hit": False, "rank": None, "mrr": 0.0}
+    hits = [
+        {"page_id": 1, "title": "旧研报", "page_no": 22},
+        {"page_id": 2, "title": "新年报", "page_no": 8},
+    ]
+    promote_fact_match(
+        hits,
+        retrieval,
+        ["1383家"],
+        {1: "门店净增讨论", 2: "餐厅总数为 1,383 家"},
+    )
+    assert retrieval["hit"] is True
+    assert retrieval["rank"] == 2
+    assert retrieval["fact_match"] is True
 
 
 def test_primary_query_strips_company_for_keyword():

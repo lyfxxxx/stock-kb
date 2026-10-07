@@ -91,11 +91,10 @@ def _title_for_report(conn: sqlite3.Connection, report_id: Any) -> str:
 
 def latest_annual_year(conn: sqlite3.Connection, company: str) -> int | None:
     row = conn.execute(
-        """
+        f"""
         SELECT MAX(year) AS y FROM reports
         WHERE company=? AND report_type='annual'
-          AND COALESCE(is_duplicate, 0)=0
-          AND COALESCE(status, 'ok')='ok'
+          AND {db.live_report_sql()}
           AND year IS NOT NULL
         """,
         (company,),

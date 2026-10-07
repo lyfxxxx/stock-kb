@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from stock_kb import search
+from stock_kb import db, search
 
 TOOL_INDICATORS = "get_indicators"
 TOOL_STATEMENTS = "get_financial_statements"
@@ -79,8 +79,41 @@ _SEARCH_RE = re.compile(
 _IMPAIRMENT_RE = re.compile(r"减值|impairment", re.I)
 
 
-def route(question: str, company: str | None = None) -> dict[str, Any]:
-    """Return {tool, reason, company, year, name|keyword, fallback}."""
+def corpus_max_year_for(conn, company: str | None = None) -> int | None:
+    """该公司当前使用文档的最大文档年。没有年份时返回 None。"""
+    sql = (
+        "SELECT MAX(year) AS y FROM reports "
+        f"WHERE {db.live_report_sql('')} AND year IS NOT NULL"
+    )
+    params: list[Any] = []
+    if company:
+        sql += " AND company=?"
+        params.append(company)
+    row = conn.execute(sql, params).fetchone()
+    if row is None or row["y"] is None:
+        return None
+    return int(row["y"])
+
+
+def route_for_conn(conn, question: str, company: str | None = None) -> dict[str, Any]:
+    """按该公司当前使用文档的最大年来判断年份是否超出范围。"""
+    return route(
+        question,
+        company,
+        corpus_max_year=corpus_max_year_for(conn, company),
+    )
+
+
+def route(
+    question: str,
+    company: str | None = None,
+    corpus_max_year: int | None = None,
+) -> dict[str, Any]:
+    """Return {tool, reason, company, year, name|keyword, fallback}.
+
+    corpus_max_year 为空时不设年份上界，只拒绝 1999 及更早。
+    调用方有目录时传入该公司当前使用文档的最大年。
+    """
     q = search.normalize_query(question or "")
     years = search.query_years(q)
     year = years[0] if years else None
@@ -107,7 +140,7 @@ def route(question: str, company: str | None = None) -> dict[str, Any]:
                     "reason": "company_mismatch",
                 }
 
-    if years and (max(years) >= 2026 or min(years) <= 1999):
+    if years and _year_out_of_corpus(years, corpus_max_year):
         return {**base, "tool": TOOL_NO_ANSWER, "reason": "year_out_of_corpus"}
 
     if _SEARCH_RE.search(q) and not _looks_like_line_item(q):
@@ -134,6 +167,14 @@ def route(question: str, company: str | None = None) -> dict[str, Any]:
             }
 
     return {**base, "tool": TOOL_SEARCH, "reason": "default_search"}
+
+
+def _year_out_of_corpus(years: list[int], corpus_max_year: int | None) -> bool:
+    if min(years) <= 1999:
+        return True
+    if corpus_max_year is not None and max(years) > corpus_max_year:
+        return True
+    return False
 
 
 def _looks_like_line_item(q: str) -> bool:

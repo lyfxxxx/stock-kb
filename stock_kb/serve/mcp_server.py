@@ -236,9 +236,13 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
     @mcp.tool()
     def route_query(question: str, company: str | None = None) -> dict[str, Any]:
         """按 skill 规则判断该走哪把只读工具。科目数字用 get_indicators / get_financial_statements，经营叙述用 search_reports。"""
-        from stock_kb.route import route
+        from stock_kb.route import route_for_conn
 
-        return route(question, company=company)
+        conn = _conn()
+        try:
+            return route_for_conn(conn, question, company=company)
+        finally:
+            conn.close()
 
     @mcp.tool()
     def get_financial_statements(
@@ -352,8 +356,7 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                    p.content, p.content_orig, r.title, r.path
             FROM pages p JOIN reports r ON r.id = p.report_id
             WHERE r.company=?
-              AND COALESCE(r.is_duplicate, 0) = 0
-              AND COALESCE(r.status, 'ok') = 'ok'
+              AND """ + db.live_report_sql("r") + """
         """
         params: list[Any] = [company]
         if title is not None:

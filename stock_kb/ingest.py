@@ -98,7 +98,9 @@ def _scan_locked(
                     print(f"[error] {p}: {exc}")
             stats["missing"] += _mark_missing_sources(conn, company_dir, company)
 
-    stats["duplicates_marked"] = db.mark_duplicate_reports(conn)
+    refreshed = refresh_logical_keys(conn)
+    stats["duplicates_marked"] = refreshed["duplicates_marked"]
+    stats["keys_updated"] = refreshed["keys_updated"]
     row = conn.execute(
         "SELECT COUNT(*) AS n FROM pages"
     ).fetchone()
@@ -460,6 +462,74 @@ def elect_logical_key(
                 (target, incoming_id),
             )
     return int(winner["id"])
+
+
+def refresh_logical_keys(conn) -> dict[str, int]:
+    """按已存字段重算 logical_key，再选举，最后按 SHA 去重。不重读原文。
+
+    同一把键上若已有 status=ok，选举从这条开始，避免相同 SHA 的早退把旧行抬回 ok。
+    键上没有 ok 行时，用排名最高的未失败、未失踪行选回 ok。
+    """
+    rows = conn.execute(
+        """
+        SELECT id, company, report_type, year, period_type, language,
+               path, title, source_url, logical_key
+        FROM reports
+        """
+    ).fetchall()
+    updated = 0
+    for row in rows:
+        new_key = build_logical_key(
+            company=row["company"] or "",
+            report_type=row["report_type"] or "",
+            year=row["year"],
+            period_type=row["period_type"],
+            language=row["language"],
+            path=row["path"] or "",
+            title=row["title"] or "",
+            source_url=row["source_url"],
+        )
+        if new_key != (row["logical_key"] or ""):
+            conn.execute(
+                "UPDATE reports SET logical_key=? WHERE id=?",
+                (new_key, int(row["id"])),
+            )
+            updated += 1
+    conn.commit()
+
+    key_rows = conn.execute(
+        """
+        SELECT DISTINCT logical_key FROM reports
+        WHERE logical_key IS NOT NULL AND logical_key != ''
+          AND COALESCE(status, 'ok') NOT IN ('failed', 'missing')
+        """
+    ).fetchall()
+    elected = 0
+    for key_row in key_rows:
+        key = key_row["logical_key"]
+        active = conn.execute(
+            """
+            SELECT id, status, retrieved_at, mtime FROM reports
+            WHERE logical_key=?
+              AND COALESCE(status, 'ok') NOT IN ('failed', 'missing')
+            """,
+            (key,),
+        ).fetchall()
+        if not active:
+            continue
+        ok_rows = [item for item in active if (item["status"] or "ok") == "ok"]
+        if ok_rows:
+            incoming_id = min(int(item["id"]) for item in ok_rows)
+        else:
+            incoming_id = int(max(active, key=_version_rank)["id"])
+        elect_logical_key(conn, key, incoming_id=incoming_id)
+        elected += 1
+    dupes = db.mark_duplicate_reports(conn)
+    return {
+        "keys_updated": updated,
+        "keys_elected": elected,
+        "duplicates_marked": dupes,
+    }
 
 
 def _company_scan_dirs(cfg: dict[str, Any], company: str) -> list[Path]:

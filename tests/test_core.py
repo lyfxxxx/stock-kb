@@ -902,6 +902,95 @@ def test_mark_duplicate_reports(conn):
     assert rows[1]["duplicate_of"] == rows[0]["id"]
 
 
+def test_mark_duplicate_prefers_ok_over_missing(conn):
+    conn.execute("INSERT INTO companies(name) VALUES('测试')")
+    conn.execute(
+        "INSERT INTO reports(company, report_type, title, path, sha256, status) "
+        "VALUES('测试','annual','old','/old.pdf','same-hash','missing')"
+    )
+    conn.execute(
+        "INSERT INTO reports(company, report_type, title, path, sha256, status) "
+        "VALUES('测试','annual','new','/new.pdf','same-hash','ok')"
+    )
+    conn.execute(
+        "INSERT INTO reports(company, report_type, title, path, sha256, status) "
+        "VALUES('测试','annual','old2','/old2.pdf','same-hash','superseded')"
+    )
+    conn.commit()
+    assert db.mark_duplicate_reports(conn) == 2
+    rows = {
+        row["title"]: row
+        for row in conn.execute(
+            "SELECT id, title, is_duplicate, duplicate_of FROM reports"
+        )
+    }
+    assert rows["new"]["is_duplicate"] == 0
+    assert rows["new"]["duplicate_of"] is None
+    assert rows["old"]["is_duplicate"] == 1
+    assert rows["old"]["duplicate_of"] == rows["new"]["id"]
+    assert rows["old2"]["duplicate_of"] == rows["new"]["id"]
+
+
+def test_catalog_titles_leave_fts(conn):
+    conn.execute("INSERT INTO companies(name) VALUES('海底捞')")
+    conn.execute(
+        "INSERT INTO reports(company, report_type, title, path, status) "
+        "VALUES('海底捞','interim','海底捞_2024中报','/interim.pdf','ok')"
+    )
+    interim_id = conn.execute(
+        "SELECT id FROM reports WHERE path='/interim.pdf'"
+    ).fetchone()["id"]
+    conn.execute(
+        "INSERT INTO reports(company, report_type, title, path, status) "
+        "VALUES('海底捞','other','文件清单','/catalog.md','ok')"
+    )
+    catalog_id = conn.execute(
+        "SELECT id FROM reports WHERE path='/catalog.md'"
+    ).fetchone()["id"]
+    conn.execute(
+        "INSERT INTO reports(company, report_type, title, path, status) "
+        "VALUES('海底捞','other','研报參考清單','/catalog-trad.md','ok')"
+    )
+    trad_id = conn.execute(
+        "SELECT id FROM reports WHERE path='/catalog-trad.md'"
+    ).fetchone()["id"]
+    page = {
+        "page_no": 1,
+        "content": "开店计划写在目录里",
+        "content_orig": "开店计划写在目录里",
+        "char_count": 10,
+        "is_ocr": 0,
+        "company": "海底捞",
+    }
+    db.replace_pages(conn, interim_id, [page])
+    db.replace_pages(conn, catalog_id, [page])
+    db.replace_pages(conn, trad_id, [page])
+    hits = search.fts_search(conn, "开店", company="海底捞")
+    titles = {hit["title"] for hit in hits}
+    assert titles == {"海底捞_2024中报"}
+
+
+def test_route_for_conn_ignores_catalog_year(conn):
+    from stock_kb.route import TOOL_INDICATORS, TOOL_NO_ANSWER, route_for_conn
+
+    conn.execute("INSERT INTO companies(name) VALUES('海底捞')")
+    conn.execute(
+        "INSERT INTO reports(company, report_type, year, title, path, status) "
+        "VALUES('海底捞','interim',2026,'2026中报','/2026.pdf','ok')"
+    )
+    conn.execute(
+        "INSERT INTO reports(company, report_type, year, title, path, status) "
+        "VALUES('海底捞','other',2099,'文件清单','/catalog.md','ok')"
+    )
+    conn.commit()
+    hit = route_for_conn(conn, "海底捞 2026 年营业收入是多少？", "海底捞")
+    assert hit["tool"] == TOOL_INDICATORS
+    assert hit["name"] == "revenue"
+    miss = route_for_conn(conn, "海底捞 2027 年营业收入是多少？", "海底捞")
+    assert miss["tool"] == TOOL_NO_ANSWER
+    assert miss["reason"] == "year_out_of_corpus"
+
+
 def test_vec_table_name_is_model_specific():
     assert vector._vec_table_name("BAAI/bge-m3") != vector._vec_table_name(
         "intfloat/multilingual-e5-large"

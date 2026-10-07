@@ -6,11 +6,12 @@ import pytest
 
 from stock_kb import db, search
 from stock_kb.classify import classify_report
-from stock_kb.ingest import _mark_missing_sources, _process_file
+from stock_kb.ingest import _mark_missing_sources, _process_file, refresh_logical_keys
 from stock_kb.versioning import (
     PARSE_VERSION,
     build_logical_key,
     decide_scan_action,
+    detect_market,
     event_date_from_filename,
     page_kind_for,
 )
@@ -339,3 +340,109 @@ def test_logical_key_shapes_omit_sha():
     )
     assert other == r"海底捞|other|C:\a\备忘.txt"
     assert "sha" not in filing
+
+
+def test_detect_market_uses_filename_not_parent_dir():
+    assert (
+        detect_market(r"D:\年报\百胜中国_2024年报.pdf", "百胜中国_2024年报")
+        == "HK"
+    )
+    assert (
+        detect_market(
+            r"D:\年报\百胜中国_2024_Annual_Report.pdf",
+            "百胜中国_2024_Annual_Report",
+        )
+        == "US"
+    )
+    assert (
+        detect_market(r"\\nas\海底捞\HK_Annual\2024年报.pdf", "2024年报")
+        == "HK"
+    )
+    assert detect_market(r"C:\yumc\2024-10k.pdf", "2024 10-K") == "US"
+    assert (
+        detect_market(
+            r"D:\年报\百胜中国_2016_Annual_Report.pdf",
+            "百胜中国_2016_Annual_Report",
+        )
+        == "US"
+    )
+    hk = build_logical_key(
+        company="百胜中国",
+        report_type="annual",
+        year=2024,
+        period_type="annual",
+        language="en",
+        path=r"D:\年报\百胜中国_2024年报.pdf",
+        title="百胜中国_2024年报",
+    )
+    us = build_logical_key(
+        company="百胜中国",
+        report_type="annual",
+        year=2024,
+        period_type="annual",
+        language="en",
+        path=r"D:\年报\百胜中国_2024_Annual_Report.pdf",
+        title="百胜中国_2024_Annual_Report",
+    )
+    assert hk == "百胜中国|annual|2024|annual|en|HK"
+    assert us == "百胜中国|annual|2024|annual|en|US"
+
+
+def test_refresh_splits_hk_annual_from_us_10k(conn):
+    conn.execute("INSERT INTO companies(name) VALUES('百胜中国')")
+    conn.execute(
+        """
+        INSERT INTO reports(
+            company, report_type, language, year, period_type, title, path,
+            status, logical_key, sha256, mtime
+        ) VALUES (
+            '百胜中国', 'annual', 'en', 2024, 'annual', '百胜中国_2024年报', ?,
+            'ok', '百胜中国|annual|2024|annual|en|UNK', 'sha-hk', 200
+        )
+        """,
+        (r"D:\年报\百胜中国_2024年报.pdf",),
+    )
+    conn.execute(
+        """
+        INSERT INTO reports(
+            company, report_type, language, year, period_type, title, path,
+            status, logical_key, sha256, mtime
+        ) VALUES (
+            '百胜中国', 'annual', 'en', 2024, 'annual', '百胜中国_2024_Annual_Report', ?,
+            'superseded', '百胜中国|annual|2024|annual|en|UNK', 'sha-us', 100
+        )
+        """,
+        (r"D:\年报\百胜中国_2024_Annual_Report.pdf",),
+    )
+    conn.execute(
+        """
+        INSERT INTO reports(
+            company, report_type, language, year, period_type, title, path,
+            status, logical_key, sha256, mtime
+        ) VALUES (
+            '百胜中国', 'annual', 'en', 2024, 'annual', '百胜中国_2024_HK_Annual_Report', ?,
+            'missing', '百胜中国|annual|2024|annual|en|HK', 'sha-hk', 50
+        )
+        """,
+        (r"D:\old\百胜中国_2024_HK_Annual_Report.pdf",),
+    )
+    conn.commit()
+    refresh_logical_keys(conn)
+    rows = {
+        row["title"]: row
+        for row in conn.execute(
+            "SELECT id, title, status, logical_key, is_duplicate, duplicate_of FROM reports"
+        )
+    }
+    hk = rows["百胜中国_2024年报"]
+    us = rows["百胜中国_2024_Annual_Report"]
+    old = rows["百胜中国_2024_HK_Annual_Report"]
+    assert hk["logical_key"] == "百胜中国|annual|2024|annual|en|HK"
+    assert hk["status"] == "ok"
+    assert hk["is_duplicate"] == 0
+    assert us["logical_key"] == "百胜中国|annual|2024|annual|en|US"
+    assert us["status"] == "ok"
+    assert us["is_duplicate"] == 0
+    assert old["status"] == "missing"
+    assert old["is_duplicate"] == 1
+    assert old["duplicate_of"] == hk["id"]

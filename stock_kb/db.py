@@ -291,13 +291,20 @@ def _init_fts(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
+# 文件名里的目录清单。标题等于 classify 的 stem，父目录名不算。
+_CATALOG_TITLE_MARKS = ("清单", "清單")
+
+
 def live_report_sql(alias: str = "") -> str:
-    """默认检索只看当前使用文档：非重复，且 status 为空或 ok。"""
+    """默认检索只看当前使用文档：非重复，status 为空或 ok，且标题不是目录清单。"""
     prefix = f"{alias}." if alias else ""
-    return (
-        f"COALESCE({prefix}is_duplicate, 0) = 0 "
-        f"AND COALESCE({prefix}status, 'ok') = 'ok'"
-    )
+    parts = [
+        f"COALESCE({prefix}is_duplicate, 0) = 0",
+        f"COALESCE({prefix}status, 'ok') = 'ok'",
+    ]
+    for mark in _CATALOG_TITLE_MARKS:
+        parts.append(f"instr(COALESCE({prefix}title, ''), '{mark}') = 0")
+    return " AND ".join(parts)
 
 
 def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
@@ -379,8 +386,7 @@ def query_statements(
                r.title, r.path, r.year AS report_year
         FROM statements s JOIN reports r ON r.id = s.report_id
         WHERE r.company=?
-          AND COALESCE(r.is_duplicate, 0) = 0
-          AND COALESCE(r.status, 'ok') = 'ok'
+          AND """ + live_report_sql("r") + """
     """
     params: list[Any] = [company]
     if not include_ocr:
@@ -488,7 +494,12 @@ def upsert_report(conn: sqlite3.Connection, meta: dict[str, Any]) -> int:
 
 
 def mark_duplicate_reports(conn: sqlite3.Connection) -> int:
-    """按 SHA-256 标记完全重复的报告，保留每组 id 最小者作为 canonical。"""
+    """按 SHA-256 标记完全重复的报告。
+
+    每组留一条 canonical：先取 status 为 ok 的行，再取 id 较小者。
+    文件改名后，失踪或已被取代的旧行不能把仍在磁盘上的新副本标成重复，
+    否则两边都会退出当前使用文档。
+    """
     conn.execute("UPDATE reports SET is_duplicate=0, duplicate_of=NULL")
     groups = conn.execute(
         "SELECT sha256 FROM reports WHERE sha256 IS NOT NULL "
@@ -496,17 +507,25 @@ def mark_duplicate_reports(conn: sqlite3.Connection) -> int:
     ).fetchall()
     marked = 0
     for group in groups:
-        ids = [
-            row["id"]
-            for row in conn.execute(
-                "SELECT id FROM reports WHERE sha256=? ORDER BY id", (group["sha256"],)
-            ).fetchall()
-        ]
-        canonical = ids[0]
-        for dup_id in ids[1:]:
+        rows = conn.execute(
+            "SELECT id, status FROM reports WHERE sha256=? ORDER BY id",
+            (group["sha256"],),
+        ).fetchall()
+        canonical = min(
+            rows,
+            key=lambda row: (
+                0 if (row["status"] or "ok") == "ok" else 1,
+                int(row["id"]),
+            ),
+        )
+        canonical_id = int(canonical["id"])
+        for row in rows:
+            dup_id = int(row["id"])
+            if dup_id == canonical_id:
+                continue
             conn.execute(
                 "UPDATE reports SET is_duplicate=1, duplicate_of=? WHERE id=?",
-                (canonical, dup_id),
+                (canonical_id, dup_id),
             )
             marked += 1
     conn.commit()

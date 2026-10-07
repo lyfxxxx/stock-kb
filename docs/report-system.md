@@ -66,7 +66,7 @@ flowchart TB
   end
 ```
 
-证据层的当前使用文档条件是 `COALESCE(is_duplicate,0)=0 AND COALESCE(status,'ok')='ok'`。`superseded`、`missing`、`failed` 不进默认检索。MCP `list_reports` 仍返回全部状态。
+证据层的当前使用文档条件是 非重复、`status` 为空或 `ok`，且标题不含「清单」或「清單」。`superseded`、`missing`、`failed` 不进默认检索。MCP `list_reports` 仍返回全部状态。
 
 ## 运行流程
 
@@ -159,7 +159,7 @@ flowchart TB
 | 产物 | `reports` 文档目录、出处 JSON、`pages`、财报的 `statements` | 下游只认库里的目录行。页同时留下简体和原文。三表行保持千元或百万美元 |
 | 验收 | 三表 29/29；`fidelity` 抽检；覆盖矩阵 | 前两道卡住回归测试或明确「不算通过」。覆盖矩阵只展示缺口 |
 
-当前使用文档条件是 `COALESCE(is_duplicate,0)=0 AND COALESCE(status,'ok')='ok'`。`superseded`、`missing`、`failed` 不进默认检索。MCP `list_reports` 仍返回全部状态。
+当前使用文档条件是 非重复、`status` 为空或 `ok`，且标题不含「清单」或「清單」。`superseded`、`missing`、`failed` 不进默认检索。MCP `list_reports` 仍返回全部状态。
 
 ### 入库每一步在做什么
 
@@ -171,7 +171,7 @@ flowchart TB
 4. **再 `scan` 一次，收进新文件。** 先读 `meta_dir`；没有则读原文旁旧 sidecar，并写回 `meta_dir`。路径、sha、大小、mtime 都没变，且已按当前 `PARSE_VERSION`（`stock_kb/versioning.py`，现在是 `2026-10-02.1`）扫成功，就跳过。sha 相同但解析规则旧了，就地重解析。sha 变了才新开版本。
 5. **读正文时按文件名分类。** 分类看文件名和父目录，不读 JSON 里的 `kind`。`--kind transcript` 的实际作用是给文件名加 `transcript-` 前缀。电话会关键词优先于研报；研报关键词再优先于年报、中报。
 6. **写入文档目录，再写页和三表。** `reports.path` 唯一。查询、引用、版本选举都读这行。页和三表跟在后面，见下一节。
-7. **同一份文档只留一条当前使用文档。** `logical_key` 不含 sha。同一键下，`(retrieved_at, mtime, id)` 最大的一条保持 `ok`。相同 sha 标 `is_duplicate`。源文件从本次扫描的公司目录消失时，标 `missing`，不删行。
+7. **同一份文档只留一条当前使用文档。** `logical_key` 不含 sha。财报的市场看文件名和标题，不看父目录：年报、年度报告、中报、中期报告是港股；Annual Report 且没有港股标记是美股。同一键下，`(retrieved_at, mtime, id)` 最大的一条保持 `ok`。相同 sha 标 `is_duplicate`。源文件从本次扫描的公司目录消失时，标 `missing`，不删行。扫描结束会按已存字段重算逻辑键，不重读原文。
 
 `manifest` 只服务扫描：记住某条路径上次的 sha、大小、mtime。给人查询用的目录是 `reports`。
 
@@ -227,7 +227,7 @@ flowchart TB
 - **决定重读时**：sha、大小、mtime、`PARSE_VERSION` 和 `manifest` 一起判断。字节没变但解析规则旧了，就地重解析，避免目录膨胀。
 - **分类之后**：类型、年份、期间、语言写进目录行。检索可以按这些过滤；三表默认当年年报正文；指标按公司、年、期间归集。
 - **写成页之后**：`content_orig` 给引用和保真抽检；`content` 给 FTS 和向量。`page_kind` 区分封面、目录、报表页、正文、电话会。
-- **选出当前使用文档之后**：默认检索和指标只看非重复且 `status=ok` 的行。旧版仍在库里，MCP `list_reports` 仍能看到。
+- **选出当前使用文档之后**：默认检索和指标只看非重复、`status` 为空或 `ok`，且标题不含「清单」或「清單」的行。旧版和目录清单仍在库里，MCP `list_reports` 仍能看到。
 
 `origin` 区分文件在 NAS 还是 `data/raw`。`stats` 的 `reports_by_origin` 用它。检索、写稿目前不读这一列。笔记引用写 `《title》第N页`，不写 URL。
 
@@ -322,7 +322,7 @@ flowchart TB
   gate[否<br/>长度达到 6<br/>或短查询的 FTS 为空]
   ftsN[FTS 侧：pages_fts 用 trigram，单位是整页<br/>3 字及以上把内容词用 AND 连起来<br/>是多少、怎么样这类虚词不参加 AND<br/>问句没有年份时，BM25 再除以每年 1.5% 的新近度，用来打散跨年重复页<br/>短于 3 字走整页 LIKE。两字中文 LIKE 为空，才查 pages_bigram_fts<br/>这一侧不拼中英别名]
   vecN[向量侧：默认模型 BAAI/bge-small-zh-v1.5<br/>sqlite-vec，距离是 L2<br/>页按约 800 字、不重叠、按行切块<br/>先在块上找近邻，再每页只留距离最小的一块<br/>嵌入前把中英和口语别名拼进问句，这些别名不进 FTS<br/>非常见词必须出现在块正文里，否则丢掉该页<br/>带了公司或年份等过滤时，块候选大约是页候选的 10 倍，否则约 5 倍]
-  rrf[两侧各先取候选页：top_k 的 4 倍和 20 里较大的那个。默认 top_k=5，所以每侧最多 20 页<br/>过滤相同：当前使用文档是非重复且 status=ok，is_ocr 小于 2<br/>可再限公司、文档类型、语言<br/>参数 year 或问句里的年份按 reports.year 硬过滤<br/>问句里任一四位年份超出该公司当前使用文档的年份范围时，两侧都直接空<br/>然后做 RRF。名次从 1 起，默认两侧权重都是 1，k=60<br/>fusion 等于 1 除以 fts_rank 加 60，再加上 1 除以 vec_rank 加 60<br/>只出现在一侧的页只加那一侧。没有另一套分数加权，也没有 reranker<br/>先按 fusion_score 从高到低，再按向量 L2 从小到大<br/>两侧都命中的页没有把 L2 写进 score，并列时这一项按很大的距离处理<br/>截到 top_k 页，hybrid_fused=true]
+  rrf[两侧各先取候选页：top_k 的 4 倍和 20 里较大的那个。默认 top_k=5，所以每侧最多 20 页<br/>过滤相同：当前使用文档是非重复且 status 为空或 ok，标题不含清单，is_ocr 小于 2<br/>可再限公司、文档类型、语言<br/>参数 year 或问句里的年份按 reports.year 硬过滤<br/>问句里任一四位年份超出该公司当前使用文档的年份范围时，两侧都直接空<br/>然后做 RRF。名次从 1 起，默认两侧权重都是 1，k=60<br/>fusion 等于 1 除以 fts_rank 加 60，再加上 1 除以 vec_rank 加 60<br/>只出现在一侧的页只加那一侧。没有另一套分数加权，也没有 reranker<br/>先按 fusion_score 从高到低，再按向量 L2 从小到大<br/>两侧都命中的页没有把 L2 写进 score，并列时这一项按很大的距离处理<br/>截到 top_k 页，hybrid_fused=true]
   out[返回的是页，不是块<br/>locator 仍是《title》第N页<br/>融合结果带 fts_rank、vec_rank、fusion_score]
 
   q --> entry
@@ -352,7 +352,7 @@ flowchart TB
 
 长度达到 6，或者短查询的 FTS 为空，才同时取两侧。候选池是 `max(top_k * 4, 20)` 页。默认 `top_k=5` 时，每侧最多 20 页，融完再截回 5 页。向量索引还没建时，向量侧返回空列表，融合结果只含 FTS 页，但 `hybrid_fused` 仍是 true。这和长度门提前返回时的 false 不同。
 
-两侧用同一组过滤。当前使用文档条件是 `COALESCE(is_duplicate,0)=0 AND COALESCE(status,'ok')='ok'`。`is_ocr=2` 的乱码页不进结果。`year=` 是硬过滤。未传 `year` 时，问句里的四位年份同样按 `reports.year` 过滤。其中任何一个年份落到该公司当前使用文档的最小年与最大年之外，检索直接返回空。问句没有年份时，FTS 的 BM25 `rank`（越小越好）再除以 `1 + 0.015 * (今年 - 文档年)`，每年大约 1.5%，用来把近乎并列的跨年重复页分开。文档年取自 `reports.year`。
+两侧用同一组过滤。当前使用文档条件是 非重复、`status` 为空或 `ok`，且标题不含「清单」或「清單」。`is_ocr=2` 的乱码页不进结果。`year=` 是硬过滤。未传 `year` 时，问句里的四位年份同样按 `reports.year` 过滤。其中任何一个年份落到该公司当前使用文档的最小年与最大年之外，检索直接返回空。问句没有年份时，FTS 的 BM25 `rank`（越小越好）再除以 `1 + 0.015 * (今年 - 文档年)`，每年大约 1.5%，用来把近乎并列的跨年重复页分开。文档年取自 `reports.year`。
 
 FTS 对 3 字及以上的问句把内容词 AND 起来。`是多少`、`怎么样`、`如何`、`是否` 等虚词不进 AND，年份本身也不进 AND。短于 3 字走 `pages.content LIKE`。恰好 2 个汉字且 LIKE 为空时，才查 `pages_bigram_fts`。bigram 不参与有结果时的排序。FTS 查询文本保持原句，不拼别名。
 
@@ -370,7 +370,7 @@ fusion = 1 / (fts_rank + 60) + 1 / (vec_rank + 60)
 
 | 问句 | 归一化长度 | 显式 `engine=hybrid` 时 |
 |---|---|---|
-| 翻台率 | 3 | FTS 有页则不融合。写作本文时 CLI `--top-k 1` 命中《海底捞研报-国信-202502》第 19 页 |
+| 翻台率 | 3 | FTS 有页则不融合。写作本文时 CLI `--top-k 1` 命中《海底捞_研报-国信-202502》第 19 页 |
 | 现金流质量 | 5 | 同样先看 FTS。有页则 `hybrid_fused=false` |
 | 海底捞赚到的利润有多少能变成真金白银？ | 大于 6 | 做 RRF。嵌入侧额外拼上「经营现金流 现金流质量」，FTS 仍用原句 |
 
@@ -378,7 +378,7 @@ fusion = 1 / (fts_rank + 60) + 1 / (vec_rank + 60)
 
 索引和查询日志：`pages.content` 进 FTS5 trigram。向量按上面的 800 字写入 sqlite-vec。MCP 以只读方式打开 SQLite。查询成功后把标题和页码追加到 `data/retrieval_log.jsonl`，不写整页正文，也不写进 `stock_kb.db`。
 
-`route` 把问句分到指标、三表、检索或无答案。带年份的检索按 `reports.year` 过滤。
+`route` 把问句分到指标、三表、检索或无答案。带年份的检索按 `reports.year` 过滤。路由的年份上界是该公司当前使用文档的最大年；1999 及更早直接无答案。没有传入上界时不设上界。
 
 评测不把各层合成一个总 Recall。现行门：
 
@@ -425,7 +425,7 @@ fusion = 1 / (fts_rank + 60) + 1 / (vec_rank + 60)
 2. 知识库层。这是科目。`route` 走到指标或三表，不先做全文检索。MCP 对应 `get_indicators` / `get_financial_statements`。
 3. 报告层。终稿注释写《2024年报》第 142 页。这次查询的 `run_id` 日志里要有这一页。`audit-report` 核对页上或三表里有 42754687。
 
-另一条路径是检索。翻台率是 3 字，走 `search_reports` 的默认 FTS，不进 RRF。写作本文时，`python -m stock_kb search "翻台率" --top-k 1 --json` 命中《海底捞研报-国信-202502》第 19 页。更长的经营叙述问句要显式 `engine=hybrid` 才会融合，规则见上面的「混合检索」。
+另一条路径是检索。翻台率是 3 字，走 `search_reports` 的默认 FTS，不进 RRF。写作本文时，`python -m stock_kb search "翻台率" --top-k 1 --json` 命中《海底捞_研报-国信-202502》第 19 页。更长的经营叙述问句要显式 `engine=hybrid` 才会融合，规则见上面的「混合检索」。
 
 ## 后续再做
 

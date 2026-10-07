@@ -59,14 +59,38 @@ def decide_scan_action(
     return "reparse"
 
 
+# 只认文件名和标题。父目录叫「年报」时，里面的美股 10-K 不能被判成港股。
+_HK_FILING_NAME_MARKS = ("年度报告", "中期报告", "中期報告", "年报", "年報", "中报")
+
+
+def _filing_label(path: str, title: str) -> str:
+    stem = Path(str(path)).stem if path else ""
+    return f"{stem}\n{title or ''}"
+
+
 def detect_market(path: str, title: str) -> str:
-    """路径或标题：hk / 港 / HK_Annual → HK；10-k、10k、20-f、us annual → US。"""
+    """路径或标题含港 / hk → HK。
+
+    文件名（不含父目录）含年报、年度报告、中报、中期报告 → HK。
+    10-K、20-F、us annual，或文件名含 annual report 且还不是 HK → US。
+    """
     raw = f"{path}\n{title}"
     lowered = raw.lower()
     spaced = re.sub(r"[\s_\-]+", " ", lowered)
-    if "港" in raw or "hk_annual" in lowered or "hk annual" in spaced or _HK_TOKEN.search(lowered):
+    if (
+        "港" in raw
+        or "hk_annual" in lowered
+        or "hk annual" in spaced
+        or _HK_TOKEN.search(lowered)
+    ):
+        return "HK"
+    label = _filing_label(path, title)
+    if any(mark in label for mark in _HK_FILING_NAME_MARKS):
         return "HK"
     if _US_10K.search(spaced) or _US_20F.search(spaced) or "us annual" in spaced:
+        return "US"
+    label_spaced = re.sub(r"[\s_\-]+", " ", label.lower())
+    if "annual report" in label_spaced:
         return "US"
     return "UNK"
 

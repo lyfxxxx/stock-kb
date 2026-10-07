@@ -459,13 +459,12 @@ def vector_search(
     best: dict[int, dict[str, Any]] = {}
     for h in hits:
         r = conn.execute(
-            """
+            f"""
             SELECT p.id AS page_id, p.page_no, p.report_id, r.company, r.title, r.path,
                    r.year, r.report_type, r.language, c.content
             FROM chunks c JOIN pages p ON p.id = c.page_id
             JOIN reports r ON r.id = p.report_id
-            WHERE c.id=? AND COALESCE(r.is_duplicate, 0) = 0
-              AND COALESCE(r.status, 'ok') = 'ok'
+            WHERE c.id=? AND {db.live_report_sql("r")}
               AND COALESCE(p.is_ocr, 0) < 2
             """,
             (h["chunk_id"],),

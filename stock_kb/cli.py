@@ -260,9 +260,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.cmd == "route":
-        from stock_kb.route import route
+        from stock_kb.route import route_for_conn
 
-        decision = route(args.question, company=args.company)
+        conn = db.connect(cfg["db_path"])
+        try:
+            decision = route_for_conn(conn, args.question, company=args.company)
+        finally:
+            conn.close()
         print(json.dumps(decision, ensure_ascii=False, indent=2))
         return 0
 

@@ -57,7 +57,7 @@ pages:
       - "本公司擁有人應佔年內"
       - "1,374,477 (4,163,175)"
   - company: 百胜中国
-    title_contains: "百胜中国_2025_HK_Annual_Report"
+    title_contains: "百胜中国_2025年报"
     page_no: 153
     report_type: annual
     is_ocr: 0
@@ -123,7 +123,7 @@ pages:
       - "重点布局下沉市场"
       - "全年实现收入286.1亿元，同比增长7.8%，"
   - company: 百胜中国
-    title_contains: "国信证券_百胜中国_同店销售增速重新转正"
+    title_contains: "百胜中国_研报-国信证券-20250806-同店销售增速重新转正，运营效率持续提升"
     page_no: 1
     report_type: research
     is_ocr: 0
@@ -131,7 +131,7 @@ pages:
       - "同店销售增速重新转正，运营效率持续提升"
       - "2025Q2经营利润同增14.3%。"
   - company: 百胜中国
-    title_contains: "海通国际_百胜中国_2025Q2经营利润创新高"
+    title_contains: "百胜中国_研报-海通国际-20250807-点评报告：2Q25经营利润创第二季度新高，同店销售额实现正增长"
     page_no: 1
     report_type: research
     is_ocr: 0
@@ -139,7 +139,7 @@ pages:
       - "2Q25 经营利润创第二季度新高，同店销售额实现正增长"
       - "维持优于大市Maintain OUTPERFORM"
   - company: 百胜中国
-    title_contains: "2024_百胜中国_快餐业龙头多品牌布局"
+    title_contains: "百胜中国_研报-2024-快餐业龙头多品牌布局"
     page_no: 1
     report_type: research
     is_ocr: 0
@@ -193,7 +193,7 @@ pages:
 
   # ---------- 招股书 2 ----------
   - company: 海底捞
-    title_contains: "2018招股说明书（全球发售）"
+    title_contains: "海底捞_2018招股说明书"
     page_no: 130
     report_type: prospectus
     is_ocr: 0
@@ -201,7 +201,7 @@ pages:
       - "Our overall table turnover rate was 4.9 times per day for the six months ended"
       - "4.0 times per day in 2015 to 4.5 times per day in 2016 and 5.0"
   - company: 百胜中国
-    title_contains: "百胜中国_招股书_中文版"
+    title_contains: "百胜中国_招股说明书"
     page_no: 1
     report_type: prospectus
     is_ocr: 0

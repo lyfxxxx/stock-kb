@@ -13,7 +13,7 @@ import yaml
 
 from stock_kb import db, search
 from stock_kb.eval_stats import wilson_ci
-from stock_kb.route import route as route_query
+from stock_kb.route import route_for_conn
 
 
 RETRIEVAL_TYPES = {"exact", "keyword", "semantic", "cross"}
@@ -103,7 +103,9 @@ def run_eval(
         qtype = q.get("type") or ""
         if qtype == ROUTE_TYPE:
             expected = q.get("expected") or {}
-            decision = route_query(q.get("question") or "", company=q.get("company"))
+            decision = route_for_conn(
+                conn, q.get("question") or "", company=q.get("company")
+            )
             predicted = decision.get("tool")
             want = expected.get("tool")
             results.append(
@@ -128,6 +130,18 @@ def run_eval(
         )
         norm = _normalize_expected(q.get("expected"))
         retrieval = _retrieval_result(hits, norm, top_k)
+        phrases = norm.get("accept_phrases") or []
+        if phrases and hits:
+            page_ids = [h["page_id"] for h in hits if h.get("page_id") is not None]
+            text_by_page_id: dict[Any, str] = {}
+            if page_ids:
+                marks = ",".join("?" * len(page_ids))
+                for row in conn.execute(
+                    f"SELECT id, content, content_orig FROM pages WHERE id IN ({marks})",
+                    page_ids,
+                ):
+                    text_by_page_id[row["id"]] = row["content"] or row["content_orig"] or ""
+            promote_fact_match(hits, retrieval, phrases, text_by_page_id)
         retrieval["query"] = query
         retrieval["hybrid_fused"] = hybrid_fused
         retrieval["error_tags"] = classify_retrieval_errors(
@@ -320,14 +334,68 @@ def _run_search(
     )
 
 
+_FACT_NUM_RE = re.compile(r"^\d+(?:\.\d+)?$")
+
+
+def fold_fact_text(text: str) -> str:
+    """去掉空白和千分位，便于同一数字的不同排版互相认出。"""
+    folded = text or ""
+    for ch in ("\u3000", " ", "\n", "\r", "\t", ",", "，"):
+        folded = folded.replace(ch, "")
+    return folded.replace("╱", "/")
+
+
+def fact_phrase_hit(text: str, phrases: list[str]) -> bool:
+    """页文本是否包含任一验收短语。纯数字按整段数字比对，避免 336 撞上 1336。"""
+    folded = fold_fact_text(text)
+    for phrase in phrases:
+        needle = fold_fact_text(str(phrase))
+        if not needle:
+            continue
+        if _FACT_NUM_RE.fullmatch(needle):
+            if re.search(rf"(?<!\d){re.escape(needle)}(?!\d)", folded):
+                return True
+        elif needle in folded:
+            return True
+    return False
+
+
+def promote_fact_match(
+    hits: list[dict[str, Any]],
+    retrieval: dict[str, Any],
+    phrases: list[str],
+    text_by_page_id: dict[Any, str],
+) -> None:
+    """同一事实出现在前 k 的另一页时，也算命中。"""
+    if not phrases:
+        return
+    for index, hit in enumerate(hits, start=1):
+        if not fact_phrase_hit(text_by_page_id.get(hit.get("page_id")) or "", phrases):
+            continue
+        retrieval["fact_match"] = True
+        rank = retrieval.get("rank")
+        if not retrieval.get("hit") or rank is None or rank > index:
+            retrieval["hit"] = True
+            retrieval["rank"] = index
+            retrieval["mrr"] = round(1.0 / index, 5)
+        return
+
+
 def _normalize_expected(expected: Any) -> dict[str, Any]:
     if expected is None:
-        return {"answer": None, "sources": [], "negatives": [], "legacy": False}
+        return {
+            "answer": None,
+            "sources": [],
+            "negatives": [],
+            "accept_phrases": [],
+            "legacy": False,
+        }
     if isinstance(expected, dict):
         return {
             "answer": expected.get("answer"),
             "sources": [_normalize_source(s) for s in (expected.get("sources") or [])],
             "negatives": [_normalize_source(s) for s in (expected.get("negatives") or [])],
+            "accept_phrases": [str(p) for p in (expected.get("accept_phrases") or [])],
             "legacy": False,
         }
     if isinstance(expected, list):
@@ -335,9 +403,16 @@ def _normalize_expected(expected: Any) -> dict[str, Any]:
             "answer": None,
             "sources": [_normalize_source(s) for s in expected],
             "negatives": [],
+            "accept_phrases": [],
             "legacy": True,
         }
-    return {"answer": None, "sources": [], "negatives": [], "legacy": False}
+    return {
+        "answer": None,
+        "sources": [],
+        "negatives": [],
+        "accept_phrases": [],
+        "legacy": False,
+    }
 
 
 def _normalize_source(source: Any) -> dict[str, Any]:

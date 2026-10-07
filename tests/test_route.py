@@ -44,10 +44,32 @@ def test_route_search_operating():
 
 
 def test_route_no_answer():
-    assert route("海底捞 2026 年营业收入是多少？", "海底捞")["tool"] == TOOL_NO_ANSWER
+    # 未传入目录上界时，不把 2026 一律当成库外。
+    assert route("海底捞 2026 年营业收入是多少？", "海底捞")["tool"] == TOOL_INDICATORS
     assert route("海底捞在火星开了多少家店？", "海底捞")["tool"] == TOOL_NO_ANSWER
     assert route("百胜中国比特币储备规模", "百胜中国")["tool"] == TOOL_NO_ANSWER
     assert route("瑞幸咖啡 2024 年营业收入", "百胜中国")["tool"] == TOOL_NO_ANSWER
+    old = route("海底捞 1998 年营业收入", "海底捞")
+    assert old["tool"] == TOOL_NO_ANSWER
+    assert old["reason"] == "year_out_of_corpus"
+
+
+def test_route_corpus_max_year():
+    question_2026 = "海底捞 2026 年营业收入是多少？"
+    question_2027 = "海底捞 2027 年营业收入是多少？"
+    inside = route(question_2026, "海底捞", corpus_max_year=2026)
+    assert inside["tool"] == TOOL_INDICATORS
+    assert inside["name"] == "revenue"
+    assert inside["year"] == 2026
+    outside = route(question_2027, "海底捞", corpus_max_year=2026)
+    assert outside["tool"] == TOOL_NO_ANSWER
+    assert outside["reason"] == "year_out_of_corpus"
+    still_out = route(question_2026, "海底捞", corpus_max_year=2025)
+    assert still_out["tool"] == TOOL_NO_ANSWER
+    assert still_out["reason"] == "year_out_of_corpus"
+    early = route("海底捞 1998 年营业收入", "海底捞", corpus_max_year=2026)
+    assert early["tool"] == TOOL_NO_ANSWER
+    assert early["reason"] == "year_out_of_corpus"
 
 
 def test_route_same_store_not_revenue():

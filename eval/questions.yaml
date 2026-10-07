@@ -11,6 +11,7 @@ notes: >
   no_answer 8 / 真语义 8 / 跨语言检索 10。回归测试请用 --split freeze。
   2026-08-30：freeze 46 道检索 GT 按 pages.content 通读；8 道改 required 页，若干道改负样本。
   2026-08-30：新增 freeze route 24（工具路由）与 year_filter 4（问句带年份）。
+  2026-10-07：关键词 22 道改为带文档年的单点事实，accept_phrases 表示同一事实。
 questions:
   # ---------------- exact: 23 ----------------
   - id: exact-001
@@ -333,7 +334,7 @@ questions:
     expected:
       answer: 11797
       sources:
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 153
           table: "Consolidated Statements of Income"
           required: true
@@ -341,7 +342,7 @@ questions:
           evidence_snippet: 'Total revenues 11,797 11,303 10,978'
           relevance: 2
       negatives:
-        - file: "百胜中国_2024_HK_Annual_Report"
+        - file: "百胜中国_2024年报"
           page: 151
   - id: exact-012
     type: exact
@@ -363,7 +364,7 @@ questions:
     expected:
       answer: 929
       sources:
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 153
           table: "Consolidated Statements of Income"
           required: true
@@ -371,7 +372,7 @@ questions:
           evidence_snippet: 'Net Income — Yum China Holdings, Inc. $ 929 $ 911 $ 827'
           relevance: 2
       negatives:
-        - file: "百胜中国_2024_HK_Annual_Report"
+        - file: "百胜中国_2024年报"
           page: 151
   - id: exact-013
     type: exact
@@ -393,7 +394,7 @@ questions:
     expected:
       answer: 11303
       sources:
-        - file: "百胜中国_2024_HK_Annual_Report"
+        - file: "百胜中国_2024年报"
           page: 151
           table: "Consolidated Statements of Income"
           required: true
@@ -401,7 +402,7 @@ questions:
           evidence_snippet: 'Total revenues 11,303 10,978 9,569'
           relevance: 2
       negatives:
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 153
   - id: exact-014
     type: exact
@@ -423,7 +424,7 @@ questions:
     expected:
       answer: 911
       sources:
-        - file: "百胜中国_2024_HK_Annual_Report"
+        - file: "百胜中国_2024年报"
           page: 151
           table: "Consolidated Statements of Income"
           required: true
@@ -431,7 +432,7 @@ questions:
           evidence_snippet: 'Net Income — Yum China Holdings, Inc. $ 911 $ 827 $ 442'
           relevance: 2
       negatives:
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 153
   - id: exact-015
     type: exact
@@ -453,7 +454,7 @@ questions:
     expected:
       answer: 10978
       sources:
-        - file: "百胜中国_2023_HK_Annual_Report"
+        - file: "百胜中国_2023年报"
           page: 147
           table: "Consolidated Statements of Income"
           required: true
@@ -461,7 +462,7 @@ questions:
           annotator: user
           evidence_snippet: "Total revenues 10,978 9,569 9,853"
       negatives:
-        - file: "百胜中国_2024_HK_Annual_Report"
+        - file: "百胜中国_2024年报"
           page: 151
   - id: exact-016
     type: exact
@@ -483,7 +484,7 @@ questions:
     expected:
       answer: 827
       sources:
-        - file: "百胜中国_2023_HK_Annual_Report"
+        - file: "百胜中国_2023年报"
           page: 147
           table: "Consolidated Statements of Income"
           required: true
@@ -491,7 +492,7 @@ questions:
           evidence_snippet: 'Net Income — Yum China Holdings, Inc. $ 827 $ 442 $ 990'
           relevance: 2
       negatives:
-        - file: "百胜中国_2024_HK_Annual_Report"
+        - file: "百胜中国_2024年报"
           page: 151
   - id: exact-017
     type: exact
@@ -543,7 +544,7 @@ questions:
     expected:
       answer: 11121
       sources:
-        - file: "百胜中国_2024_HK_Annual_Report"
+        - file: "百胜中国_2024年报"
           page: 154
           table: "Consolidated Balance Sheets"
           required: true
@@ -551,7 +552,7 @@ questions:
           annotator: user
           evidence_snippet: "Total Assets 11,121 12,031"
       negatives:
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 156
   - id: exact-019
     type: exact
@@ -573,7 +574,7 @@ questions:
     expected:
       answer: 1419
       sources:
-        - file: "百胜中国_2024_HK_Annual_Report"
+        - file: "百胜中国_2024年报"
           page: 153
           table: "Consolidated Statements of Cash Flows"
           required: true
@@ -581,7 +582,7 @@ questions:
           evidence_snippet: 'Net Cash Provided by Operating Activities 1,419 1,473 1,413'
           relevance: 2
       negatives:
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 155
   - id: exact-020
     type: exact
@@ -603,7 +604,7 @@ questions:
     expected:
       answer: 9569
       sources:
-        - file: "百胜中国_2022_HK_Annual_Report"
+        - file: "百胜中国_2022年报"
           page: 150
           table: "Consolidated Statements of Income"
           required: true
@@ -611,7 +612,7 @@ questions:
           evidence_snippet: 'Total revenues 9,569 9,853'
           relevance: 2
       negatives:
-        - file: "百胜中国_2023_HK_Annual_Report"
+        - file: "百胜中国_2023年报"
           page: 147
   - id: exact-021
     type: exact
@@ -704,287 +705,345 @@ questions:
         - file: "2025中报"
           page: 53
 
-  # ---------------- keyword: 20 ----------------
+  # ---------------- keyword: 22 ----------------
+  # 2026-10-07：问句带文档年，验收短语是同一事实。前 5 页里另一份当前使用文档写出同一短语也算对。
   - id: keyword-001
     type: keyword
-    question: 海底捞 翻台率
+    question: 海底捞 2025年翻台率3.9次
     company: 海底捞
     expected:
+      accept_phrases: ["翻台率为3.9次", "翻台率3.9次", "平均翻台率（次/天）3.9"]
       sources:
-        - file: "海底捞研报-国信-202502"
-          page: 19
+        - file: "海底捞_业绩公告-2025年度"
+          page: 3
           required: true
           relevance: 2
-      negatives:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 23
-  - id: keyword-002
-    type: keyword
-    question: 海底捞 同店销售
-    company: 海底捞
-    expected:
-      sources:
-        - file: "研报-国信证券HK-2021-餐饮业复苏中"
-          page: 4
-          required: true
-          relevance: 2
-      negatives:
-        - file: "2019年报"
-          page: 21
-  - id: keyword-003
-    type: keyword
-    question: 海底捞 门店净增
-    company: 海底捞
-    expected:
-      sources:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 22
-          required: true
-          relevance: 2
-      negatives:
-        - file: "研报-平安证券-2022-中报点评疫情关店承压"
-          page: 1
-  - id: keyword-004
-    type: keyword
-    question: 海底捞 减值
-    company: 海底捞
-    expected:
-      sources:
-        - file: "2022年报"
-          page: 285
-          required: true
-          relevance: 2
-        - file: "2022年报"
-          page: 331
-          required: true
-          relevance: 2
-      negatives:
-        - file: "2021年报"
-          page: 264
-  - id: keyword-005
-    type: keyword
-    question: 海底捞 客单价
-    company: 海底捞
-    expected:
-      sources:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 24
-          required: true
-          relevance: 2
-      negatives:
-        - file: "研报-浙商证券-2023-从成长到坚韧餐饮王者"
-          page: 12
-  - id: keyword-006
-    type: keyword
-    question: 海底捞 股息
-    company: 海底捞
-    expected:
-      sources:
-        - file: "2024年报"
-          page: 151
-          required: true
-          relevance: 2
-        - file: "2024年报"
-          page: 205
-          required: true
-          relevance: 2
-      negatives:
-        - file: "2019年报"
-          page: 205
-  - id: keyword-007
-    type: keyword
-    question: 海底捞 开店
-    company: 海底捞
-    expected:
-      sources:
-        - file: "2024中报"
-          page: 12
-          required: true
-          relevance: 2
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 33
-          required: true
-          relevance: 2
-      negatives:
-        - file: "2020年报"
-          page: 17
-  - id: keyword-008
-    type: keyword
-    question: 海底捞 员工激励
-    company: 海底捞
-    expected:
-      sources:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+        - file: "海底捞_2025年报"
           page: 25
           required: true
           relevance: 2
       negatives:
-        - file: "研报-东吴证券-2019-管理体系深度解析"
-          page: 15
+        - file: "海底捞_研报-国信-202502"
+          page: 3
+  - id: keyword-002
+    type: keyword
+    question: 海底捞 2024年翻台率为4.1次
+    company: 海底捞
+    expected:
+      accept_phrases: ["翻台率为4.1次", "翻台率4.1次", "平均翻台率（次/天）4.1"]
+      sources:
+        - file: "海底捞_业绩公告-2024年度"
+          page: 3
+          required: true
+          relevance: 2
+        - file: "海底捞_2024年报"
+          page: 19
+          required: true
+          relevance: 2
+  - id: keyword-003
+    type: keyword
+    question: 海底捞 2026年1383家
+    company: 海底捞
+    expected:
+      accept_phrases: ["1383家"]
+      sources:
+        - file: "海底捞_研报-国信证券-20260326-外卖业务成新增长极"
+          page: 1
+          required: true
+          relevance: 2
+        - file: "海底捞_研报-东吴证券-20260325-海底捞2025年年度业绩公告"
+          page: 1
+          required: true
+          relevance: 2
+        - file: "海底捞_纪要-20260325-富途牛牛"
+          page: 1
+          required: true
+          relevance: 2
+  - id: keyword-004
+    type: keyword
+    question: 海底捞 2024年已付股息
+    company: 海底捞
+    expected:
+      accept_phrases: ["已付股息(6071486)"]
+      sources:
+        - file: "海底捞_2024年报"
+          page: 151
+          required: true
+          relevance: 2
+  - id: keyword-005
+    type: keyword
+    question: 海底捞 2024年外卖业务
+    company: 海底捞
+    expected:
+      accept_phrases: ["1253.9百万"]
+      sources:
+        - file: "海底捞_2024年报"
+          page: 26
+          required: true
+          relevance: 2
+        - file: "海底捞_业绩公告-2024年度"
+          page: 6
+          required: true
+          relevance: 2
+  - id: keyword-006
+    type: keyword
+    question: 海底捞 2026年客单价
+    company: 海底捞
+    expected:
+      accept_phrases: ["客单价97.0元", "客单价为97.0元", "人均消费（人民币元）97.0"]
+      sources:
+        - file: "海底捞_研报-国信证券-20260826-2026H1多元驱动增长"
+          page: 1
+          required: true
+          relevance: 2
+        - file: "海底捞_研报-国元国际控股-20260902-经营基本面平稳"
+          page: 1
+          required: true
+          relevance: 2
+        - file: "海底捞_业绩公告-2026中期"
+          page: 2
+          required: true
+          relevance: 2
+  - id: keyword-007
+    type: keyword
+    question: 海底捞 2026年翻台率
+    company: 海底捞
+    expected:
+      accept_phrases: ["翻台率3.9次", "翻台率为3.9次", "平均翻台率（次/天）3.9"]
+      sources:
+        - file: "2026中期报告-2026092200356"
+          page: 12
+          required: true
+          relevance: 2
+        - file: "海底捞_业绩公告-2026中期"
+          page: 3
+          required: true
+          relevance: 2
+        - file: "海底捞_研报-国信证券-20260826-2026H1多元驱动增长"
+          page: 1
+          required: true
+          relevance: 2
+  - id: keyword-008
+    type: keyword
+    question: 海底捞 2021年自身餐厅利润的2.8%
+    company: 海底捞
+    expected:
+      accept_phrases: ["自身餐厅利润的2.8%"]
+      sources:
+        - file: "海底捞_研报-国信证券-2021-阿米巴模式师徒制"
+          page: 26
+          required: true
+          relevance: 2
+        - file: "海底捞_研报-国信证券-2021-阿米巴模式师徒制"
+          page: 21
+          required: true
+          relevance: 2
   - id: keyword-009
     type: keyword
-    question: 海底捞 师徒制
-    company: 海底捞
+    question: 百胜中国 2025年门店净增
+    company: 百胜中国
     expected:
+      accept_phrases: ["净增336家", "为336家"]
       sources:
-        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
-          page: 11
+        - file: "百胜中国_研报-国信证券-20250806-同店销售增速重新转正"
+          page: 1
           required: true
           relevance: 2
-      negatives:
-        - file: "2018年报"
-          page: 138
+        - file: "百胜中国_研报-招商证券(香港)-20251106-季度业绩持续稳健"
+          page: 1
+          required: true
+          relevance: 2
   - id: keyword-010
     type: keyword
-    question: 海底捞 阿米巴
-    company: 海底捞
+    question: 百胜中国 2024年门店净增
+    company: 百胜中国
     expected:
+      accept_phrases: ["净增534家"]
       sources:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 27
+        - file: "百胜中国_研报-国信证券-2024Q4同店降幅收窄"
+          page: 1
           required: true
           relevance: 2
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 29
+        - file: "百胜中国_研报-国信证券-2024Q4同店降幅收窄"
+          page: 2
           required: true
           relevance: 2
-      negatives:
-        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
-          page: 12
   - id: keyword-011
     type: keyword
-    question: 海底捞 现金流
-    company: 海底捞
+    question: 百胜中国 2026年门店总数
+    company: 百胜中国
     expected:
+      accept_phrases: ["18101家"]
       sources:
-        - file: "研报-国信证券-2025-收入利润再创新高"
+        - file: "百胜中国_研报-国信证券-20260205-同店收入连续3季度正增"
+          page: 1
+          required: true
+          relevance: 2
+        - file: "百胜中国_研报-华源证券-20260209-2025年第四季度同店销售表现优异"
+          page: 1
+          required: true
+          relevance: 2
+        - file: "百胜中国_研报-中邮证券-20260212-同店销售提速"
+          page: 1
+          required: true
+          relevance: 2
+        - file: "百胜中国_研报-海通国际-20260206-点评报告：4Q25利润超预期"
+          page: 1
+          required: true
+          relevance: 2
+  - id: keyword-012
+    type: keyword
+    question: 百胜中国 2025年资本开支
+    company: 百胜中国
+    expected:
+      accept_phrases: ["6-7亿美元"]
+      sources:
+        - file: "百胜中国_研报-浦银国际证券-20250807-短期同店与利润率小幅波动不改公司长期投资价值"
+          page: 2
+          required: true
+          relevance: 2
+        - file: "百胜中国_研报-国证国际证券-20250806-二季度同店收入增长回正"
+          page: 1
+          required: true
+          relevance: 2
+        - file: "百胜中国_研报-海通国际-20250807-点评报告：2Q25经营利润创第二季度新高"
+          page: 1
+          required: true
+          relevance: 2
+  - id: keyword-013
+    type: keyword
+    question: 百胜中国 2025年KCOFFEE Cafes
+    company: 百胜中国
+    expected:
+      accept_phrases: ["2200and200", "2200cafes"]
+      sources:
+        - file: "百胜中国_2025_Annual_Report"
           page: 5
           required: true
           relevance: 2
-      negatives:
-        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
-          page: 2
-  - id: keyword-012
-    type: keyword
-    question: 海底捞 资本开支
-    company: 海底捞
-    expected:
-      sources:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 39
+        - file: "百胜中国_2025年报"
+          page: 7
           required: true
           relevance: 2
-      negatives:
-        - file: "2024年报"
-          page: 239
-  - id: keyword-013
-    type: keyword
-    question: 百胜中国 同店销售
-    company: 百胜中国
-    expected:
-      sources:
-        - file: "国信证券_百胜中国_同店销售增速重新转正"
-          page: 1
-          required: true
-          relevance: 2
-      negatives:
-        - file: "百胜中国_招股书_中文版"
-          page: 200
   - id: keyword-014
     type: keyword
-    question: 百胜中国 门店净增
+    question: 百胜中国 2024年肯悦咖啡
     company: 百胜中国
     expected:
+      accept_phrases: ["达到700家"]
       sources:
-        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
-          page: 2
+        - file: "百胜中国_研报-国信证券-2024Q4同店降幅收窄"
+          page: 4
           required: true
           relevance: 2
-      negatives:
-        - file: "国信证券_百胜中国_2024Q3经营数据改善"
-          page: 3
   - id: keyword-015
     type: keyword
-    question: 百胜中国 资本开支
+    question: 百胜中国 2026年15,776
     company: 百胜中国
     expected:
+      accept_phrases: ["自营餐厅15776"]
       sources:
-        - file: "华源证券研报"
+        - file: "百胜中国_2026中报"
+          page: 8
+          required: true
+          relevance: 2
+        - file: "百胜中国_业绩公告-2026中期"
+          page: 34
+          required: true
+          relevance: 2
+  - id: keyword-016
+    type: keyword
+    question: 海底捞 2025年97.7元
+    company: 海底捞
+    expected:
+      accept_phrases: ["97.7元"]
+      sources:
+        - file: "海底捞_业绩公告-2025年度"
+          page: 7
+          required: true
+          relevance: 2
+        - file: "海底捞_2025年报"
+          page: 25
+          required: true
+          relevance: 2
+  - id: keyword-017
+    type: keyword
+    question: 百胜中国 2025年肩并肩
+    company: 百胜中国
+    expected:
+      accept_phrases: ["肩并肩"]
+      sources:
+        - file: "百胜中国_研报-海通国际-20251118-2025投资者日"
           page: 1
           required: true
           relevance: 2
-      negatives:
-        - file: "国信证券_百胜中国_2023年报费用管控效果显著"
-          page: 6
-  - id: keyword-016
-    type: keyword
-    question: 百胜中国 股息
-    company: 百胜中国
-    expected:
-      sources:
-        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
-          page: 4
+        - file: "百胜中国_研报-国金证券-20250208-看好运营效率持续提升"
+          page: 1
           required: true
           relevance: 2
-      negatives:
-        - file: "百胜中国_2025_Annual_Report"
-          page: 62
-  - id: keyword-017
-    type: keyword
-    question: 百胜中国 品牌布局
-    company: 百胜中国
-    expected:
-      sources:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
-          page: 4
-          required: true
-          relevance: 2
-      negatives:
-        - file: "百胜中国_招股书_中文版"
-          page: 134
   - id: keyword-018
     type: keyword
-    question: 百胜中国 数字化
+    question: 百胜中国 2026年突破2200家
     company: 百胜中国
     expected:
+      accept_phrases: ["突破2200家"]
       sources:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
-          page: 10
-          required: true
-          relevance: 2
-      negatives:
-        - file: "百胜中国_招股书_中文版"
-          page: 161
-  - id: keyword-019
-    type: keyword
-    question: 百胜中国 KCOFFEE
-    company: 百胜中国
-    expected:
-      sources:
-        - file: "百胜中国_2024_Annual_Report"
+        - file: "百胜中国_研报-国信证券-20260205-同店收入连续3季度正增"
           page: 3
           required: true
           relevance: 2
-      negatives:
-        - file: "百胜中国_招股书_中文版"
-          page: 54
+  - id: keyword-019
+    type: keyword
+    question: 海底捞 2026年20.5亿
+    company: 海底捞
+    expected:
+      accept_phrases: ["20.5亿"]
+      sources:
+        - file: "海底捞_研报-国投证券(香港)-20260831-主品牌稳固，新品牌扩张"
+          page: 1
+          required: true
+          relevance: 2
   - id: keyword-020
     type: keyword
-    question: 百胜中国 外卖
+    question: 百胜中国 2025年同店销售额实现1%正增长
     company: 百胜中国
     expected:
+      accept_phrases: ["同店销售额实现1%正增长"]
       sources:
-        - file: "百胜中国_招股书_中文版"
-          page: 166
+        - file: "百胜中国_研报-华源证券-20250811-同店转正"
+          page: 1
           required: true
           relevance: 2
-        - file: "百胜中国_招股书_中文版"
-          page: 184
+  - id: keyword-021
+    type: keyword
+    question: 海底捞 2026年净增66家
+    company: 海底捞
+    expected:
+      accept_phrases: ["净增66家"]
+      sources:
+        - file: "海底捞_研报-国信证券-20260326-外卖业务成新增长极"
+          page: 1
           required: true
           relevance: 2
-      negatives:
-        - file: "百胜中国_2025_HK_Annual_Report"
-          page: 45
+        - file: "海底捞_研报-中信证券经纪(香港)-20260401-周期性还是结构性"
+          page: 1
+          required: true
+          relevance: 2
+  - id: keyword-022
+    type: keyword
+    question: 百胜中国 2026年净增587家
+    company: 百胜中国
+    expected:
+      accept_phrases: ["净增587家"]
+      sources:
+        - file: "百胜中国_研报-国信证券-20260205-同店收入连续3季度正增"
+          page: 1
+          required: true
+          relevance: 2
+        - file: "百胜中国_研报-海通国际-20260206-点评报告：4Q25利润超预期"
+          page: 1
+          required: true
+          relevance: 2
 
   # ---------------- semantic: 20 ----------------
   - id: semantic-001
@@ -1006,7 +1065,7 @@ questions:
           required: false
           relevance: 2
       negatives:
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 14
   - id: semantic-002
     type: semantic
@@ -1073,7 +1132,7 @@ questions:
     company: 海底捞
     expected:
       sources:
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 19
           required: true
           relevance: 3
@@ -1081,7 +1140,7 @@ questions:
           page: 1
           required: false
           relevance: 2
-        - file: "研报-国信证券HK-2021-餐饮业复苏中"
+        - file: "海底捞_研报-国信证券(香港)-20210414-餐饮业复苏进行中"
           page: 4
           required: false
           relevance: 1
@@ -1123,12 +1182,12 @@ questions:
           page: 22
           required: false
           relevance: 2
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 20
           required: false
           relevance: 2
       negatives:
-        - file: "研报-国信证券HK-2021-餐饮业复苏中"
+        - file: "海底捞_研报-国信证券(香港)-20210414-餐饮业复苏进行中"
           page: 4
   - id: semantic-008
     type: semantic
@@ -1136,7 +1195,7 @@ questions:
     company: 海底捞
     expected:
       sources:
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 14
           required: true
           relevance: 3
@@ -1157,7 +1216,7 @@ questions:
     company: 海底捞
     expected:
       sources:
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 20
           required: true
           relevance: 3
@@ -1178,7 +1237,7 @@ questions:
     company: 海底捞
     expected:
       sources:
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 19
           required: true
           relevance: 3
@@ -1207,12 +1266,12 @@ questions:
           page: 2
           required: false
           relevance: 2
-        - file: "百胜中国_2023_HK_Annual_Report"
+        - file: "百胜中国_2023年报"
           page: 76
           required: false
           relevance: 2
       negatives:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 4
   - id: semantic-012
     type: semantic
@@ -1237,20 +1296,20 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 4
           required: true
           relevance: 3
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 10
           required: false
           relevance: 2
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 11
           required: false
           relevance: 2
       negatives:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 134
   - id: semantic-014
     type: semantic
@@ -1258,16 +1317,16 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 134
           required: true
           relevance: 3
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 4
           required: false
           relevance: 2
       negatives:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 10
   - id: semantic-015
     type: semantic
@@ -1288,7 +1347,7 @@ questions:
           required: false
           relevance: 2
       negatives:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 159
   - id: semantic-016
     type: semantic
@@ -1300,12 +1359,12 @@ questions:
           page: 3
           required: true
           relevance: 3
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 7
           required: false
           relevance: 2
       negatives:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 54
   - id: semantic-017
     type: semantic
@@ -1313,20 +1372,20 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 184
           required: true
           relevance: 3
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 10
           required: false
           relevance: 2
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 166
           required: false
           relevance: 2
       negatives:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 134
   - id: semantic-018
     type: semantic
@@ -1372,18 +1431,18 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 166
           required: true
           relevance: 3
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 45
           required: false
           relevance: 2
 
   # ---------------- cross: 12 ----------------
       negatives:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 3
   - id: cross-001
     type: cross
@@ -1405,7 +1464,7 @@ questions:
     expected:
       answer: 1290
       sources:
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 153
           required: true
           annotator: user
@@ -1431,7 +1490,7 @@ questions:
     expected:
       answer: 442
       sources:
-        - file: "百胜中国_2022_HK_Annual_Report"
+        - file: "百胜中国_2022年报"
           page: 150
           required: true
           annotator: user
@@ -1457,7 +1516,7 @@ questions:
     expected:
       answer: 12031
       sources:
-        - file: "百胜中国_2023_HK_Annual_Report"
+        - file: "百胜中国_2023年报"
           page: 150
           required: true
           annotator: user
@@ -1548,7 +1607,7 @@ questions:
     keywords: ["same-store sales"]
     expected:
       sources:
-        - file: "百胜中国_2023_HK_Annual_Report"
+        - file: "百胜中国_2023年报"
           page: 76
           required: true
           relevance: 2
@@ -1595,7 +1654,7 @@ questions:
           required: true
           relevance: 2
       negatives:
-        - file: "研报-国信证券HK-2021-餐饮业复苏中"
+        - file: "海底捞_研报-国信证券(香港)-20210414-餐饮业复苏进行中"
           page: 4
   - id: cross-011
     type: cross
@@ -1604,16 +1663,16 @@ questions:
     keywords: ["store count", "门店数量"]
     expected:
       sources:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 15
           required: true
           relevance: 2
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 4
           required: false
           relevance: 1
       negatives:
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 122
   - id: cross-012
     type: cross
@@ -1627,7 +1686,7 @@ questions:
           required: true
           relevance: 2
       negatives:
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 19
 
   # ---------------- end2end: 8 ----------------
@@ -1707,7 +1766,7 @@ questions:
       - 材料需区分港股与美股披露口径
     expected:
       sources:
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: null
           required: true
   - id: end2end-007
@@ -1731,7 +1790,7 @@ questions:
       - 关键数字需同时给出中英文来源
     expected:
       sources:
-        - file: "百胜中国_2024_HK_Annual_Report"
+        - file: "百胜中国_2024年报"
           page: null
           required: true
         - file: "百胜中国_2024_Annual_Report"
@@ -1888,7 +1947,7 @@ questions:
   - id: noans-001
     type: no_answer
     split: diag
-    question: 海底捞 2026 年营业收入是多少？
+    question: 海底捞 2027 年营业收入是多少？
     company: 海底捞
     expected:
       sources: []
@@ -1980,7 +2039,7 @@ questions:
     company: 海底捞
     expected:
       sources:
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 14
           required: true
           relevance: 3
@@ -2000,7 +2059,7 @@ questions:
     company: 海底捞
     expected:
       sources:
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 19
           required: true
           relevance: 3
@@ -2016,7 +2075,7 @@ questions:
           relevance: 3
           authority: annual
       negatives:
-        - file: "研报-国信证券HK-2021-餐饮业复苏中"
+        - file: "海底捞_研报-国信证券(香港)-20210414-餐饮业复苏进行中"
           page: 4
   - id: semantic-025
     type: semantic
@@ -2035,7 +2094,7 @@ questions:
           required: true
           relevance: 3
           authority: annual
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 15
           required: true
           relevance: 3
@@ -2050,7 +2109,7 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 4
           required: true
           relevance: 3
@@ -2061,7 +2120,7 @@ questions:
           relevance: 2
           authority: annual
       negatives:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 134
   - id: semantic-027
     type: semantic
@@ -2075,7 +2134,7 @@ questions:
           required: true
           relevance: 3
           authority: research
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 78
           required: true
           relevance: 2
@@ -2090,7 +2149,7 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "百胜中国_2022_HK_Annual_Report"
+        - file: "百胜中国_2022年报"
           page: 8
           required: true
           relevance: 3
@@ -2106,7 +2165,7 @@ questions:
           relevance: 2
           authority: research
       negatives:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 54
 
   # ---------------- cross diag: 纯检索跨语言 ----------------
@@ -2157,18 +2216,18 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 183
           required: true
           relevance: 3
           authority: prospectus
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 8
           required: true
           relevance: 2
           authority: research
       negatives:
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 45
   - id: cross-016
     type: cross
@@ -2187,13 +2246,13 @@ questions:
           required: true
           relevance: 2
           authority: annual
-        - file: "百胜中国_2025_HK_Annual_Report"
+        - file: "百胜中国_2025年报"
           page: 78
           required: true
           relevance: 2
           authority: annual
       negatives:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 200
   - id: cross-017
     type: cross
@@ -2242,18 +2301,18 @@ questions:
     company: 百胜中国
     expected:
       sources:
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 10
           required: true
           relevance: 3
           authority: research
-        - file: "2024_百胜中国_快餐业龙头多品牌布局"
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
           page: 7
           required: true
           relevance: 2
           authority: research
       negatives:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 161
   - id: cross-020
     type: cross
@@ -2292,13 +2351,13 @@ questions:
           required: true
           relevance: 3
           authority: annual
-        - file: "百胜中国_2022_HK_Annual_Report"
+        - file: "百胜中国_2022年报"
           page: 8
           required: true
           relevance: 3
           authority: annual
       negatives:
-        - file: "百胜中国_招股书_中文版"
+        - file: "百胜中国_招股说明书"
           page: 54
   - id: cross-022
     type: cross
@@ -2307,7 +2366,7 @@ questions:
     company: 海底捞
     expected:
       sources:
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 19
           required: true
           relevance: 3
@@ -2463,7 +2522,7 @@ questions:
       tool: search_reports
   - id: route-021
     type: route
-    question: 海底捞 2026 年营业收入是多少？
+    question: 海底捞 2027 年营业收入是多少？
     company: 海底捞
     expected:
       tool: no_answer
@@ -2514,7 +2573,7 @@ questions:
     expected:
       year: 2023
       sources:
-        - file: "百胜中国_2023_HK_Annual_Report"
+        - file: "百胜中国_2023年报"
           page: 76
           required: true
   - id: year-004
@@ -2524,7 +2583,7 @@ questions:
     expected:
       year: 2025
       sources:
-        - file: "海底捞研报-国信-202502"
+        - file: "海底捞_研报-国信-202502"
           page: 19
           required: true
 
