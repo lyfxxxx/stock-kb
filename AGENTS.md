@@ -107,6 +107,7 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 | `docs/glossary.md` | 读者文档与示意图的中文术语库 |
 | `docs/report-system.md` | 三层架构、数据转换、每层评测和 exact-001 实例 |
 | `docs/process-log.md` | 历次踩坑记录与解法（现象/原因/解决/教训），改相关模块前必读；简历过程记录指定此文件 |
+| `docs/status/index.html` | 现状页：库怎么建、问句怎么查、门槛与实测、逐题判定、后续工作。完成工作时核对，有对应变动就改 |
 
 注意：`tools/*.py` 里多数脚本硬编码了 `D:\workspace\stock-kb\data\stock_kb.db`，是历史一次性脚本，**新代码不要模仿**。
 
@@ -173,6 +174,7 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 - ✅ 模型重建按 model 隔离；embedder 实例进程级缓存（`vector._EMBEDDER_CACHE`）。
 - ✅ CLI 面向脚本输出 JSON 时用 `--json` 并 `ensure_ascii=False`；终端乱码时以 `--json` 结果为准。
 - ✅ MCP 保持只读，新工具不得接受任何写操作；新增工具后 stdio 与 HTTP 都要验证。
+- ✅ 完成任何工作后查看 `docs/status/index.html`。页上已有内容与这次改动对应时，改这一页。没有对应内容就不要为了凑页去改。
 - ❌ 不要在 `stock_kb/` 内硬编码绝对路径或机器相关用户名。
 - ❌ 不要通过 PowerShell 5.1 管道把中文传给 Python 子进程（编码会被破坏）；用参数、文件或 JSON。
 - ❌ 不要升级/降级 `mcp` 主版本：项目锁定 `mcp>=1.0,<2`，导入路径是 `mcp.server.fastmcp`（2.0 不兼容）。
@@ -220,7 +222,7 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 
 ### 更新文档
 
-改动影响命令、schema、流程、已知限制时，同步更新 `README.md`、`AGENTS.md`；踩坑记录追加到 `docs/process-log.md`。读者中文用词必须在 `docs/glossary.md`；新术语先补术语库，再写正文和示意图。
+改动影响命令、schema、流程、已知限制时，同步更新 `README.md`、`AGENTS.md`；踩坑记录追加到 `docs/process-log.md`。读者中文用词必须在 `docs/glossary.md`；新术语先补术语库，再写正文和示意图。现状页的核对见第 10 节。
 
 ## 10. 完成标准（改完必须全部通过）
 
@@ -229,6 +231,7 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 - [ ] `python tools/run_eval_regression.py` 跑通（门槛见 `eval/EVAL_SYSTEM.md` §5；含 `audit_notes.py`）；
 - [ ] 涉及 MCP 时 `tools/test_mcp_http.py` 通过（stdio 与 HTTP 至少各验证一次）；
 - [ ] 输出路径、环境变量、新增命令已写进文档。
+- [ ] 已查看 `docs/status/index.html`。本次改动若改变了页里已写的实现、查询、门槛、实测、逐题判定或后续工作，已同步修改；没有对应内容则不必改页。
 
 ## 11. 已知陷阱速查（详见 docs/process-log.md）
 
@@ -256,7 +259,7 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 
 > 2026-08-16 自动修复后的最新状态见 `docs/fix-record-20260816.md`；2026-09-13 数据/审计轮次见 `eval/data_gaps.md` 与 `docs/process-log.md` 45–47 条；以下只列仍未完成或需要人工的事项。
 
-- 评测现状见 `eval/EVAL_PLAN.md`。`indicators.net_profit` 已改为归母；no_answer 带引擎健康哨兵（engine_error 不计入 empty_rate）。问句带年份时检索硬过滤 `reports.year`；三表 `year=` 默认当年正文且默认排除 OCR 行、未指定 `period_type` 时只取年报。路由 24/24；组稿 faithful_rate=1.0（含趋势句口径一致性自检）。freeze hybrid semantic Recall@5 为 0.30（含近失软分 `recall_soft_at_k` 字段）。真语义/跨语言仍是 diag 盲区（已扩英文+中报题；2026-10-04 加 freeze exact-021–023 后题集 159 道；2026-10-07 关键词改为 22 道带年份的单点事实，题集 161 道，其中 48 diag）。行情走 `python -m stock_kb quote`，不入库；TTM 已能用中报拼 `interim_plus_stub`。
+- 评测现状见 `eval/EVAL_PLAN.md`。`indicators.net_profit` 已改为归母；no_answer 带引擎健康哨兵（engine_error 不计入 empty_rate）。问句带年份时检索硬过滤 `reports.year`；三表 `year=` 默认当年正文且默认排除 OCR 行、未指定 `period_type` 时只取年报。路由 24/24；组稿 faithful_rate=1.0（含趋势句口径一致性自检）。freeze hybrid semantic Recall@5 在语义题改为单事实换说法后为 0.30（6/20，门槛 0.20）。真语义/跨语言仍是 diag 盲区（已扩英文+中报题；2026-10-04 加 freeze exact-021–023 后题集 159 道；2026-10-07 关键词改为 22 道单点事实，语义召回改为 20 道单事实，题集 161 道，其中 48 diag）。行情走 `python -m stock_kb quote`，不入库；TTM 已能用中报拼 `interim_plus_stub`。
 - 扫描报告数据面：中报三表、百胜 2016–2018、海底捞总资产、折行残片均已修复；OCR 指标分层已落地（2017 五个核心仍标 comparative）。剩余缺口（两家无毛利率序列、分部收入未结构化、美/港双版本 canonical）见 `eval/data_gaps.md` 待办。
 - 正式稿程序化审计已落地（`tools/audit_formal_notes.py`，接入回归测试；样张缺失时自动跳过），但 R1/R2/R11（判断段分布、心算复核）仍靠人工 rubric。
 - 两字查询已建 `pages_bigram_fts`，但 bigram 排序暂未启用（避免牺牲 keyword 基线），需独立评测集调权。

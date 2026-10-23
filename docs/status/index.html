@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>stock-kb 现状 · 2026-10-23</title>
+<style>
+  :root {
+    --ink: #1c1917;
+    --muted: #57534e;
+    --line: #e6dfd4;
+    --paper: #f4f0e8;
+    --card: #fffcf7;
+    --teal: #1f6b56;
+    --teal-soft: #e5f3ee;
+    --amber: #9a5b12;
+    --amber-soft: #f8ecd9;
+    --rose: #9f3d32;
+    --rose-soft: #f8e8e4;
+    --fts: #1d4e89;
+    --fts-soft: #e7f0f8;
+    --hyb: #6b3fa0;
+    --hyb-soft: #f3eaf8;
+    --shadow: 0 1px 2px rgba(28, 25, 23, 0.04);
+    --column: 1360px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 16px/1.65 "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  a { color: var(--teal); }
+  header.top {
+    background: #1c2b27;
+    color: #f6f3ec;
+    padding: 28px max(24px, calc((100% - var(--column)) / 2)) 22px;
+  }
+  header.top h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+  }
+  header.top p { margin: 0; color: #d9d3c7; }
+  nav.topnav {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 24px;
+    background: rgba(244, 240, 232, 0.94);
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(8px);
+  }
+  nav a {
+    text-decoration: none;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 14px;
+  }
+  main {
+    width: min(var(--column), calc(100% - 48px));
+    margin: 0 auto;
+    padding: 28px 0 64px;
+  }
+  section { margin: 0 0 36px; scroll-margin-top: 72px; }
+  .toc { display: none; }
+  h2 {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 650;
+  }
+  h3 { margin: 22px 0 8px; font-size: 17px; }
+  p { margin: 0 0 10px; }
+  .lead { color: var(--muted); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 14px 0 8px;
+  }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: var(--shadow);
+  }
+  .stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 13px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 16px 8px;
+    box-shadow: var(--shadow);
+    margin: 12px 0;
+  }
+  .card h3 { margin-top: 0; }
+  iframe.diagram {
+    width: 100%;
+    height: 860px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: white;
+  }
+  .links { font-size: 14px; margin: 6px 0 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: #f7f1e6; font-weight: 650; }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .ok { color: var(--teal); font-weight: 650; }
+  .show { color: var(--amber); font-weight: 650; }
+  .old { color: var(--muted); }
+  ul { margin: 8px 0 12px; padding-left: 1.2em; }
+  li { margin: 4px 0; }
+  .note {
+    background: var(--amber-soft);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #3f3428;
+    font-size: 14px;
+  }
+  .svg-wrap { overflow-x: auto; }
+  svg text { font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  footer { color: var(--muted); font-size: 13px; margin-top: 28px; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 0.92em; }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    position: sticky;
+    top: 54px;
+    z-index: 2;
+    background: rgba(244, 240, 232, 0.94);
+    padding: 8px 0;
+  }
+  .filters label { font-size: 14px; color: var(--muted); }
+  .filters select, .filters input {
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 4px 8px;
+  }
+  .filters input { min-width: 180px; }
+  #f-count { font-size: 14px; color: var(--muted); }
+  article.q {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin: 8px 0;
+  }
+  article.q.miss { border-left-color: var(--rose); }
+  article.q.drop { border-left-color: var(--amber); }
+  article.q.ok { border-left-color: var(--teal); }
+  article.q p { margin: 4px 0; overflow-wrap: anywhere; }
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 650;
+    border-radius: 999px;
+    padding: 1px 8px;
+    margin-right: 6px;
+  }
+  .badge.miss { background: var(--rose-soft); color: var(--rose); }
+  .badge.drop { background: var(--amber-soft); color: var(--amber); }
+  .badge.ok { background: var(--teal-soft); color: var(--teal); }
+  .legend { font-size: 14px; color: var(--muted); }
+  .swatch {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 650;
+    border-radius: 999px;
+    padding: 0 8px;
+    margin-right: 4px;
+  }
+  .swatch.fts { background: var(--fts-soft); color: var(--fts); }
+  .swatch.hybrid { background: var(--hyb-soft); color: var(--hyb); }
+  .eng {
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin: 8px 0;
+  }
+  .eng.fts { background: var(--fts-soft); border-left: 4px solid var(--fts); }
+  .eng.hybrid { background: var(--hyb-soft); border-left: 4px solid var(--hyb); }
+  .eng-name { margin: 0; font-weight: 650; }
+  .eng.fts .eng-name { color: var(--fts); }
+  .eng.hybrid .eng-name { color: var(--hyb); }
+  .eng ol { margin: 6px 0 0; padding-left: 1.2em; }
+  .eng li { margin: 8px 0; }
+  .eng .loc { margin: 0; }
+  .eng .excerpt { margin: 2px 0 0; font-size: 14px; color: #3f3428; }
+  .eng .k { font-weight: 650; }
+  .eng.fts .k { color: var(--fts); }
+  .eng.hybrid .k { color: var(--hyb); }
+  .eng mark { background: #fff3bf; color: inherit; padding: 0 2px; }
+  .tag {
+    display: inline-block;
+    font-size: 12px;
+    border-radius: 999px;
+    padding: 0 6px;
+    margin-left: 6px;
+    background: #f3efe6;
+    color: var(--muted);
+  }
+  .tag.hit { background: var(--teal-soft); color: var(--teal); }
+  .tag.bad { background: var(--rose-soft); color: var(--rose); }
+  @media (max-width: 800px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+    iframe.diagram { height: 640px; }
+  }
+  @media (min-width: 1780px) {
+    .toc {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: fixed;
+      z-index: 4;
+      left: 16px;
+      top: 20px;
+      width: 168px;
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+      padding: 12px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+    }
+    .toc p {
+      margin: 0 0 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .toc a {
+      display: block;
+      text-decoration: none;
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .toc a.active {
+      background: var(--teal-soft);
+      color: var(--teal);
+      font-weight: 650;
+    }
+    nav.topnav { display: none; }
+    .filters { top: 12px; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>stock-kb 现状</h1>
+  <p>本地财报知识库。试点是海底捞和百胜中国。数字要能回到文件和页码。下面三节分别写库怎么建、问句怎么查、各层门槛的实测。</p>
+</header>
+<aside class="toc" aria-label="页内目录">
+  <p>目录</p>
+  <a href="#now">库里有什么</a>
+  <a href="#build">库怎么建</a>
+  <a href="#query">问句怎么查</a>
+  <a href="#metrics">门槛与实测</a>
+  <a href="#items">逐题判定</a>
+  <a href="#next">后续工作</a>
+</aside>
+<nav class="topnav">
+  <a href="#now">库里有什么</a>
+  <a href="#build">库怎么建</a>
+  <a href="#query">问句怎么查</a>
+  <a href="#metrics">门槛与实测</a>
+  <a href="#items">逐题判定</a>
+  <a href="#next">后续工作</a>
+</nav>
+<main>
+
+<section id="now">
+  <h2>库里现在有什么</h2>
+  <p>统计来自 2026-10-23 对本地库的只读查询。库文件最后写入是 2026-10-07。当前使用文档指非重复、status 为空或 ok、标题不含「清单」或「清單」的目录行。</p>
+  <div class="grid">
+    <div class="stat"><b>487</b><span>当前使用文档</span></div>
+    <div class="stat"><b>18,926</b><span>页文本</span></div>
+    <div class="stat"><b>18,204</b><span>三表行</span></div>
+    <div class="stat"><b>310</b><span>指标</span></div>
+  </div>
+  <p class="lead">目录一共 566 行。其中 ok 516、missing 49、superseded 1。来源是 NAS 562 行、collect 4 行。当前使用文档里 NAS 484、collect 3。向量是 <code>BAAI/bge-small-zh-v1.5</code>，60,340 块，约 800 字一块。</p>
+
+  <div class="card">
+    <h3>当前使用文档按文种</h3>
+    <p class="lead">研报远多于年报。三表和指标只从财报报表页来。研报和电话会文字稿通常只有页文本。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 720 280" width="720" height="280" role="img" aria-label="两家公司当前使用文档的文种数量">
+        <g font-size="13" fill="#1c1917">
+          <text x="92" y="36" text-anchor="end">年报</text>
+          <text x="92" y="72" text-anchor="end">中报</text>
+          <text x="92" y="108" text-anchor="end">招股</text>
+          <text x="92" y="144" text-anchor="end">研报</text>
+          <text x="92" y="180" text-anchor="end">电话会</text>
+          <text x="92" y="216" text-anchor="end">其他</text>
+        </g>
+        <g fill="#1f6b56">
+          <rect x="104" y="22" width="16" height="18" rx="3"></rect>
+          <rect x="104" y="58" width="16" height="18" rx="3"></rect>
+          <rect x="104" y="94" width="4" height="18" rx="2"></rect>
+          <rect x="104" y="130" width="550" height="18" rx="3"></rect>
+          <rect x="104" y="166" width="16" height="18" rx="3"></rect>
+          <rect x="104" y="202" width="32" height="18" rx="3"></rect>
+        </g>
+        <g fill="#c4a574">
+          <rect x="120" y="22" width="32" height="18" rx="3"></rect>
+          <rect x="120" y="58" width="12" height="18" rx="3"></rect>
+          <rect x="108" y="94" width="4" height="18" rx="2"></rect>
+          <rect x="104" y="148" width="264" height="14"></rect>
+          <rect x="120" y="166" width="8" height="18" rx="2"></rect>
+          <rect x="136" y="202" width="20" height="18" rx="3"></rect>
+        </g>
+        <g font-size="12" fill="#1c1917">
+          <text x="160" y="36">8 + 16</text>
+          <text x="140" y="72">8 + 6</text>
+          <text x="120" y="108">2 + 2</text>
+          <text x="662" y="142">275</text>
+          <text x="376" y="160">132</text>
+          <text x="136" y="180">8 + 4</text>
+          <text x="164" y="216">16 + 10</text>
+        </g>
+        <g font-size="12" fill="#57534e">
+          <rect x="104" y="244" width="12" height="12" fill="#1f6b56"></rect>
+          <text x="122" y="255">海底捞</text>
+          <rect x="180" y="244" width="12" height="12" fill="#c4a574"></rect>
+          <text x="198" y="255">百胜中国。研报按 275 和 132 分行画，避免叠在一起。</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>310 条指标从哪来</h3>
+    <p class="lead">挑选顺序是当年干净页、干净比较列、当年 OCR=1。OCR=2 不入选。这次库里没有 <code>ocr_own</code>。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 720 150" width="720" height="150" role="img" aria-label="指标来源构成">
+        <text x="0" y="28" font-size="13" fill="#1c1917">own_year 167</text>
+        <rect x="120" y="12" width="334" height="22" rx="4" fill="#1f6b56"></rect>
+        <text x="0" y="68" font-size="13" fill="#1c1917">derived 93</text>
+        <rect x="120" y="52" width="186" height="22" rx="4" fill="#3d8b74"></rect>
+        <text x="0" y="108" font-size="13" fill="#1c1917">comparative 50</text>
+        <rect x="120" y="92" width="100" height="22" rx="4" fill="#c4a574"></rect>
+        <text x="120" y="140" font-size="12" fill="#57534e">比例尺：310 条对应满宽。派生比率没有单独页，出处标 derived。</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="build">
+  <h2>库怎么建出来</h2>
+  <p>证据层把原文变成可引用的页。财报再抽出三表行。知识库层不改这些页。</p>
+  <ol>
+    <li><b>先扫 NAS。</b><code>scan</code> 只读遍历共享目录和已有 <code>data/raw</code>。出处 JSON 写到 <code>data/meta</code>。</li>
+    <li><b>再看缺口。</b><code>stats --json</code> 看文档类型和来源。只对缺的类型 <code>fetch</code>。</li>
+    <li><b>再扫一遍。</b>新文件留在 <code>data/raw</code>。不把 NAS 原文拷进本机。</li>
+    <li><b>页和三表分开。</b>每份文件都有页。报表页才有三表行。数字保持千元或百万美元。</li>
+    <li><b>两条索引。</b>简体 <code>content</code> 进 FTS5 和向量。引用用原文 <code>content_orig</code>。指标只从三表行归出。</li>
+  </ol>
+  <p class="links">图可以单独打开：<a href="kb-build.html">kb-build.html</a>。支持缩放、深浅色和按节点聚焦。</p>
+  <iframe class="diagram" src="kb-build.html" title="知识库怎样从原文建出来"></iframe>
+  <div class="card">
+    <h3>查询时实际打开的是哪几张表</h3>
+    <table>
+      <thead><tr><th>表</th><th>给谁用</th><th>不做什么</th></tr></thead>
+      <tbody>
+        <tr><td><code>reports</code></td><td>文档目录。查询只看当前使用文档</td><td><code>list_reports</code> 仍列出 missing 和 superseded</td></tr>
+        <tr><td><code>pages</code></td><td>全文检索和引用</td><td>不在这里换算成亿元</td></tr>
+        <tr><td><code>statements</code></td><td>三表行。默认排除 OCR，只要当年年报正文</td><td>比较列要显式打开</td></tr>
+        <tr><td><code>indicators</code></td><td>收入、归母净利、资产、净资产、经营现金流、比率</td><td>翻台率、门店数不在这张表</td></tr>
+        <tr><td><code>chunks</code> / sqlite-vec</td><td>约 800 字的向量近邻，再收成页</td><td>默认入口不先走这里</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="query">
+  <h2>问句怎么查</h2>
+  <p>MCP 以只读方式打开 SQLite，地址是 <code>127.0.0.1:8931</code>。科目数字不先做全文检索。</p>
+  <ol>
+    <li><b>先路由。</b><code>route_query</code> 把问句分到指标、三表、全文或无答案。</li>
+    <li><b>科目走表。</b>收入、归母净利、资产、经营现金流用 <code>get_indicators</code>。已付股息、资本开支、减值用 <code>get_financial_statements</code>。</li>
+    <li><b>叙述走全文。</b>翻台率、同店、师徒用 <code>search_reports</code>。默认引擎是 FTS。有页就返回。</li>
+    <li><b>零命中才融合。</b>MCP 在 FTS 零命中时才升到 hybrid。CLI 零命中保持空。显式 hybrid 时，归一化长度达到 6，或短查询的 FTS 为空，才做 RRF。</li>
+    <li><b>出处统一。</b>返回 <code>《title》第N页</code>。派生比率标 <code>derived</code>。命中追加到 <code>retrieval_log.jsonl</code>，不写入 SQLite。</li>
+  </ol>
+  <p class="links">图可以单独打开：<a href="query.html">query.html</a>。科目和经营叙述可以分开看。</p>
+  <iframe class="diagram" src="query.html" title="问句怎样选到只读工具"></iframe>
+  <div class="card">
+    <h3>取数常用这几个工具</h3>
+    <table>
+      <thead><tr><th>工具</th><th>什么时候用</th></tr></thead>
+      <tbody>
+        <tr><td><code>route_query</code></td><td>还不确定走哪一条</td></tr>
+        <tr><td><code>get_indicators</code></td><td>收入、归母净利、资产、净资产、经营现金流、毛利、净利率、ROE</td></tr>
+        <tr><td><code>get_financial_statements</code></td><td>某一行科目。默认当年年报正文，排除 OCR</td></tr>
+        <tr><td><code>search_reports</code></td><td>经营叙述。默认 FTS，可显式 <code>vector</code> 或 <code>hybrid</code></td></tr>
+        <tr><td><code>get_source_excerpt</code></td><td>按标题和页码摘原文，供注释</td></tr>
+        <tr><td><code>list_reports</code></td><td>列目录，含未进入当前使用文档的行</td></tr>
+        <tr><td><code>list_companies</code></td><td>列试点公司</td></tr>
+        <tr><td><code>get_report_text</code></td><td>按标题取页文本</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>行情不进这套库。<code>python -m stock_kb quote</code> 单独取价。写稿前要有 <code>STOCK_KB_RUN_ID</code>。终稿交给 <code>audit-report</code>，核对注释里的数是否在该页或三表行里，以及出处是否属于这一次查询。</p>
+</section>
+
+<section id="metrics">
+  <h2>各层门槛和实测</h2>
+  <p>三层不合成一个总 Recall。冻结回归测试看下面这些评测指标。题集 161 道，SHA-256 前缀 <code>2f4f07f5</code>。检索实测是 2026-10-23 当场跑的，没有写入 <code>eval/reports</code>。对不上的题在 <a href="#items">逐题判定</a>。</p>
+  <p class="lead">题集构成：冻结回归测试里 exact 23、keyword 22、semantic 20、cross 12、end2end 8、route 24、year_filter 4。诊断集里 indicator 12、no_answer 8、semantic 13、cross 15。诊断集里只有指标表对照和无答案卡住回归测试。</p>
+
+  <div class="card">
+    <h3>越高越好的评测指标</h3>
+    <p class="lead">深色条是实测。浅色轨道是 0 到 1。竖线是门槛。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 720 340" width="720" height="340" role="img" aria-label="越高越好的评测指标，实测对照门槛">
+        <g font-size="13" fill="#1c1917">
+          <text x="168" y="28" text-anchor="end">FTS 关键词召回</text>
+          <text x="168" y="62" text-anchor="end">hybrid 语义召回</text>
+          <text x="168" y="96" text-anchor="end">FTS 无答案空结果</text>
+          <text x="168" y="130" text-anchor="end">hybrid 无答案空结果</text>
+          <text x="168" y="164" text-anchor="end">路由准确率</text>
+          <text x="168" y="198" text-anchor="end">年份过滤</text>
+          <text x="168" y="232" text-anchor="end">结构化 29/29</text>
+          <text x="168" y="266" text-anchor="end">指标表 12/12</text>
+          <text x="168" y="300" text-anchor="end">页保真 23/23</text>
+        </g>
+        <g fill="#e7e1d6">
+          <rect x="180" y="14" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="48" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="82" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="116" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="150" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="184" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="218" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="252" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="286" width="500" height="18" rx="3"></rect>
+        </g>
+        <g fill="#1f6b56">
+          <rect x="180" y="14" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="48" width="150" height="18" rx="3"></rect>
+          <rect x="180" y="82" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="116" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="150" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="184" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="218" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="252" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="286" width="500" height="18" rx="3"></rect>
+        </g>
+        <g stroke="#9a5b12" stroke-width="2">
+          <line x1="555" y1="12" x2="555" y2="34"></line>
+          <line x1="280" y1="46" x2="280" y2="68"></line>
+          <line x1="555" y1="80" x2="555" y2="102"></line>
+          <line x1="555" y1="114" x2="555" y2="136"></line>
+          <line x1="680" y1="148" x2="680" y2="170"></line>
+          <line x1="480" y1="182" x2="480" y2="204"></line>
+          <line x1="680" y1="216" x2="680" y2="238"></line>
+          <line x1="680" y1="250" x2="680" y2="272"></line>
+          <line x1="680" y1="284" x2="680" y2="306"></line>
+        </g>
+        <g font-size="11" fill="#fffcf7" text-anchor="end">
+          <text x="668" y="27">1.00</text>
+          <text x="668" y="95">1.00</text>
+          <text x="668" y="129">1.00</text>
+          <text x="668" y="163">1.00</text>
+          <text x="668" y="197">1.00</text>
+          <text x="668" y="231">1.00</text>
+          <text x="668" y="265">1.00</text>
+          <text x="668" y="299">1.00</text>
+        </g>
+        <text x="338" y="61" font-size="12" fill="#1c1917">0.30</text>
+        <g font-size="12" fill="#57534e">
+          <text x="180" y="328">0</text>
+          <text x="672" y="328" text-anchor="end">1</text>
+          <text x="400" y="328">竖线 = 门槛</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>越低越好的负样本</h3>
+    <p class="lead">条是前 5 条里出现难负样本的比例。竖线是允许的上限。</p>
+    <div class="svg-wrap">
+      <svg viewBox="0 0 720 110" width="720" height="110" role="img" aria-label="负样本命中率对照上限">
+        <text x="168" y="32" font-size="13" text-anchor="end" fill="#1c1917">FTS 关键词 Neg@5</text>
+        <text x="168" y="70" font-size="13" text-anchor="end" fill="#1c1917">hybrid 语义 Neg@5</text>
+        <line x1="180" y1="26" x2="680" y2="26" stroke="#e6dfd4"></line>
+        <line x1="180" y1="64" x2="680" y2="64" stroke="#e6dfd4"></line>
+        <circle cx="180" cy="26" r="5" fill="#1f6b56"></circle>
+        <circle cx="180" cy="64" r="5" fill="#1f6b56"></circle>
+        <line x1="505" y1="16" x2="505" y2="36" stroke="#9a5b12" stroke-width="2"></line>
+        <line x1="280" y1="54" x2="280" y2="74" stroke="#9a5b12" stroke-width="2"></line>
+        <text x="180" y="96" font-size="12" fill="#57534e">实测都是 0。上限分别是 0.65 和 0.20。圆点画在 0。</text>
+      </svg>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>层</th><th>评测指标</th><th>门槛</th><th class="num">实测</th><th>结果</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>证据层</td><td>结构化 L1 / L3</td><td>29/29</td><td class="num">29/29</td><td class="ok">过</td></tr>
+      <tr><td>证据层</td><td>页保真</td><td>非 OCR 缺句则失败</td><td class="num">23/23 命中</td><td class="ok">过</td></tr>
+      <tr><td>证据层</td><td>覆盖矩阵</td><td>只展示</td><td class="num">本页未重跑</td><td class="show">只展示</td></tr>
+      <tr><td>知识库层</td><td>FTS keyword Recall@5</td><td>≥ 0.75</td><td class="num">1.00（22/22）</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>FTS keyword Neg@5</td><td>≤ 0.65</td><td class="num">0.00</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>hybrid semantic Recall@5</td><td>≥ 0.20</td><td class="num">0.30（6/20）</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>hybrid semantic Neg@5</td><td>≤ 0.20</td><td class="num">0.00</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>指标表对照</td><td>12/12，容差 0.0001</td><td class="num">12/12</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>无答案 empty_rate</td><td>FTS、hybrid 都 ≥ 0.75</td><td class="num">1.00（8/8）</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>路由 accuracy</td><td>1.0（24 题）</td><td class="num">1.00</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>year_filter</td><td>≥ 0.60（4 题）</td><td class="num">1.00</td><td class="ok">过</td></tr>
+      <tr><td>报告层</td><td>组稿 faithful_rate</td><td>1.00，趋势句 0 处不一致</td><td class="num">1.00</td><td class="old">2026-09-13 存档</td></tr>
+      <tr><td>报告层</td><td>手写笔记审计</td><td>硬失败 0</td><td class="num">0</td><td class="old">2026-10-04 存档</td></tr>
+    </tbody>
+  </table>
+
+  <h3>检索里另外看见的数</h3>
+  <p>这些数不卡住回归测试。语义召回的门槛用题型 semantic 的 20 道，不用分桶里的 22 道。</p>
+  <div class="card">
+    <div class="svg-wrap">
+      <svg viewBox="0 0 720 168" width="720" height="168" role="img" aria-label="只展示的召回">
+        <g font-size="13" fill="#1c1917">
+          <text x="250" y="28" text-anchor="end">FTS 关键词分桶 22/22</text>
+          <text x="250" y="58" text-anchor="end">hybrid 关键词 21/22</text>
+          <text x="250" y="88" text-anchor="end">hybrid 语义分桶 6/22</text>
+          <text x="250" y="118" text-anchor="end">hybrid 跨语言 0/6</text>
+          <text x="250" y="148" text-anchor="end">诊断集语义 1/13</text>
+        </g>
+        <g fill="#1f6b56">
+          <rect x="262" y="14" width="420" height="16" rx="3"></rect>
+          <rect x="262" y="44" width="401" height="16" rx="3"></rect>
+        </g>
+        <g fill="#c4a574">
+          <rect x="262" y="74" width="115" height="16" rx="3"></rect>
+          <rect x="262" y="134" width="32" height="16" rx="3"></rect>
+        </g>
+        <g fill="#9f3d32">
+          <rect x="262" y="104" width="4" height="16" rx="2"></rect>
+        </g>
+        <text x="262" y="164" font-size="12" fill="#57534e">满宽是 1。跨语言 0 画成短条。诊断集跨语言 hybrid 是 3/15。</text>
+      </svg>
+    </div>
+  </div>
+  <ul>
+    <li><b>关键词题都进了融合。</b>显式 hybrid 时 22 道全部 <code>hybrid_fused</code>。FTS 是 22/22。融合后是 21/22，有 1 道掉出前 5。</li>
+    <li><b>语义题只有一半融合。</b>20 道里 10 道 <code>hybrid_fused</code>。Recall@5 是 0.30。n=20，点估计会跳。门槛钉的是 0.20 这条下限。</li>
+    <li><b>跨语言没有单独门槛。</b>冻结回归测试里纯检索 cross 是 6 道。FTS Recall@5 是 0.167。hybrid 是 0。</li>
+    <li><b>向量筛选是旧诊断。</b>2026-08-30，<code>bge-small-zh</code> 在 44 道长句上 Recall@5 = 0.159，Recall@50 = 0.364，50 名内没有 28 道。这组数不进 G1–G11。今天没有重跑。</li>
+    <li><b>两家都没有毛利行。</b>损益表不单列毛利。不自造毛利率。指标里也就没有这条序列。</li>
+  </ul>
+  <div class="note">组稿 faithful_rate 和手写笔记审计用的是已保存的评测报告，不是今天重跑。页保真、FTS、hybrid、路由、年份过滤、结构化、指标表对照和无答案是今天对当前库和当前题集跑的。</div>
+</section>
+
+<section id="items">
+  <h2>逐题判定</h2>
+  <p>下面是题集里的 161 道。FTS 用了 1.1 秒，hybrid 用了 40.6 秒，模型是 <code>BAAI/bge-small-zh-v1.5</code>，top 5。默认只留下没过的题。评测指标按回归测试的那几项来分，选项里写着有几道未过。</p>
+  <p>检索题按页判定。《文件》第 N 页是对错单位。FTS 搜的是整页，摘录是命中附近的页文本。hybrid 先在约 800 字的文本块上找近邻，再收成页；选段是该页最近的一块。只考一路的题只列这一路。无答案要两路都空，所以两路都列。被 hybrid 挤出前 5 的那道关键词，两路都列。结构化、指标表对照和路由不列检索页。</p>
+  <p class="legend"><span class="swatch fts">FTS</span>整页与页内摘录。<span class="swatch hybrid">hybrid</span>按页排序，并附文本块选段。</p>
+  <p>结构化 29 道、指标表对照 12 道、路由 24 道、无答案 8 道、年份过滤 4 道、关键词的 FTS 22 道都对上了。对不上的有 53 道：语义召回 14 道没有回到对照页，1 道关键词被 hybrid 挤出前 5，另外 38 道是只展示的检索未命中。语义整组 Recall@5 是 0.30，门槛 0.20 仍过。组稿和手写笔记没有逐题清单。</p>
+  <div class="filters">
+    <label>范围
+      <select id="f-scope">
+        <option value="wrong">对不上</option>
+        <option value="all">全部</option>
+        <option value="pass">对上了</option>
+      </select>
+    </label>
+    <label>题型
+      <select id="f-type">
+        <option value="">全部</option>
+        <option value="semantic">语义</option>
+        <option value="cross">跨语言</option>
+        <option value="keyword">关键词</option>
+        <option value="end2end">材料</option>
+        <option value="exact">结构化</option>
+        <option value="indicator">指标表</option>
+        <option value="route">路由</option>
+        <option value="year_filter">年份</option>
+        <option value="no_answer">无答案</option>
+      </select>
+    </label>
+    <label>集合
+      <select id="f-split">
+        <option value="">全部</option>
+        <option value="freeze">冻结回归测试</option>
+        <option value="diag">诊断集</option>
+      </select>
+    </label>
+    <label>评测指标
+      <select id="f-metric">
+        <option value="">全部</option>
+      </select>
+    </label>
+    <input id="f-q" type="search" placeholder="题号或问句">
+    <span id="f-count"></span>
+  </div>
+  <div id="q-list"></div>
+</section>
+
+<section id="next">
+  <h2>后续工作</h2>
+  <p>下面这些事还没做完。每一项只写它改变哪一层。</p>
+  <table>
+    <thead><tr><th>工作</th><th>作用</th></tr></thead>
+    <tbody>
+      <tr><td>分部收入</td><td>分产品、分地区目前只在页文本里。结构化之后可以按科目查。现在只能做全文检索。</td></tr>
+      <tr><td>美股 / 港股年报标记</td><td>百胜 2022–2025 两套正文都在当前使用文档里。同一年的三表查询会返回两套行。标记之后可以只留一套给默认查询。</td></tr>
+      <tr><td>百胜 2017 的 OCR 页</td><td>五个核心指标仍是比较列。当年利润表和现金流页是 OCR=2，不能升成当年数。</td></tr>
+      <tr><td>「股东」检索</td><td>这个词常打到章程条款页。收窄用词后，控股和持股比例更容易排到前面。</td></tr>
+      <tr><td>两字排序</td><td><code>pages_bigram_fts</code> 已建。有结果时还没用它排序，避免把关键词基线打乱。要单独评测再开。</td></tr>
+      <tr><td>真语义和跨语言</td><td>诊断集仍然经常召不回。400 字分块试过，冻结语义召回从 0.10 掉到 0.05，已经退回。reranker 仍是可选项，不排进下一步。</td></tr>
+      <tr><td>判断段</td><td>R1、R2、R11 仍靠人工。回归测试只审数字、出处和必备节。观点层还不能批量放行。</td></tr>
+      <tr><td>Docker 与 Hermes</td><td>库还在这台机器上。迁到 DXP-4800、接 Hermes 都还没开始。</td></tr>
+      <tr><td><code>scan --watch-interval</code></td><td>开关已有。还没在真实新增文件上验过。</td></tr>
+    </tbody>
+  </table>
+  <h3>本期明确不做</h3>
+  <ul>
+    <li><b>不自造毛利率。</b>报表没有这一行。</li>
+    <li><b>不自动改写问句。</b>查询日志留给以后看零命中。</li>
+    <li><b>不上 RAPTOR 或 GraphRAG。</b>只有某一检索桶稳定失败，并且报告必备节依赖这个桶，再单独立项。</li>
+    <li><b>不换默认向量模型。</b>除非 <code>eval-embed</code> 判定 better，并且冻结语义召回仍过 0.20。</li>
+    <li><b>不把行情写进 SQLite。</b>价格走独立命令。</li>
+  </ul>
+</section>
+
+<footer>
+  <p>用词按 <code>docs/glossary.md</code>。结构图用 Archify showcase 交付：<code>kb-build.html</code> 9/9 通过，<code>query.html</code> 9/9 通过。页保真分组：年报非 OCR 7/7，年报 OCR 4/4，中报 1/1，招股 2/2，研报 8/8，电话会 1/1。</p>
+</footer>
+</main>
+<script src="items.js"></script>
+<script>
+(function () {
+  var TYPE = {
+    exact: "结构化",
+    keyword: "关键词",
+    semantic: "语义",
+    cross: "跨语言",
+    end2end: "材料",
+    route: "路由",
+    year_filter: "年份",
+    indicator: "指标表",
+    no_answer: "无答案"
+  };
+  var SPLIT = { freeze: "冻结", diag: "诊断" };
+  var GROUP = {
+    "gate-miss": "计入门槛，这一题未命中",
+    "hybrid-drop": "关键词 FTS 命中，hybrid 未进前 5",
+    "display-miss": "只展示，检索没有回到对照页",
+    pass: "对上了"
+  };
+  var ORDER = ["gate-miss", "hybrid-drop", "display-miss", "pass"];
+  var EVALS = [
+    { key: "hybrid-semantic", label: "hybrid 语义 Recall@5", note: "门槛 ≥ 0.20", order: 1 },
+    { key: "fts-keyword", label: "FTS 关键词 Recall@5", note: "门槛 ≥ 0.75", order: 2 },
+    { key: "structured", label: "结构化", note: "29 道都要相符", order: 3 },
+    { key: "indicator", label: "指标表对照", note: "12 道都要相符", order: 4 },
+    { key: "no-answer", label: "无答案 empty_rate", note: "FTS 和 hybrid 都要空", order: 5 },
+    { key: "route", label: "路由 accuracy", note: "24 道都要相符", order: 6 },
+    { key: "year", label: "年份过滤", note: "门槛 ≥ 0.60", order: 7 },
+    { key: "hybrid-keyword", label: "hybrid 关键词", note: "只展示", order: 8 },
+    { key: "diag-semantic", label: "诊断集语义", note: "只展示", order: 9 },
+    { key: "cross", label: "跨语言检索", note: "只展示", order: 10 },
+    { key: "end2end", label: "材料题", note: "只展示", order: 11 }
+  ];
+
+  function evalKey(item) {
+    if (item.group === "hybrid-drop") return "hybrid-keyword";
+    if ((item.gate || "").indexOf("结构化") === 0) return "structured";
+    if (item.type === "indicator") return "indicator";
+    if (item.type === "no_answer") return "no-answer";
+    if (item.type === "route") return "route";
+    if (item.type === "year_filter") return "year";
+    if (item.type === "keyword") return "fts-keyword";
+    if (item.type === "semantic" && item.split === "freeze") return "hybrid-semantic";
+    if (item.type === "semantic") return "diag-semantic";
+    if (item.type === "cross") return "cross";
+    if (item.type === "end2end") return "end2end";
+    return "other";
+  }
+
+  function evalInfo(key) {
+    for (var i = 0; i < EVALS.length; i++) {
+      if (EVALS[i].key === key) return EVALS[i];
+    }
+    return { key: key, label: key, note: "" };
+  }
+
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"]/g, function (ch) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[ch];
+    });
+  }
+
+  function enginesFor(item) {
+    var key = evalKey(item);
+    if (key === "no-answer" || key === "hybrid-keyword") return ["fts", "hybrid"];
+    if (key === "fts-keyword" || key === "year") return ["fts"];
+    if (key === "hybrid-semantic" || key === "diag-semantic" || key === "cross" || key === "end2end") return ["hybrid"];
+    return [];
+  }
+
+  function markSnippet(text) {
+    var parts = String(text || "").split(/\[([^\]]+)\]/);
+    var html = "";
+    for (var i = 0; i < parts.length; i++) {
+      html += i % 2 === 1 ? "<mark>" + esc(parts[i]) + "</mark>" : esc(parts[i]);
+    }
+    return html;
+  }
+
+  function foldText(value) {
+    return String(value || "").replace(/[\s\u3000,，]/g, "");
+  }
+
+  function phraseHit(item, excerpt) {
+    var text = item.expected || "";
+    var mark = "验收短语：";
+    var at = text.indexOf(mark);
+    if (at < 0) return false;
+    var folded = foldText(excerpt);
+    var parts = text.slice(at + mark.length).split(" / ");
+    for (var i = 0; i < parts.length; i++) {
+      var needle = foldText(parts[i]);
+      if (needle && folded.indexOf(needle) >= 0) return true;
+    }
+    return false;
+  }
+
+  function rowHtml(name, row, index, item) {
+    var loc = "《" + (row.title || "") + "》第" + row.page + "页";
+    if (item.type === "year_filter" && row.year) loc += " · 文档年 " + row.year;
+    var tags = "";
+    if (row.expected) tags += " <span class=\"tag hit\">对照页</span>";
+    else if (phraseHit(item, row.excerpt)) tags += " <span class=\"tag hit\">验收短语</span>";
+    if (row.negative) tags += " <span class=\"tag bad\">负样本</span>";
+    if (name === "hybrid" && row.ftsRank) tags += " <span class=\"tag\">FTS 第" + row.ftsRank + "</span>";
+    if (name === "hybrid" && row.vecRank) tags += " <span class=\"tag\">向量第" + row.vecRank + "</span>";
+    var label = row.kind === "chunk" ? "文本块" : "页内摘录";
+    var body = row.kind === "chunk" ? esc(row.excerpt) : markSnippet(row.excerpt);
+    return "<li><p class=\"loc\">" + esc(loc) + tags + "</p><p class=\"excerpt\"><span class=\"k\">" + label + "</span> " + body + "</p></li>";
+  }
+
+  function engineBlock(name, block, item) {
+    var rows = (block && block.rows) || [];
+    var sub = "整页";
+    if (name === "hybrid") {
+      if (!rows.length) sub = "按页";
+      else if (block && block.fused) sub = "按页，附文本块";
+      else sub = "未融合，整页";
+    }
+    var html = "<div class=\"eng " + name + "\">";
+    html += "<p class=\"eng-name\">" + (name === "fts" ? "FTS" : "hybrid") + " · " + sub + "</p>";
+    if (block && block.query && block.query !== item.question) {
+      html += "<p class=\"lead\">检索词：" + esc(block.query) + "</p>";
+    }
+    if (!rows.length) {
+      html += "<p class=\"eng-empty\">没有命中页。</p></div>";
+      return html;
+    }
+    html += "<ol>";
+    rows.forEach(function (row, index) { html += rowHtml(name, row, index, item); });
+    html += "</ol></div>";
+    return html;
+  }
+
+  function answerHtml(item) {
+    var engines = enginesFor(item);
+    if (!engines.length || !item.hits) {
+      var html = "<p><b>回答：</b>" + esc(item.answer) + "</p>";
+      var key = evalKey(item);
+      if (key === "structured") html += "<p class=\"lead\">这题对的是三表行。回答里的页是出处。</p>";
+      else if (key === "indicator") html += "<p class=\"lead\">这题对的是指标表。回答里的页是出处。</p>";
+      else if (key === "route") html += "<p class=\"lead\">这题对的是路由工具。</p>";
+      return html;
+    }
+    var html = "<p><b>回答</b></p>";
+    if (evalKey(item) === "hybrid-keyword") {
+      html += "<p class=\"lead\">关键词门槛看的是 FTS，这一题 FTS 已命中。下面同时列出 hybrid，因为前 5 页里没有对照页。</p>";
+    }
+    engines.forEach(function (name) { html += engineBlock(name, item.hits[name], item); });
+    return html;
+  }
+
+  function hitHay(item) {
+    var hits = item.hits || {};
+    var parts = [];
+    ["fts", "hybrid"].forEach(function (name) {
+      var block = hits[name];
+      if (!block) return;
+      (block.rows || []).forEach(function (row) {
+        parts.push(row.title || "", row.excerpt || "", String(row.page == null ? "" : row.page));
+      });
+    });
+    return parts.join(" ");
+  }
+
+  var items = window.STATUS_ITEMS || [];
+  var scope = document.getElementById("f-scope");
+  var type = document.getElementById("f-type");
+  var split = document.getElementById("f-split");
+  var metric = document.getElementById("f-metric");
+  var query = document.getElementById("f-q");
+  var list = document.getElementById("q-list");
+  var count = document.getElementById("f-count");
+
+  function visible(item) {
+    if (scope.value === "wrong" && item.group === "pass") return false;
+    if (scope.value === "pass" && item.group !== "pass") return false;
+    if (type.value && item.type !== type.value) return false;
+    if (split.value && item.split !== split.value) return false;
+    if (metric.value && evalKey(item) !== metric.value) return false;
+    var needle = (query.value || "").trim();
+    if (!needle) return true;
+    var hay = item.id + " " + item.question + " " + item.company + " " + item.answer + " " + item.gate + " " + hitHay(item);
+    return hay.indexOf(needle) >= 0;
+  }
+
+  function tone(group) {
+    if (group === "pass") return "ok";
+    if (group === "hybrid-drop") return "drop";
+    return "miss";
+  }
+
+  function render() {
+    var picked = items.filter(visible);
+    var pool = items.filter(function (item) {
+      if (metric.value && evalKey(item) !== metric.value) return false;
+      if (type.value && item.type !== type.value) return false;
+      if (split.value && item.split !== split.value) return false;
+      return true;
+    });
+    count.textContent = picked.length + " / " + pool.length + " 题";
+    var html = "";
+    ORDER.forEach(function (group) {
+      var rows = picked.filter(function (item) { return item.group === group; });
+      if (!rows.length) return;
+      html += "<div class=\"q-group\"><h3>" + GROUP[group] + " · " + rows.length + "</h3>";
+      rows.forEach(function (item) {
+        var kind = tone(item.group);
+        html += "<article class=\"q " + kind + "\" id=\"q-" + esc(item.id) + "\">";
+        html += "<p><span class=\"badge " + kind + "\">" + esc(item.verdict) + "</span>";
+        html += "<code>" + esc(item.id) + "</code> ";
+        html += "<span class=\"lead\">" + esc(SPLIT[item.split] || item.split);
+        html += " · " + esc(TYPE[item.type] || item.type);
+        html += " · " + esc(evalInfo(evalKey(item)).label);
+        html += " · " + esc(item.company) + "</span></p>";
+        html += "<p>" + esc(item.question) + "</p>";
+        html += "<p><b>对照：</b>" + esc(item.expected) + "</p>";
+        html += answerHtml(item);
+        if (item.extra) html += "<p class=\"lead\">" + esc(item.extra) + "</p>";
+        html += "<p class=\"lead\">判定用：" + esc(item.gate) + "</p>";
+        html += "</article>";
+      });
+      html += "</div>";
+    });
+    if (!html && metric.value && scope.value === "wrong") {
+      html = "<p>这一评测指标下没有未通过的题。</p>";
+    }
+    list.innerHTML = html || "<p>这个筛选下面没有题。</p>";
+  }
+
+  function missCount(key) {
+    var n = 0;
+    items.forEach(function (item) {
+      if (evalKey(item) === key && item.group !== "pass") n += 1;
+    });
+    return n;
+  }
+
+  EVALS.slice().sort(function (a, b) {
+    var diff = missCount(b.key) - missCount(a.key);
+    return diff || a.order - b.order;
+  }).forEach(function (row) {
+    var missed = missCount(row.key);
+    var option = document.createElement("option");
+    option.value = row.key;
+    option.textContent = row.label + (missed ? " · " + missed + " 未过" : " · 全过");
+    metric.appendChild(option);
+  });
+
+  [scope, type, split, metric, query].forEach(function (el) {
+    el.addEventListener("input", render);
+    el.addEventListener("change", render);
+  });
+  render();
+
+  var links = Array.prototype.slice.call(document.querySelectorAll(".toc a"));
+  var sections = links.map(function (link) {
+    return { link: link, section: document.getElementById((link.getAttribute("href") || "").slice(1)) };
+  }).filter(function (row) { return row.section; });
+
+  function spy() {
+    var active = sections[0];
+    sections.forEach(function (row) {
+      if (row.section.getBoundingClientRect().top <= 96) active = row;
+    });
+    sections.forEach(function (row) {
+      row.link.classList.toggle("active", row === active);
+    });
+  }
+
+  if (sections.length) {
+    window.addEventListener("scroll", spy, { passive: true });
+    spy();
+  }
+})();
+</script>
+</body>
+</html>

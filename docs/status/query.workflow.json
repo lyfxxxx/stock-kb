@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "问句怎样选到只读工具",
+    "quality_profile": "showcase",
+    "viewBox": [1680, 860],
+    "output": "docs/status/query.html",
+    "views": [
+      {
+        "id": "subject",
+        "label": "科目数字",
+        "focus": ["q", "route", "ind", "cite", "log"],
+        "note": "收入、归母净利、资产和经营现金流走指标。股息和资本开支走三表行，图上并进科目这一支。"
+      },
+      {
+        "id": "narrative",
+        "label": "经营叙述",
+        "focus": ["route", "fts", "hy", "cite"],
+        "note": "翻台率、同店、师徒走默认 FTS。有页就返回。零命中或显式 hybrid 才融合。"
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "subject", "label": "科目" },
+    { "id": "ask", "label": "问句" },
+    { "id": "text", "label": "全文" }
+  ],
+  "phases": [
+    { "id": "pick", "label": "选工具", "fromCol": 0, "toCol": 1 },
+    { "id": "read", "label": "只读取数", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "keep", "label": "留下出处", "fromCol": 4, "toCol": 5 }
+  ],
+  "mainPath": ["q", "route", "ind", "cite", "log"],
+  "nodes": [
+    {
+      "id": "q",
+      "lane": "ask",
+      "col": 0,
+      "type": "external",
+      "label": "问句",
+      "sublabel": "先归一化",
+      "width": 96,
+      "height": 52
+    },
+    {
+      "id": "route",
+      "lane": "ask",
+      "col": 1,
+      "type": "backend",
+      "label": "路由",
+      "sublabel": "route_query",
+      "width": 96,
+      "height": 52
+    },
+    {
+      "id": "ind",
+      "lane": "subject",
+      "col": 2,
+      "type": "database",
+      "label": "科目",
+      "sublabel": "指标或三表",
+      "width": 96,
+      "height": 52
+    },
+    {
+      "id": "fts",
+      "lane": "text",
+      "col": 2,
+      "type": "database",
+      "label": "全文",
+      "sublabel": "默认 FTS",
+      "width": 96,
+      "height": 52
+    },
+    {
+      "id": "hy",
+      "lane": "text",
+      "col": 3,
+      "type": "backend",
+      "label": "融合",
+      "sublabel": "hybrid",
+      "width": 96,
+      "height": 52
+    },
+    {
+      "id": "cite",
+      "lane": "ask",
+      "col": 4,
+      "type": "backend",
+      "label": "出处",
+      "sublabel": "《title》第N页",
+      "width": 96,
+      "height": 52
+    },
+    {
+      "id": "log",
+      "lane": "ask",
+      "col": 5,
+      "type": "database",
+      "label": "日志",
+      "sublabel": "retrieval_log",
+      "width": 96,
+      "height": 52
+    }
+  ],
+  "edges": [
+    { "id": "q-route", "from": "q", "to": "route", "variant": "emphasis" },
+    {
+      "id": "route-ind",
+      "from": "route",
+      "to": "ind",
+      "label": "科目数字",
+      "variant": "emphasis"
+    },
+    {
+      "id": "route-fts",
+      "from": "route",
+      "to": "fts",
+      "label": "经营叙述",
+      "variant": "default"
+    },
+    {
+      "id": "fts-hy",
+      "from": "fts",
+      "to": "hy",
+      "label": "零命中",
+      "variant": "dashed",
+      "labelDy": 50
+    },
+    {
+      "id": "ind-cite",
+      "from": "ind",
+      "to": "cite",
+      "variant": "emphasis"
+    },
+    {
+      "id": "hy-cite",
+      "from": "hy",
+      "to": "cite",
+      "label": "融合页",
+      "variant": "dashed"
+    },
+    {
+      "id": "cite-log",
+      "from": "cite",
+      "to": "log",
+      "label": "run_id",
+      "variant": "emphasis",
+      "labelDy": 50
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "科目不走全文",
+      "items": [
+        "收入、归母净利、资产、经营现金流走 get_indicators",
+        "已付股息、资本开支、减值走三表行",
+        "三表默认只要当年年报正文，并排除 OCR 行"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "全文何时融合",
+      "items": [
+        "CLI 和 MCP 默认都是 FTS",
+        "MCP 零命中才升到 hybrid；CLI 零命中保持空",
+        "显式 hybrid 时，长度达到 6，或短查询 FTS 为空，才做 RRF"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "出处怎么留下",
+      "items": [
+        "工具返回《title》第N页",
+        "派生比率没有单独页时标 derived",
+        "命中追加到 retrieval_log.jsonl，不写入 SQLite"
+      ]
+    }
+  ]
+}

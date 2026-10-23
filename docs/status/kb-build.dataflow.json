@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "知识库怎样从原文建出来",
+    "quality_profile": "showcase",
+    "viewBox": [1680, 760],
+    "output": "docs/status/kb-build.html",
+    "views": [
+      {
+        "id": "ingest",
+        "label": "先扫再补",
+        "focus": ["nas", "gap", "scan"],
+        "note": "先扫 NAS。stats 看出缺口后，才把缺的直链取回来再扫。"
+      },
+      {
+        "id": "indexes",
+        "label": "三条索引",
+        "focus": ["pages", "stmts", "ind", "fts", "vec"],
+        "note": "页文本进全文和向量。三表行才进入指标。"
+      },
+      {
+        "id": "query",
+        "label": "只读查询",
+        "focus": ["ind", "fts", "vec", "mcp"],
+        "note": "MCP 只读打开 SQLite。科目、全文、向量在这里汇合。"
+      }
+    ]
+  },
+  "stages": [
+    { "label": "原文" },
+    { "label": "入库" },
+    { "label": "页与三表" },
+    { "label": "索引" },
+    { "label": "只读查询" }
+  ],
+  "nodes": [
+    {
+      "id": "nas",
+      "type": "external",
+      "label": "NAS 原文",
+      "sublabel": "只读共享",
+      "stage": 0,
+      "row": 0,
+      "tag": "年报中报研报"
+    },
+    {
+      "id": "gap",
+      "type": "cloud",
+      "label": "缺口直链",
+      "sublabel": "SEC 或披露易",
+      "stage": 0,
+      "row": 2,
+      "tag": "只补缺口"
+    },
+    {
+      "id": "scan",
+      "type": "backend",
+      "label": "scan",
+      "sublabel": "先扫，再补，再扫",
+      "stage": 1,
+      "row": 1,
+      "tag": "不发检索"
+    },
+    {
+      "id": "stmts",
+      "type": "database",
+      "label": "三表行",
+      "sublabel": "数字保持原单位",
+      "stage": 2,
+      "row": 0,
+      "tag": "statements"
+    },
+    {
+      "id": "pages",
+      "type": "database",
+      "label": "页文本",
+      "sublabel": "简体索引，原文引用",
+      "stage": 2,
+      "row": 2,
+      "tag": "pages"
+    },
+    {
+      "id": "ind",
+      "type": "database",
+      "label": "指标",
+      "sublabel": "归母净利与比率",
+      "stage": 3,
+      "row": 0,
+      "tag": "indicators"
+    },
+    {
+      "id": "fts",
+      "type": "database",
+      "label": "FTS5",
+      "sublabel": "整页 trigram",
+      "stage": 3,
+      "row": 2,
+      "tag": "默认全文"
+    },
+    {
+      "id": "vec",
+      "type": "database",
+      "label": "向量",
+      "sublabel": "约 800 字一块",
+      "stage": 3,
+      "row": 3,
+      "tag": "bge-small-zh"
+    },
+    {
+      "id": "mcp",
+      "type": "security",
+      "label": "MCP 只读",
+      "sublabel": "127.0.0.1:8931",
+      "stage": 4,
+      "row": 2,
+      "tag": "mode=ro"
+    }
+  ],
+  "flows": [
+    {
+      "id": "nas-scan",
+      "from": "nas",
+      "to": "scan",
+      "label": "先扫",
+      "classification": "只读",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gap-scan",
+      "from": "gap",
+      "to": "scan",
+      "label": "只补缺口再扫",
+      "classification": "网络文件",
+      "variant": "default"
+    },
+    {
+      "id": "scan-pages",
+      "from": "scan",
+      "to": "pages",
+      "label": "每份都有页",
+      "classification": "简体与原文",
+      "variant": "emphasis"
+    },
+    {
+      "id": "scan-stmts",
+      "from": "scan",
+      "to": "stmts",
+      "label": "财报报表页",
+      "classification": "原单位",
+      "variant": "default"
+    },
+    {
+      "id": "pages-fts",
+      "from": "pages",
+      "to": "fts",
+      "label": "整页",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDy": -22
+    },
+    {
+      "id": "pages-vec",
+      "from": "pages",
+      "to": "vec",
+      "label": "切块",
+      "variant": "dashed",
+      "labelDy": 28
+    },
+    {
+      "id": "stmts-ind",
+      "from": "stmts",
+      "to": "ind",
+      "label": "科目规则",
+      "classification": "归母",
+      "variant": "default",
+      "route": "straight"
+    },
+    {
+      "id": "ind-mcp",
+      "from": "ind",
+      "to": "mcp",
+      "label": "科目查询",
+      "classification": "只读",
+      "variant": "default"
+    },
+    {
+      "id": "fts-mcp",
+      "from": "fts",
+      "to": "mcp",
+      "label": "默认",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelDx": -22,
+      "labelDy": -22
+    },
+    {
+      "id": "vec-mcp",
+      "from": "vec",
+      "to": "mcp",
+      "label": "长问句",
+      "variant": "dashed",
+      "labelDx": 36
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "入库顺序",
+      "items": [
+        "先扫 NAS，用 stats 看类型缺口",
+        "fetch 只补缺失类型，再扫 data/raw",
+        "原文留在原处，出处 JSON 写到 data/meta"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "两条索引",
+      "items": [
+        "研报和电话会通常只有页文本",
+        "财报报表页才抽出三表行，再归成指标",
+        "检索用简体，引用用原文"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "交给查询",
+      "items": [
+        "指标、FTS5、向量并列进入 MCP",
+        "SQLite 以只读方式打开",
+        "查询不改页文本，也不改三表行"
+      ]
+    }
+  ]
+}
