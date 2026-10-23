@@ -12,6 +12,7 @@ notes: >
   2026-08-30：freeze 46 道检索 GT 按 pages.content 通读；8 道改 required 页，若干道改负样本。
   2026-08-30：新增 freeze route 24（工具路由）与 year_filter 4（问句带年份）。
   2026-10-07：关键词 22 道改为带文档年的单点事实，accept_phrases 表示同一事实。
+  2026-10-07：语义召回 20 道改为一种说法、一个事实，并覆盖 2025–2026 年报、中报和研报。
 questions:
   # ---------------- exact: 23 ----------------
   - id: exact-001
@@ -1046,404 +1047,294 @@ questions:
           relevance: 2
 
   # ---------------- semantic: 20 ----------------
+  # 2026-10-07：一种说法、一个事实。问句不包含验收短语。前 5 页含短语即算同一事实。
+  # 变快变慢、近几年、哪个更撑收入这类要读多页的题已退出这组。
   - id: semantic-001
     type: semantic
-    question: 海底捞赚到的利润有多少能变成真金白银？
+    question: 海底捞赚到的利润里，经营上实际留下的现金，早年是变多了吗？
     company: 海底捞
     expected:
+      accept_phrases: ["从2016年14.14亿"]
       sources:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+        - file: "海底捞_研报-国信证券-2021-阿米巴模式师徒制"
           page: 40
           required: true
           relevance: 3
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 41
-          required: false
-          relevance: 2
-        - file: "研报-国信证券-2025-收入利润再创新高"
-          page: 5
-          required: false
-          relevance: 2
-      negatives:
-        - file: "海底捞_研报-国信-202502"
-          page: 14
   - id: semantic-002
     type: semantic
-    question: 海底捞把门店铺到什么程度才算合适？
+    question: 若按购物中心来数，海底捞的店将来大概能铺到多少家？
     company: 海底捞
     expected:
+      accept_phrases: ["2000-2600家"]
       sources:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+        - file: "海底捞_研报-国信证券-2021-阿米巴模式师徒制"
           page: 33
           required: true
           relevance: 3
-        - file: "研报-国信证券-2023-降本增效静待新一轮增长"
-          page: 3
-          required: false
+        - file: "海底捞_研报-国信证券-2021-阿米巴模式师徒制"
+          page: 32
+          required: true
           relevance: 2
-        - file: "研报-国信证券-2023-降本增效静待新一轮增长"
-          page: 5
-          required: false
-          relevance: 2
-      negatives:
-        - file: "研报-浦银国际-2024-翻台率估值承压"
-          page: 1
   - id: semantic-003
     type: semantic
-    question: 海底捞怎么把开销打下去？
+    question: 海底捞 2023年食材占收入的比重，比上一年是降了还是升了？
     company: 海底捞
     expected:
+      accept_phrases: ["从2022年的41.6%"]
       sources:
-        - file: "研报-东方证券-2023-2022年报点评利润改善重启扩张"
-          page: 1
+        - file: "海底捞_2023年报"
+          page: 27
           required: true
           relevance: 3
-        - file: "研报-招银证券-2024-2024H1业绩点评"
-          page: 1
-          required: false
+        - file: "海底捞_业绩公告-2023年度"
+          page: 9
+          required: true
           relevance: 2
-      negatives:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 24
   - id: semantic-004
     type: semantic
-    question: 一线员工为什么愿意把服务做到极致？
+    question: 一线店员为什么肯主动把客人伺候到位？
     company: 海底捞
     expected:
+      accept_phrases: ["充分授权，且为员工各种服务计费"]
       sources:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
+        - file: "海底捞_研报-国信证券-2021-阿米巴模式师徒制"
           page: 25
           required: true
           relevance: 3
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 39
-          required: false
-          relevance: 2
-        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
-          page: 11
-          required: false
-          relevance: 2
-      negatives:
-        - file: "研报-东吴证券-2019-管理体系深度解析"
-          page: 15
   - id: semantic-005
     type: semantic
-    question: 客人来得勤不勤、一桌坐得转不转？
+    question: 海底捞把主动关掉不赚钱的店，起过一个什么计划的名字？
     company: 海底捞
     expected:
+      accept_phrases: ["啄木鸟计划"]
       sources:
-        - file: "海底捞_研报-国信-202502"
-          page: 19
+        - file: "海底捞_业绩公告-2025中期"
+          page: 3
           required: true
           relevance: 3
-        - file: "研报-浦银国际-2024-翻台率估值承压"
-          page: 1
-          required: false
+        - file: "海底捞_2025中报"
+          page: 11
+          required: true
           relevance: 2
-        - file: "海底捞_研报-国信证券(香港)-20210414-餐饮业复苏进行中"
-          page: 4
-          required: false
-          relevance: 1
-      negatives:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 24
+        - file: "研报-东吴-海底捞-20260302"
+          page: 6
+          required: true
+          relevance: 2
   - id: semantic-006
     type: semantic
-    question: 一个店长如何带出下一家店的负责人？
+    question: 主品牌火锅以外，海底捞孵化其他小牌子的那套安排叫什么？
     company: 海底捞
     expected:
+      accept_phrases: ["红石榴计划"]
       sources:
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 26
+        - file: "2026中期报告-2026092200356"
+          page: 16
           required: true
           relevance: 3
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 28
-          required: false
+        - file: "海底捞_业绩公告-2025中期"
+          page: 4
+          required: true
           relevance: 2
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 27
-          required: false
+        - file: "研报-东吴-海底捞-20260302"
+          page: 1
+          required: true
           relevance: 2
-      negatives:
-        - file: "研报-东吴证券-2019-管理体系深度解析"
-          page: 15
   - id: semantic-007
     type: semantic
-    question: 座位周转是在变快还是变慢？
+    question: 海底捞 2025年底，交给别人开的海底捞餐厅有多少家？
     company: 海底捞
     expected:
+      accept_phrases: ["加盟海底捞餐厅数量79"]
       sources:
-        - file: "研报-国信证券-2023-降本增效静待新一轮增长"
-          page: 4
+        - file: "海底捞_业绩公告-2025年度"
+          page: 2
           required: true
           relevance: 3
-        - file: "研报-东吴证券-2019-管理体系深度解析"
-          page: 22
-          required: false
-          relevance: 2
-        - file: "海底捞_研报-国信-202502"
-          page: 20
-          required: false
-          relevance: 2
-      negatives:
-        - file: "海底捞_研报-国信证券(香港)-20210414-餐饮业复苏进行中"
-          page: 4
   - id: semantic-008
     type: semantic
-    question: 海底捞的啄木鸟计划与门店优化
+    question: 海底捞 2025年全年，进店吃饭的客人一共有多少人次？
     company: 海底捞
     expected:
+      accept_phrases: ["383.9百万"]
       sources:
-        - file: "海底捞_研报-国信-202502"
-          page: 14
+        - file: "海底捞_业绩公告-2025年度"
+          page: 3
           required: true
           relevance: 3
-        - file: "研报-平安证券-2022-中报点评疫情关店承压"
-          page: 1
-          required: false
+        - file: "海底捞_2025年报"
+          page: 18
+          required: true
           relevance: 2
-        - file: "研报-浙商证券-2023-从成长到坚韧餐饮王者"
-          page: 8
-          required: false
-          relevance: 2
-      negatives:
-        - file: "研报-国信证券-2023-降本增效静待新一轮增长"
-          page: 3
   - id: semantic-009
     type: semantic
-    question: 赚一块钱能剩多少，近几年怎么变？
+    question: 海底捞的外卖盒子里，已经不是火锅占大头，哪种菜占了一半以上？
     company: 海底捞
     expected:
+      accept_phrases: ["下饭菜则贡献55%"]
       sources:
-        - file: "海底捞_研报-国信-202502"
-          page: 20
+        - file: "研报-东吴-海底捞-20260302"
+          page: 1
           required: true
           relevance: 3
-        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
+        - file: "研报-东吴-海底捞-20260302"
           page: 23
-          required: false
+          required: true
           relevance: 2
-        - file: "研报-东吴证券-2019-管理体系深度解析"
-          page: 27
-          required: false
-          relevance: 1
-      negatives:
-        - file: "研报-东吴证券-2019-管理体系深度解析"
-          page: 22
   - id: semantic-010
     type: semantic
-    question: 客人为一餐花多少钱，和来得频不频，哪个更撑收入？
-    company: 海底捞
+    question: 肯德基往县城铺的时候，用的那种小店叫什么？
+    company: 百胜中国
     expected:
+      accept_phrases: ["小镇店"]
       sources:
-        - file: "海底捞_研报-国信-202502"
-          page: 19
+        - file: "百胜中国_研报-海通国际-20251118-2025投资者日"
+          page: 1
           required: true
           relevance: 3
-        - file: "研报-国信证券-2021-阿米巴模式师徒制"
-          page: 24
-          required: false
-          relevance: 2
-        - file: "研报-东吴证券-2019-管理体系深度解析"
-          page: 32
-          required: false
-          relevance: 1
-      negatives:
-        - file: "研报-国盛证券-2019-利益分享体系火锅巨头"
+        - file: "百胜中国_研报-安信国际证券-20230815-步履不停，扬帆远航"
           page: 11
+          required: true
+          relevance: 2
   - id: semantic-011
     type: semantic
-    question: 客人愿不愿意再来这家快餐店？
+    question: 百胜中国给很远以后的门店定过一个总规模，是突破多少家？
     company: 百胜中国
     expected:
+      accept_phrases: ["突破3万家"]
       sources:
-        - file: "国信证券_百胜中国_同店销售增速重新转正"
+        - file: "百胜中国_研报-海通国际-20251118-2025投资者日"
           page: 1
           required: true
           relevance: 3
-        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
-          page: 2
-          required: false
-          relevance: 2
-        - file: "百胜中国_2023年报"
-          page: 76
-          required: false
-          relevance: 2
-      negatives:
-        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
-          page: 4
   - id: semantic-012
     type: semantic
-    question: 百胜中国怎么把开销按住？
+    question: 必胜客去低线城市时，那种更省钱的新店型英文怎么称呼？
     company: 百胜中国
     expected:
+      accept_phrases: ["WOW门店", "WOW格式"]
       sources:
-        - file: "国信证券_百胜中国_2023年报费用管控效果显著"
-          page: 4
+        - file: "百胜中国_研报-中邮证券-20260212-同店销售提速"
+          page: 2
           required: true
           relevance: 3
-        - file: "国信证券_百胜中国_2023年报费用管控效果显著"
+        - file: "百胜中国_纪要-20260204-雪球"
           page: 1
-          required: false
+          required: true
           relevance: 2
-      negatives:
-        - file: "国信证券_百胜中国_同店销售增速重新转正"
-          page: 1
   - id: semantic-013
     type: semantic
-    question: 肯德基之外还有哪些牌子在撑场面？
+    question: 百胜中国 2025年年中这一季的经营利润，有没有创下同期最好成绩？
     company: 百胜中国
     expected:
+      accept_phrases: ["创第二季度新高"]
       sources:
-        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
-          page: 4
+        - file: "百胜中国_研报-海通国际-20250807-点评报告：2Q25经营利润创第二季度新高"
+          page: 1
           required: true
           relevance: 3
-        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
-          page: 10
-          required: false
+        - file: "百胜中国_研报-国证国际证券-20250806-二季度同店收入增长回正"
+          page: 1
+          required: true
           relevance: 2
-        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
-          page: 11
-          required: false
+        - file: "百胜中国_研报-中邮证券-20250814-同店销售转正，经营利润提速"
+          page: 2
+          required: true
           relevance: 2
-      negatives:
-        - file: "百胜中国_招股说明书"
-          page: 134
   - id: semantic-014
     type: semantic
-    question: 百胜中国的竞争格局
+    question: 百胜中国 2025年第二季度，在手机上点的餐占餐厅收入的多少？
     company: 百胜中国
     expected:
+      accept_phrases: ["占餐厅收入的94%"]
       sources:
-        - file: "百胜中国_招股说明书"
-          page: 134
-          required: true
-          relevance: 3
-        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
-          page: 4
-          required: false
-          relevance: 2
-      negatives:
-        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
-          page: 10
-  - id: semantic-015
-    type: semantic
-    question: 新店主要开在什么地方、开给谁？
-    company: 百胜中国
-    expected:
-      sources:
-        - file: "海通国际_百胜中国_2025投资者日_创新与提效双轮驱动"
-          page: 1
-          required: true
-          relevance: 3
-        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
-          page: 2
-          required: false
-          relevance: 2
-        - file: "国信证券_百胜中国_2024Q3经营数据改善"
-          page: 1
-          required: false
-          relevance: 2
-      negatives:
-        - file: "百胜中国_招股说明书"
-          page: 159
-  - id: semantic-016
-    type: semantic
-    question: 除了炸鸡和披萨，热饮这条线怎么走？
-    company: 百胜中国
-    expected:
-      sources:
-        - file: "百胜中国_2024_Annual_Report"
+        - file: "百胜中国_研报-国信证券-20250806-同店销售增速重新转正"
           page: 3
           required: true
           relevance: 3
-        - file: "百胜中国_2025年报"
-          page: 7
-          required: false
-          relevance: 2
-      negatives:
-        - file: "百胜中国_招股说明书"
-          page: 54
-  - id: semantic-017
+  - id: semantic-015
     type: semantic
-    question: 不到店点单、送到家，哪头更重要？
+    question: 百胜中国 2024年准备用股息和回购回馈股东多少钱？
     company: 百胜中国
     expected:
+      accept_phrases: ["回馈15亿美元"]
+      sources:
+        - file: "百胜中国_2024中报"
+          page: 8
+          required: true
+          relevance: 3
+        - file: "百胜中国_业绩公告-2024中期"
+          page: 33
+          required: true
+          relevance: 2
+  - id: semantic-016
+    type: semantic
+    question: 肯德基和必胜客以外，百胜中国还端着哪些餐饮牌子？
+    company: 百胜中国
+    expected:
+      accept_phrases: ["黄记煌、小肥羊", "小肥羊、黄记煌", "烧范儿"]
+      sources:
+        - file: "百胜中国_业绩公告-2024中期"
+          page: 8
+          required: true
+          relevance: 3
+        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
+          page: 4
+          required: true
+          relevance: 2
+  - id: semantic-017
+    type: semantic
+    question: 中国的餐饮店这么多，最大的几家是不是已经把市场占满了？
+    company: 百胜中国
+    expected:
+      accept_phrases: ["市场份额少于5%"]
+      sources:
+        - file: "百胜中国_招股说明书"
+          page: 134
+          required: true
+          relevance: 3
+  - id: semantic-018
+    type: semantic
+    question: 客人不到店，肯德基很早是不是就用自己的渠道把餐送出去？
+    company: 百胜中国
+    expected:
+      accept_phrases: ["2010年便建立其自有的外卖平台"]
       sources:
         - file: "百胜中国_招股说明书"
           page: 184
           required: true
           relevance: 3
-        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
-          page: 10
-          required: false
-          relevance: 2
-        - file: "百胜中国_招股说明书"
-          page: 166
-          required: false
-          relevance: 2
-      negatives:
-        - file: "百胜中国_招股说明书"
-          page: 134
-  - id: semantic-018
-    type: semantic
-    question: 利润薄不薄，最近是在好转吗？
-    company: 百胜中国
-    expected:
-      sources:
-        - file: "海通国际_百胜中国_2025Q2经营利润创新高"
-          page: 1
+        - file: "百胜中国_2021年报"
+          page: 11
           required: true
-          relevance: 3
-        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
-          page: 3
-          required: false
           relevance: 2
-        - file: "华源证券研报"
-          page: 1
-          required: false
-          relevance: 2
-      negatives:
-        - file: "国信证券_百胜中国_2023年报费用管控效果显著"
-          page: 3
   - id: semantic-019
     type: semantic
-    question: 股东能从公司拿回现金吗？
+    question: 百胜中国 2024年给往后两年定的股东回报总额是多少？
     company: 百胜中国
     expected:
+      accept_phrases: ["股东回报30亿美元"]
       sources:
-        - file: "国信证券_百胜中国_2024Q4同店降幅收窄"
+        - file: "百胜中国_研报-国信证券-2024Q4同店降幅收窄"
           page: 4
           required: true
           relevance: 3
-        - file: "百胜中国_2025_Annual_Report"
-          page: 62
-          required: false
-          relevance: 1
-      negatives:
-        - file: "国信证券_百胜中国_同店销售增速重新转正"
-          page: 1
   - id: semantic-020
     type: semantic
-    question: 不到店能不能吃到？
+    question: 百胜中国 2025年年中，肯德基和必胜客的会员加在一起有多少？
     company: 百胜中国
     expected:
+      accept_phrases: ["会员数合计超过5.6亿"]
       sources:
-        - file: "百胜中国_招股说明书"
-          page: 166
+        - file: "百胜中国_研报-国信证券-20250806-同店销售增速重新转正"
+          page: 3
           required: true
           relevance: 3
-        - file: "百胜中国_2025年报"
-          page: 45
-          required: false
+        - file: "百胜中国_研报-中邮证券-20250814-同店销售转正，经营利润提速"
+          page: 1
+          required: true
           relevance: 2
 
   # ---------------- cross: 12 ----------------
-      negatives:
-        - file: "百胜中国_研报-2024-快餐业龙头多品牌布局"
-          page: 3
   - id: cross-001
     type: cross
     question: Yum China 2025 operating profit
