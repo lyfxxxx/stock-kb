@@ -34,6 +34,10 @@ embedding:
   device: "cuda"
   backend: "sentence-transformers"
   chunk_size: 800  # 400 在 freeze hybrid semantic 上从 0.10 掉到 0.05，未采用；改粒度须 index --rebuild-chunks
+  # 交叉编码器重排（docs/retrieval-fix-plan-20261025.md §7 4b）：对 hybrid 融合候选的前 50 页按命中文本块重排。
+  # bge-reranker-base（权重自 ModelScope 补齐）。重排名次与融合名次再做 RRF，不整序替换；
+  # 已过门禁验收（G3 0.60、其余门槛不回退）后默认开。bge-m3+重排实测 0.70，换默认待 eval-embed 判 better
+  rerank: true
 
 mcp:
   host: "127.0.0.1"

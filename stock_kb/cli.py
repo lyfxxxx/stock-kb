@@ -316,6 +316,7 @@ def main(argv: list[str] | None = None) -> int:
                     year=args.year,
                     report_type=args.report_type,
                     language=args.language,
+                    rerank=bool(cfg.get("embedding", {}).get("rerank", False)),
                 )
         _log_retrieval(
             cfg,

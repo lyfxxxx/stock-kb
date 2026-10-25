@@ -331,6 +331,7 @@ def _run_search(
         year=year,
         report_type=report_type,
         language=language,
+        rerank=bool(cfg.get("embedding", {}).get("rerank", False)),
     )
 
 

@@ -830,6 +830,35 @@ def test_embed_query_expands_paraphrase_only():
     assert "经营现金流" in cash or "现金流" in cash
 
 
+def test_entity_words_keeps_compound_nouns():
+    # 名词连续段不拆、公司名与虚词剥掉（docs/retrieval-fix-plan-20261025.md §4 1a）。
+    # DB 侧行为（库外判空、误空）由 tools/diag_needle_coverage.py 校准，不在此重复。
+    assert search.entity_words("百胜中国欧洲门店数量", "百胜中国") == ["欧洲门店数量"]
+    assert search.entity_words("海底捞在火星开了多少家店？", "海底捞") == ["火星"]
+    assert "购物中心" in search.entity_words(
+        "若按购物中心来数，海底捞的店将来大概能铺到多少家？", "海底捞"
+    )
+    assert "客人" in search.entity_words(
+        "一线店员为什么肯主动把客人伺候到位？", "海底捞"
+    )
+    assert search.entity_words("海底捞 2026 年营业收入是多少？", "海底捞") == ["营业收入"]
+    assert "突破" in search.entity_words(
+        "百胜中国给很远以后的门店定过一个总规模，是突破多少家？", "百胜中国"
+    )
+    assert search.entity_words("", "海底捞") == []
+
+
+def test_query_embed_text_instruction_guard():
+    from stock_kb.vector import _query_embed_text
+
+    prefixed = _query_embed_text("BAAI/bge-small-zh-v1.5", "翻台率")
+    assert prefixed.startswith("为这个句子生成表示以用于检索相关文章：")
+    # bge-m3 不加中文指令前缀（别名扩展仍生效）
+    assert not _query_embed_text("BAAI/bge-m3", "翻台率").startswith(
+        "为这个句子生成表示"
+    )
+
+
 def test_year_out_of_corpus_and_needle_grounding(conn):
     conn.execute("INSERT INTO companies(name) VALUES('海底捞')")
     conn.execute(

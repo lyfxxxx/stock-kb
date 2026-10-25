@@ -145,6 +145,9 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                             year=year,
                             report_type=report_type,
                             language=language,
+                            rerank=bool(
+                                cfg.get("embedding", {}).get("rerank", False)
+                            ),
                         )
                     except Exception:
                         hits = []
@@ -211,6 +214,7 @@ def create_server(cfg: dict[str, Any]) -> FastMCP:
                     year=year,
                     report_type=report_type,
                     language=language,
+                    rerank=bool(cfg.get("embedding", {}).get("rerank", False)),
                 )
                 logged = _with_locator(hits)
                 _log(

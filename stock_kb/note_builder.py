@@ -208,6 +208,7 @@ def _vector_fallback(
             company=company,
             cache_dir=(cfg or {}).get("models_dir"),
             backend=emb.get("backend", "auto"),
+            rerank=bool(emb.get("rerank", False)),
         )
     except Exception:
         return []

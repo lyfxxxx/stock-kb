@@ -404,7 +404,11 @@ def _strip_generic(part: str) -> str:
 
 
 def claim_needles(query: str, company: str | None = None) -> list[str]:
-    """问句里需要在命中页出现的非常见词。空列表表示不约束向量。"""
+    """问句里需要在命中页出现的非常见词。空列表表示不约束向量。
+
+    2026-10 起运行时不再用它做向量硬过滤（docs/retrieval-fix-plan-20261025.md
+    §4）：口语残片会误杀语义题的答案页。保留供诊断工具与测试对照。
+    """
     q = normalize_query(query)
     if company:
         q = q.replace(company, " ")
@@ -434,6 +438,116 @@ def claim_needles(query: str, company: str | None = None) -> list[str]:
             needles.append(stripped)
             seen.add(stripped)
     return needles
+
+
+# ---------------------------------------------------------------------------
+# 实体词抽取与库外实体预检（docs/retrieval-fix-plan-20261025.md §4 1a）
+#
+# 设计约束：
+# - 名词连续段不拆：欧洲门店数量、购物中心、低线城市必须整段保留；
+# - 分隔符只消费虚词/副词/弱动词，被消费的串不进实体表；
+# - 剥词表改动后必须用 tools/diag_needle_coverage.py 重跑校准：
+#   noans 002/003/004/005/007 实体全 0 命中，freeze+diag 语义/跨语言无一道全 0 命中。
+_ENTITY_SEPARATORS = (
+    # 疑问与虚词
+    "为什么", "为何", "有没有", "是不是", "怎么", "怎样", "哪些", "什么", "多少", "如何",
+    "吗", "呢", "吧", "几",
+    # 代词
+    "自己", "别人", "大家", "这个", "那个", "这些", "那些", "我们", "你们", "他们",
+    "我", "你", "他", "她", "它",
+    # 助词、介词、连词
+    "的", "了", "是", "和", "与", "及", "等", "对", "把", "给", "从", "往", "向", "在",
+    "以内", "以外", "以上", "以下", "之前", "之后", "以后", "以来", "还", "并", "且",
+    "而", "或", "若", "按", "通过", "被", "让", "使", "里",
+    # 副词与剥词表
+    "已经", "很", "更", "最", "太", "都", "也", "就", "才", "再", "又", "只", "仍",
+    "仍然", "大概", "大约", "左右", "一共", "合计", "另外", "还是", "例如", "比如",
+    "肯主动", "主动", "将来", "早年", "当年", "很早", "早点", "一起", "就是", "只是",
+    "实际", "去", "时候", "时", "叫", "起过", "种", "套", "名字", "称呼",
+    # 问句弱动词与助词（1a 校准追加；动前先跑 diag_needle_coverage.py）
+    "伺候", "到位", "端着", "关掉", "创下", "准备", "回馈", "出去", "孵化", "交给",
+    "变多", "变少", "变厚", "变薄", "来数", "铺", "占", "开", "开出", "家", "留住",
+    "这家", "那家", "得", "快", "不", "转", "上半年", "表现",
+)
+_ENTITY_SPLIT_RE = re.compile(
+    "|".join(re.escape(s) for s in sorted(_ENTITY_SEPARATORS, key=len, reverse=True))
+    + r"|[^0-9A-Za-z\u4e00-\u9fff]+"
+)
+_LATIN_STOP = {"the", "and", "for", "with", "of", "in", "to", "a", "an", "is", "are"}
+
+
+def entity_words(query: str, company: str | None = None) -> list[str]:
+    """问句里的名词连续段（实体词），供库外实体预检与备用查询使用。
+
+    空列表表示问句剥完虚词后没有实体，不做预检。
+    """
+    q = normalize_query(query or "")
+    if not q:
+        return []
+    if company:
+        q = q.replace(company, " ")
+        if company.endswith("中国") and len(company) > 2:
+            q = q.replace(company[:-2], " ")
+    out: list[str] = []
+    seen: set[str] = set()
+    for part in _ENTITY_SPLIT_RE.split(q):
+        p = part.strip()
+        if not p or _YEAR_RE.fullmatch(p):
+            continue
+        if re.fullmatch(r"[A-Za-z]+", p):
+            if len(p) < 2 or p.lower() in _LATIN_STOP:
+                continue
+        elif len(p) < 2 or not re.search(r"[\u4e00-\u9fff]", p):
+            continue
+        if p not in seen:
+            out.append(p)
+            seen.add(p)
+    return out
+
+
+def _fold_sql(col: str) -> str:
+    """SQL 侧折叠空白与千分位，与 eval_runner.fold_fact_text 口径接近。"""
+    return (
+        f"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({col},"
+        f"' ',''),'\u3000',''),char(10),''),char(13),''),char(9),''),'，',''),',','')"
+    )
+
+
+_ENTITY_PRESENCE_CACHE: dict[tuple[str | None, str], bool] = {}
+
+
+def entity_in_corpus(conn: sqlite3.Connection, entity: str, company: str | None) -> bool:
+    """该公司当前使用文档（非 OCR）里是否出现该实体词。"""
+    key = (company, entity)
+    hit = _ENTITY_PRESENCE_CACHE.get(key)
+    if hit is None:
+        if len(_ENTITY_PRESENCE_CACHE) > 4096:
+            _ENTITY_PRESENCE_CACHE.clear()
+        row = conn.execute(
+            f"""
+            SELECT 1 FROM pages p JOIN reports r ON r.id = p.report_id
+            WHERE (:c IS NULL OR r.company = :c)
+              AND {db.live_report_sql("r")}
+              AND COALESCE(p.is_ocr, 0) < 2
+              AND ({_fold_sql("p.content")} LIKE :l
+                   OR {_fold_sql("p.content_orig")} LIKE :l)
+            LIMIT 1
+            """,
+            {"c": company, "l": f"%{entity}%"},
+        ).fetchone()
+        hit = row is not None
+        _ENTITY_PRESENCE_CACHE[key] = hit
+    return hit
+
+
+def all_entities_out_of_corpus(
+    conn: sqlite3.Connection, query: str, company: str | None = None
+) -> bool:
+    """库外实体预检：实体词非空且全部 0 命中才为 True；空列表不预检。"""
+    words = entity_words(query, company)
+    if not words:
+        return False
+    return not any(entity_in_corpus(conn, w, company) for w in words)
 
 
 def _match_expression(q: str) -> str:

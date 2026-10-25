@@ -95,6 +95,19 @@ def _expand_bilingual(query: str) -> str:
     return query + " " + " ".join(extra)
 
 
+# bge-*-zh-v1.5 是非对称检索模型，官方要求查询侧加指令前缀、文档侧不加；
+# bge-m3 不使用该前缀（docs/retrieval-fix-plan-20261025.md §6）。
+_QUERY_INSTRUCTION = "为这个句子生成表示以用于检索相关文章："
+_INSTRUCTION_MODELS = re.compile(r"^BAAI/bge-(?:small|base|large)-zh-v1\.5$")
+
+
+def _query_embed_text(model: str, query: str) -> str:
+    text = _expand_bilingual(query)
+    if _INSTRUCTION_MODELS.match(model):
+        return _QUERY_INSTRUCTION + text
+    return text
+
+
 def _chunk_size(cfg: dict[str, Any] | None = None) -> int:
     if cfg:
         raw = (cfg.get("embedding") or {}).get("chunk_size")
@@ -429,12 +442,16 @@ def vector_search(
     query = search.normalize_query(query)
     if not query:
         return []
-    embed_query = _expand_bilingual(query)
+    embed_query = _query_embed_text(model, query)
     implied_years = search.query_years(query) if year is None else []
     if implied_years and search.years_out_of_corpus(conn, query, company):
         return []
     allowed_years = {year} if year is not None else (set(implied_years) or None)
-    needles = search.claim_needles(query, company)
+    # 库外实体预检：实体词全部 0 命中说明问句谈的是语料外实体，直接返回空。
+    # 接替原 needle 硬过滤承担无答案安全；实体命中不再过滤候选
+    # （docs/retrieval-fix-plan-20261025.md §4）。
+    if search.all_entities_out_of_corpus(conn, query, company):
+        return []
     row = conn.execute(
         "SELECT dim, vec_table FROM embedding_index WHERE model=? LIMIT 1", (model,)
     ).fetchone()
@@ -479,8 +496,6 @@ def vector_search(
             continue
         if language is not None and r["language"] != language:
             continue
-        if not _content_has_needle(r["content"] or "", needles):
-            continue
         cur = best.get(r["page_id"])
         if cur is None or h["distance"] < cur["score"]:
             best[r["page_id"]] = {
@@ -496,6 +511,8 @@ def vector_search(
                 "score": float(h["distance"]),
                 "source": "vector",
                 "snippet": (r["content"] or "")[:160],
+                # 命中文本块原文，仅供 hybrid 重排使用，返回前剥离
+                "chunk_content": r["content"] or "",
             }
     out = sorted(best.values(), key=lambda x: x["score"])
     return out[:top_k]
@@ -505,6 +522,166 @@ def _content_has_needle(content: str, needles: list[str]) -> bool:
     if not needles:
         return True
     return any(n in content for n in needles)
+
+
+# 备用查询名单（docs/retrieval-fix-plan-20261025.md §4 1b）：整句全文检索为空、
+# 且问句里出现名单词时，用该词再查一次 FTS 分路（semantic-011 的守成通道）。
+# 不是通用规则：名单外的高频词（如 002 的「购物中心」）以 FTS 第 1 名进 RRF
+# 会挤掉向量第 1 的正确页。扩充前必须先在打开该词后重测 002/005，
+# 两者仍在前 5 才保留。该通道只在 hybrid 融合路径，不影响 keyword 短路。
+_FALLBACK_QUERY_TERMS = ("突破",)
+
+# ---------------------------------------------------------------------------
+# 交叉编码器重排（docs/retrieval-fix-plan-20261025.md §7 4b）
+#
+# 送入重排的是命中的那个文本块（按字符截断），不是整页——库内最长页
+# 8.3 万字（网页电话会纪要），整页会占住近邻并拉高延迟。库外实体预检在
+# vector_search 入口、重排之前，无答案问句到不了这里。仅对有文本块的
+# 候选（向量腿命中）重排；纯 FTS/fallback 命中保序跟在后面。
+_RERANKER_MODEL = "BAAI/bge-reranker-base"
+_RERANK_WINDOW = 50
+_RERANK_MAX_CHARS = 480
+_RERANKER_CACHE: dict[str, Any] = {}
+
+
+def get_reranker(cache_dir: str | None):
+    if not cache_dir:
+        return None
+    key = f"{_RERANKER_MODEL}|{cache_dir}"
+    if key not in _RERANKER_CACHE:
+        if (Path(cache_dir) / "models--BAAI--bge-reranker-base").exists():
+            os.environ["HF_HUB_OFFLINE"] = "1"
+            os.environ["TRANSFORMERS_OFFLINE"] = "1"
+        try:
+            from sentence_transformers.cross_encoder import CrossEncoder
+        except Exception:
+            return None
+        try:
+            _RERANKER_CACHE[key] = CrossEncoder(
+                _RERANKER_MODEL,
+                max_length=512,
+                cache_folder=cache_dir,
+                local_files_only=True,
+            )
+        except Exception:
+            return None
+    return _RERANKER_CACHE[key]
+
+
+_SIBLING_RADIUS = 3
+_SIBLING_LIMIT = 6
+_SIBLING_SEED_POS = 6  # 邻页的融合名次种子：紧跟前 5 之后，靠重排分竞争上位
+
+
+def _sibling_candidates(
+    conn, top_item: dict[str, Any], radius: int = _SIBLING_RADIUS, limit: int = _SIBLING_LIMIT
+) -> list[dict[str, Any]]:
+    """重排实验（计划 §7 4b）：融合第 1 名所在文档的 ±3 邻页。
+
+    语义题的答案常与最近页同文档隔几页（019 的短语在国信 2024Q4 p4，
+    最近页是 p1）。邻页以种子名次进重排、按分数竞争，不硬插入，
+    因此不会无条件挤掉已在正确位置上的页。
+    """
+    rid = top_item.get("report_id")
+    pg = top_item.get("page_no")
+    if rid is None or pg is None:
+        return []
+    rows = conn.execute(
+        f"""
+        SELECT p.id AS page_id, p.page_no, p.report_id, r.company, r.title, r.path,
+               r.year, r.report_type, r.language, p.content, p.content_orig
+        FROM pages p JOIN reports r ON r.id = p.report_id
+        WHERE p.report_id = :rid AND p.page_no BETWEEN :lo AND :hi
+          AND {db.live_report_sql("r")}
+          AND COALESCE(p.is_ocr, 0) < 2
+        ORDER BY ABS(p.page_no - :pg), p.page_no
+        LIMIT :lim
+        """,
+        {"rid": rid, "lo": pg - radius, "hi": pg + radius, "pg": pg, "lim": limit + 1},
+    ).fetchall()
+    out: list[dict[str, Any]] = []
+    for r in rows:
+        if r["page_id"] == top_item.get("page_id"):
+            continue
+        text = r["content"] or r["content_orig"] or ""
+        out.append(
+            {
+                "page_id": r["page_id"],
+                "page_no": r["page_no"],
+                "report_id": r["report_id"],
+                "company": r["company"],
+                "title": r["title"],
+                "path": r["path"],
+                "year": r["year"],
+                "report_type": r["report_type"],
+                "language": r["language"],
+                "score": 1e9,
+                "source": "hybrid",
+                "sibling": True,
+                "chunk_content": text,
+            }
+        )
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _rerank_fused(
+    query: str,
+    items: list[dict[str, Any]],
+    cache_dir: str | None,
+    window: int = _RERANK_WINDOW,
+    extra: list[dict[str, Any]] | None = None,
+    seed_pos: int = _SIBLING_SEED_POS,
+) -> list[dict[str, Any]]:
+    ce = get_reranker(cache_dir)
+    if ce is None or not items:
+        return items
+    # (候选, 融合名次)：窗口内名次即原序；邻页种子名次紧跟锚页之后
+    entries: list[tuple[dict[str, Any], int]] = [
+        (it, i + 1) for i, it in enumerate(items[:window])
+    ]
+    for j, ex in enumerate(extra or []):
+        entries.append((ex, seed_pos + j))
+    rest = items[window:]
+    idx = [k for k, (it, _) in enumerate(entries) if it.get("chunk_content")]
+    if not idx:
+        return items
+    # 证据常落在约 800 字块的后半段（双语表格页），单截头部会漏；
+    # 超长块按前、后各一段分别打分取最大。
+    pairs: list[tuple[str, str]] = []
+    counts: list[int] = []
+    for k in idx:
+        text = entries[k][0]["chunk_content"]
+        parts = (
+            [text]
+            if len(text) <= _RERANK_MAX_CHARS
+            else [text[:_RERANK_MAX_CHARS], text[-_RERANK_MAX_CHARS:]]
+        )
+        counts.append(len(parts))
+        pairs.extend((query, p) for p in parts)
+    try:
+        raw = ce.predict(pairs)
+    except Exception:
+        return items
+    best: dict[int, float] = {}
+    pos = 0
+    for k, n in zip(idx, counts):
+        best[k] = max(float(s) for s in raw[pos : pos + n])
+        pos += n
+    order = sorted(idx, key=lambda k: -best[k])
+    rerank_pos = {k: p for p, k in enumerate(order, start=1)}
+    # 重排名次不整序替换，而是与融合名次再做一次 RRF：纯重排会把已在
+    # 前 5 的正确页挤出（实测 003/006/011），纯融合又拉不动窗口内深名次。
+    tail = len(entries) + 1
+
+    def _score(k: int) -> float:
+        return 1.0 / (entries[k][1] + 60) + 1.0 / (rerank_pos.get(k, tail) + 60)
+
+    for k in idx:
+        entries[k][0]["reranked"] = True
+    final = sorted(range(len(entries)), key=lambda k: -_score(k))
+    return [entries[k][0] for k in final] + rest
 
 
 def hybrid_search(
@@ -521,6 +698,7 @@ def hybrid_search(
     fts_weight: float = 1.0,
     vec_weight: float = 1.0,
     rrf_k: int = 60,
+    rerank: bool = False,
 ) -> list[dict[str, Any]]:
     query = search.normalize_query(query)
     if not query:
@@ -544,7 +722,10 @@ def hybrid_search(
                 h["hybrid_fused"] = False
             return hits
 
-    candidate_k = max(top_k * 4, 20)
+    # P2（docs/retrieval-fix-plan-20261025.md §5）：只加深内部候选页数，
+    # 评测/回归的 top_k 仍是 5。FTS 分路为空时排序键不变，前 5 成员不变；
+    # 目的是让 013/017/015/012 的含短语页（最近块序号 ≤500）进入重排输入。
+    candidate_k = max(top_k * 4, 50)
     fts = search.fts_search(
         conn,
         query,
@@ -554,6 +735,20 @@ def hybrid_search(
         report_type=report_type,
         language=language,
     )
+    if not fts:
+        for term in _FALLBACK_QUERY_TERMS:
+            if term in query:
+                fts = search.fts_search(
+                    conn,
+                    term,
+                    company=company,
+                    top_k=candidate_k,
+                    year=year,
+                    report_type=report_type,
+                    language=language,
+                )
+                if fts:
+                    break
     vec = vector_search(
         conn,
         model,
@@ -583,14 +778,31 @@ def hybrid_search(
         item = fused.setdefault(page_id, dict(h))
         item["_rrf"] = item.get("_rrf", 0.0) + vec_weight / (pos + rrf_k)
         item["vec_rank"] = pos
+        # FTS 分路先建的分项要并入向量分路带来的文本块，否则重排拿不到输入
+        if h.get("chunk_content"):
+            item["chunk_content"] = h["chunk_content"]
         item["source"] = "hybrid"
 
-    out = sorted(
+    ranked = sorted(
         fused.values(),
         key=lambda x: (-x.get("_rrf", 0.0), x.get("score", 1e9)),
-    )[:top_k]
+    )
+    if rerank:
+        # 邻页锚点是「向量第 1 名」那份文档（计划 §7 4b），不是融合榜第 1：
+        # 融合榜头常被 FTS 分路带上来的页占据，锚错文档邻页就全错。
+        anchor = next(
+            (it for it in ranked if it.get("vec_rank") == 1), ranked[0] if ranked else None
+        )
+        extra: list[dict[str, Any]] = []
+        anchor_pos = 1
+        if anchor is not None:
+            extra = _sibling_candidates(conn, anchor)
+            anchor_pos = ranked.index(anchor) + 1
+        ranked = _rerank_fused(query, ranked, cache_dir, extra=extra, seed_pos=anchor_pos + 1)
+    out = ranked[:top_k]
     for item in out:
         item["fusion_score"] = round(item.get("_rrf", 0.0), 6)
         item["hybrid_fused"] = True
         item.pop("_rrf", None)
+        item.pop("chunk_content", None)
     return out
