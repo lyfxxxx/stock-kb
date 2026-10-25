@@ -26,3 +26,8 @@ analysis-notes/
 .zcode/
 .playwright-cli/
 eval/reports/visual/
+
+# 时间戳评测报告是本地运行产物，可随时重跑再生，不入库；
+# 固定名对照文件（diag_retrieval*.json）被文档引用，保留跟踪
+eval/reports/*_20[0-9][0-9][0-9][0-9][0-9][0-9]_*.md
+eval/reports/*_20[0-9][0-9][0-9][0-9][0-9][0-9]_*.json
