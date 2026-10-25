@@ -39,7 +39,7 @@ FTS_MAX = {
     "keyword.negative_hit_rate": 0.65,
 }
 HYBRID_MIN = {
-    "semantic.recall_at_k": 0.20,
+    "semantic.recall_at_k": 0.85,
     "structured.hit": 29,
     "structured.n": 29,
 }

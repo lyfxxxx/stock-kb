@@ -383,7 +383,7 @@ fusion = 1 / (fts_rank + 60) + 1 / (vec_rank + 60)
 评测不把各层合成一个总 Recall。现行门：
 
 - FTS keyword Recall@5 ≥ 0.75，Neg@5 ≤ 0.65
-- hybrid semantic Recall@5 ≥ 0.20，Neg@5 ≤ 0.20
+- hybrid semantic Recall@5 ≥ 0.85，Neg@5 ≤ 0.20
 - 路由 accuracy = 1.0
 - 无答案 empty_rate ≥ 0.75
 - 指标 12/12

@@ -53,6 +53,15 @@
 | 评测报告 | `eval/reports/` 里的一次评测记录 | | |
 | 终稿 | 带 `run_id`、交给 `audit-report` 的那份 | | 把材料底稿当成终稿 |
 
+## 检索
+
+| 用 | 含义 | 代码 | 不用 |
+|---|---|---|---|
+| 分路 | 混合检索里并行的一条检索通道：FTS 分路或向量分路，RRF 在两路各取名次后融合 | `hybrid_search` 内 `fts_search` / `vector_search` 两路 | 「腿」、分支 |
+| 实体约束 | 检索时要求问句里的实体词出现在命中页上。2026-10 前是硬过滤，此后改为排序加权 | `claim_needles` / `_content_has_needle` | needle 闸门（「闸门」只指 OCR） |
+| 库外实体预检 | 检索前判断问句是否含语料中不存在的实体，是则直接返回空 | 无答案判定，见 `docs/retrieval-fix-plan-20261025.md` | |
+| 重排器 | 用交叉编码器对候选页重新排序的组件 | `embedding.rerank`；BAAI/bge-reranker-base | rerank 模型、精排 |
+
 ## 入库
 
 | 用 | 含义 | 代码 | 不用 |

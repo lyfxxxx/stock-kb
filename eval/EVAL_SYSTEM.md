@@ -131,8 +131,8 @@ wrong-tool rate = 1 − accuracy。MCP 工具 `route_query` 与 CLI `python -m s
 | engine | 行为 |
 |---|---|
 | fts | FTS5 trigram；短于 3 字走 LIKE（按词频）；多词 AND，丢掉「是多少」等虚词；无 trigram OR 硬填。问句里的年份不参与 MATCH：超出该公司入库年则空，否则 **硬过滤** `reports.year`。无年份的问句不按新近排序（freeze keyword 多为旧研报） |
-| vector | sqlite-vec；问句年份超出该公司 `reports.year` 区间则空，否则同样按报告年过滤；剥掉财报常用词后的实体必须出现在命中页 |
-| hybrid | query 短于 6 字 → 只 FTS；否则 RRF。FTS 为空且向量也被年份/实体约束清空 → 空 |
+| vector | sqlite-vec；问句年份超出该公司 `reports.year` 区间则空，否则同样按报告年过滤。**库外实体预检**：`search.entity_words` 抽出的名词连续段全部 0 命中（该公司当前使用文档）则空；实体命中不再过滤候选（2026-10-25 前的「实体必须出现在命中页」硬过滤已拆除，见 process-log 第 59 条）。bge-*-zh-v1.5 查询侧加指令前缀 |
+| hybrid | query 短于 6 字 → 只 FTS；否则 RRF（内部候选 50 页）。整句 FTS 为空时，问句含**备用查询名单**词（初值仅「突破」）则以该词重查 FTS 分路。`embedding.rerank` 开时，对融合候选前 50 页按**命中文本块**（480 字截断）用 bge-reranker-base 重排。预检与年份清空后仍空 |
 
 默认嵌入：`BAAI/bge-small-zh-v1.5`，分块约 **800 字**（`embedding.chunk_size`）。命中聚合成**页**（引用单位）。
 
@@ -157,24 +157,24 @@ python tools/audit_notes.py
 回归测试脚本现测：freeze FTS、freeze hybrid、FTS diag、hybrid diag（无答案）、路由、年份过滤、组稿生成、`audit_notes.py`。  
 对照 `eval/regression_baseline.json` 打印每题翻红/翻绿（lost/gained）；翻题默认只打印，不单独当失败。改 GT 或题集后门槛通过再用 `--write-baseline`。
 
-| 检查 | 门槛 | 最近实测（2026-08-30） |
+| 检查 | 门槛 | 最近实测（2026-10-25，拆实体约束后） |
 |---|---|---|
-| FTS keyword Recall@5 | ≥ 0.75 | 0.80 |
-| FTS keyword Neg@5 | ≤ 0.65 | 0.55 |
-| hybrid semantic Recall@5 | ≥ 0.20 | 0.15 |
+| FTS keyword Recall@5 | ≥ 0.75 | 0.955（回归门内 1.00） |
+| FTS keyword Neg@5 | ≤ 0.65 | 0.00 |
+| hybrid semantic Recall@5 | ≥ 0.85 | **0.60（12/20，重排默认开），未过**（bge-m3+重排实测 0.70） |
 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 |
 | 结构化 hit / parse_hit | 29/29 | 29/29 |
 | FTS diag indicators | 12/12 | 12/12 |
 | FTS diag no_answer empty_rate | ≥ 0.75 | 1.00 |
-| hybrid diag no_answer empty_rate | ≥ 0.75 | 1.00 |
+| hybrid diag no_answer empty_rate | ≥ 0.75 | 0.875（7/8；noans-006 瑞幸在库会返回页，为用掉的 1 题） |
 | route accuracy | = 1.0（24 题） | 1.00 |
 | year_filter precision_mean | ≥ 0.60（4 题） | 1.00 |
 | generation_compose | fail_count = 0；引用页含该数 | 1.00 faithful |
 | audit_notes | 0 项失败；净利走归母 | 见脚本 |
 
-Wilson 区间会打在报告里。n=20 时点估计很跳，门禁钉的是下限，不是「再抬到 0.9」。2026-09-04 复测 freeze hybrid semantic Recall@5 = 0.30（改写碎片不再当 needles；embedding 查询补领域同义；MCP 默认仍 FTS），见 `eval/reports/BAAI_bge-small-zh-v1.5_20260904_223823.md`。
+Wilson 区间会打在报告里。n=20 时点估计仍会跳。G3 从 2026-10-24 起按企业知识库里单事实召回的常用起点定为 ≥ 0.85：本题每题一个事实，Recall@5 与 Hit@5 是同一个数，20 题里要中 17 题。2026-10-23 现状页重跑是 0.30（6/20）；2026-10-25 按 `docs/retrieval-fix-plan-20261025.md` 拆实体约束（预检 + 备用查询 + 指令前缀 + 重排）后到 **0.60**，仍未过 0.85；bge-m3+重排实测 0.70，换默认待 eval-embed 判 better。剩余缺口见 `eval/EVAL_PLAN.md` §5.7。见 `eval/METRICS_CONTRACT.md` §5.1。Neg@5 上限仍是 0.20。
 
-报告目录：`eval/reports/`。`diag_retrieval.json` 为最近一次对照；`diag_retrieval_chunk800.json` / `chunk400.json` 为分块实验。
+报告目录：`eval/reports/`。`diag_retrieval.json` 为最近一次对照；`diag_retrieval_chunk800.json` / `chunk400.json` 为分块实验。带时间戳的评测报告（`*_YYYYMMDD_HHMMSS.*`）是本地运行产物，不入库。
 
 ### 5.1 embedding 模型筛选（不进 freeze 门禁）
 

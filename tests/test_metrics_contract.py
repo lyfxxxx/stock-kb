@@ -16,7 +16,8 @@ def _read(path: Path) -> str:
 
 
 def _eval_system_gate_table(text: str) -> str:
-    marker = "| 检查 | 门槛 | 最近实测（2026-08-30） |"
+    # 快照日期会随实测更新，只锚定表头前缀
+    marker = "| 检查 | 门槛 | 最近实测（"
     start = text.find(marker)
     assert start >= 0, "EVAL_SYSTEM.md §5 gate table missing"
     rest = text[start:]
@@ -41,7 +42,7 @@ def test_contract_gate_table_matches_eval_system_20260830():
     required = [
         ("FTS keyword Recall@5", "≥ 0.75", "0.80"),
         ("FTS keyword Neg@5", "≤ 0.65", "0.55"),
-        ("hybrid semantic Recall@5", "≥ 0.20", "0.15"),
+        ("hybrid semantic Recall@5", "≥ 0.85", "0.15"),
         ("hybrid semantic Neg@5", "≤ 0.20", "0.00"),
         ("结构化 hit / parse_hit", "29/29", "29/29"),
         ("FTS diag indicators", "12/12", "12/12"),

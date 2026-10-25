@@ -127,6 +127,7 @@
   tr:last-child td { border-bottom: 0; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .ok { color: var(--teal); font-weight: 650; }
+  .bad { color: var(--rose); font-weight: 650; }
   .show { color: var(--amber); font-weight: 650; }
   .old { color: var(--muted); }
   ul { margin: 8px 0 12px; padding-left: 1.2em; }
@@ -206,6 +207,9 @@
   }
   .eng.fts { background: var(--fts-soft); border-left: 4px solid var(--fts); }
   .eng.hybrid { background: var(--hyb-soft); border-left: 4px solid var(--hyb); }
+  .eng.gold { background: var(--teal-soft); border-left: 4px solid var(--teal); }
+  .eng.gold .eng-name, .eng.gold .k { color: var(--teal); }
+  .swatch.gold { background: var(--teal-soft); color: var(--teal); }
   .eng-name { margin: 0; font-weight: 650; }
   .eng.fts .eng-name { color: var(--fts); }
   .eng.hybrid .eng-name { color: var(--hyb); }
@@ -466,7 +470,6 @@
         </g>
         <g fill="#1f6b56">
           <rect x="180" y="14" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="48" width="150" height="18" rx="3"></rect>
           <rect x="180" y="82" width="500" height="18" rx="3"></rect>
           <rect x="180" y="116" width="500" height="18" rx="3"></rect>
           <rect x="180" y="150" width="500" height="18" rx="3"></rect>
@@ -477,7 +480,7 @@
         </g>
         <g stroke="#9a5b12" stroke-width="2">
           <line x1="555" y1="12" x2="555" y2="34"></line>
-          <line x1="280" y1="46" x2="280" y2="68"></line>
+          <line x1="605" y1="46" x2="605" y2="68"></line>
           <line x1="555" y1="80" x2="555" y2="102"></line>
           <line x1="555" y1="114" x2="555" y2="136"></line>
           <line x1="680" y1="148" x2="680" y2="170"></line>
@@ -496,6 +499,7 @@
           <text x="668" y="265">1.00</text>
           <text x="668" y="299">1.00</text>
         </g>
+        <rect x="180" y="48" width="150" height="18" rx="3" fill="#9f3d32"></rect>
         <text x="338" y="61" font-size="12" fill="#1c1917">0.30</text>
         <g font-size="12" fill="#57534e">
           <text x="180" y="328">0</text>
@@ -534,10 +538,10 @@
       <tr><td>证据层</td><td>覆盖矩阵</td><td>只展示</td><td class="num">本页未重跑</td><td class="show">只展示</td></tr>
       <tr><td>知识库层</td><td>FTS keyword Recall@5</td><td>≥ 0.75</td><td class="num">1.00（22/22）</td><td class="ok">过</td></tr>
       <tr><td>知识库层</td><td>FTS keyword Neg@5</td><td>≤ 0.65</td><td class="num">0.00</td><td class="ok">过</td></tr>
-      <tr><td>知识库层</td><td>hybrid semantic Recall@5</td><td>≥ 0.20</td><td class="num">0.30（6/20）</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>hybrid semantic Recall@5</td><td>≥ 0.85</td><td class="num">0.60（12/20，2026-10-25 拆实体约束+重排后；此前 0.30）</td><td class="bad">未过</td></tr>
       <tr><td>知识库层</td><td>hybrid semantic Neg@5</td><td>≤ 0.20</td><td class="num">0.00</td><td class="ok">过</td></tr>
       <tr><td>知识库层</td><td>指标表对照</td><td>12/12，容差 0.0001</td><td class="num">12/12</td><td class="ok">过</td></tr>
-      <tr><td>知识库层</td><td>无答案 empty_rate</td><td>FTS、hybrid 都 ≥ 0.75</td><td class="num">1.00（8/8）</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>无答案 empty_rate</td><td>FTS、hybrid 都 ≥ 0.75</td><td class="num">FTS 1.00（8/8）；hybrid 0.875（7/8，瑞幸在库那题返回页，属预期）</td><td class="ok">过</td></tr>
       <tr><td>知识库层</td><td>路由 accuracy</td><td>1.0（24 题）</td><td class="num">1.00</td><td class="ok">过</td></tr>
       <tr><td>知识库层</td><td>year_filter</td><td>≥ 0.60（4 题）</td><td class="num">1.00</td><td class="ok">过</td></tr>
       <tr><td>报告层</td><td>组稿 faithful_rate</td><td>1.00，趋势句 0 处不一致</td><td class="num">1.00</td><td class="old">2026-09-13 存档</td></tr>
@@ -574,7 +578,7 @@
   </div>
   <ul>
     <li><b>关键词题都进了融合。</b>显式 hybrid 时 22 道全部 <code>hybrid_fused</code>。FTS 是 22/22。融合后是 21/22，有 1 道掉出前 5。</li>
-    <li><b>语义题只有一半融合。</b>20 道里 10 道 <code>hybrid_fused</code>。Recall@5 是 0.30。n=20，点估计会跳。门槛钉的是 0.20 这条下限。</li>
+    <li><b>语义召回已按 <code>docs/retrieval-fix-plan-20261025.md</code> 改造。</b>2026-10-25 拆实体约束（库外实体预检 + 备用查询名单 + 查询指令前缀）后 Recall@5 是 0.50，再上 bge-reranker-base 重排（重排名次与融合名次做 RRF、不整序替换）后是 0.60（12/20），返回空的题从 10 道降到 0 道；bge-m3+重排组合实测 0.70。门槛 0.85 仍未过，剩 003/007/009/017/019/004。下页逐题判定仍是 2026-10-23 快照。</li>
     <li><b>跨语言没有单独门槛。</b>冻结回归测试里纯检索 cross 是 6 道。FTS Recall@5 是 0.167。hybrid 是 0。</li>
     <li><b>向量筛选是旧诊断。</b>2026-08-30，<code>bge-small-zh</code> 在 44 道长句上 Recall@5 = 0.159，Recall@50 = 0.364，50 名内没有 28 道。这组数不进 G1–G11。今天没有重跑。</li>
     <li><b>两家都没有毛利行。</b>损益表不单列毛利。不自造毛利率。指标里也就没有这条序列。</li>
@@ -586,8 +590,9 @@
   <h2>逐题判定</h2>
   <p>下面是题集里的 161 道。FTS 用了 1.1 秒，hybrid 用了 40.6 秒，模型是 <code>BAAI/bge-small-zh-v1.5</code>，top 5。默认只留下没过的题。评测指标按回归测试的那几项来分，选项里写着有几道未过。</p>
   <p>检索题按页判定。《文件》第 N 页是对错单位。FTS 搜的是整页，摘录是命中附近的页文本。hybrid 先在约 800 字的文本块上找近邻，再收成页；选段是该页最近的一块。只考一路的题只列这一路。无答案要两路都空，所以两路都列。被 hybrid 挤出前 5 的那道关键词，两路都列。结构化、指标表对照和路由不列检索页。</p>
-  <p class="legend"><span class="swatch fts">FTS</span>整页与页内摘录。<span class="swatch hybrid">hybrid</span>按页排序，并附文本块选段。</p>
-  <p>结构化 29 道、指标表对照 12 道、路由 24 道、无答案 8 道、年份过滤 4 道、关键词的 FTS 22 道都对上了。对不上的有 53 道：语义召回 14 道没有回到对照页，1 道关键词被 hybrid 挤出前 5，另外 38 道是只展示的检索未命中。语义整组 Recall@5 是 0.30，门槛 0.20 仍过。组稿和手写笔记没有逐题清单。</p>
+  <p>有页码的对照答案下面会列出三段页文本：答案所在段，以及它前面、后面各一段。文本取自当前库，用来和检索摘录对照。页上定位不到短语时，只列正文开头。</p>
+  <p class="legend"><span class="swatch gold">对照</span>答案所在段及其前后文。<span class="swatch fts">FTS</span>整页与页内摘录。<span class="swatch hybrid">hybrid</span>按页排序，并附文本块选段。</p>
+  <p>结构化 29 道、指标表对照 12 道、路由 24 道、无答案 8 道、年份过滤 4 道、关键词的 FTS 22 道都对上了。对不上的有 53 道（2026-10-23 快照）：语义召回 14 道没有回到对照页，1 道关键词被 hybrid 挤出前 5，另外 38 道是只展示的检索未命中。语义整组 Recall@5 在 2026-10-25 改造后是 0.60，门槛 0.85，仍整组未过。组稿和手写笔记没有逐题清单。</p>
   <div class="filters">
     <label>范围
       <select id="f-scope">
@@ -639,7 +644,7 @@
       <tr><td>百胜 2017 的 OCR 页</td><td>五个核心指标仍是比较列。当年利润表和现金流页是 OCR=2，不能升成当年数。</td></tr>
       <tr><td>「股东」检索</td><td>这个词常打到章程条款页。收窄用词后，控股和持股比例更容易排到前面。</td></tr>
       <tr><td>两字排序</td><td><code>pages_bigram_fts</code> 已建。有结果时还没用它排序，避免把关键词基线打乱。要单独评测再开。</td></tr>
-      <tr><td>真语义和跨语言</td><td>诊断集仍然经常召不回。400 字分块试过，冻结语义召回从 0.10 掉到 0.05，已经退回。reranker 仍是可选项，不排进下一步。</td></tr>
+      <tr><td>真语义和跨语言</td><td>冻结语义召回 0.30 → <b>0.50</b>（2026-10-25）。计划 <code>docs/retrieval-fix-plan-20261025.md</code> 的 P0–P4a 已落地：拆实体约束（库外实体预检 + 备用查询名单「突破」）、候选池 50 页、bge-small 查询指令前缀；bge-m3 判 lean_better 不换默认。P4b 重排器已落地（RRF 二次融合 + 前后两段打分 + 同文件邻页候选），G3 到 0.60；bge-m3+重排组合 0.70，换默认待 eval-embed 判 better。剩 003/007/009/017/019/004：003/017 是 base 重排器判别力上限（换 large/v2-m3 可试），019 邻页通道因指令前缀改变向量第 1 名而锚点漂移，009/004 在窗口外。004 留分母不指望。400 字分块旧结论受过滤干扰，重切块前重估。</td></tr>
       <tr><td>判断段</td><td>R1、R2、R11 仍靠人工。回归测试只审数字、出处和必备节。观点层还不能批量放行。</td></tr>
       <tr><td>Docker 与 Hermes</td><td>库还在这台机器上。迁到 DXP-4800、接 Hermes 都还没开始。</td></tr>
       <tr><td><code>scan --watch-interval</code></td><td>开关已有。还没在真实新增文件上验过。</td></tr>
@@ -650,7 +655,7 @@
     <li><b>不自造毛利率。</b>报表没有这一行。</li>
     <li><b>不自动改写问句。</b>查询日志留给以后看零命中。</li>
     <li><b>不上 RAPTOR 或 GraphRAG。</b>只有某一检索桶稳定失败，并且报告必备节依赖这个桶，再单独立项。</li>
-    <li><b>不换默认向量模型。</b>除非 <code>eval-embed</code> 判定 better，并且冻结语义召回仍过 0.20。</li>
+    <li><b>不换默认向量模型。</b>除非 <code>eval-embed</code> 判定 better，并且冻结语义召回仍过 0.85。</li>
     <li><b>不把行情写进 SQLite。</b>价格走独立命令。</li>
   </ul>
 </section>
@@ -682,7 +687,7 @@
   };
   var ORDER = ["gate-miss", "hybrid-drop", "display-miss", "pass"];
   var EVALS = [
-    { key: "hybrid-semantic", label: "hybrid 语义 Recall@5", note: "门槛 ≥ 0.20", order: 1 },
+    { key: "hybrid-semantic", label: "hybrid 语义 Recall@5", note: "门槛 ≥ 0.85", order: 1 },
     { key: "fts-keyword", label: "FTS 关键词 Recall@5", note: "门槛 ≥ 0.75", order: 2 },
     { key: "structured", label: "结构化", note: "29 道都要相符", order: 3 },
     { key: "indicator", label: "指标表对照", note: "12 道都要相符", order: 4 },
@@ -795,6 +800,28 @@
     return html;
   }
 
+  function contextHtml(item) {
+    var rows = item.contexts || [];
+    if (!rows.length) return "";
+    var html = "<div class=\"eng gold\"><p class=\"eng-name\">对照页 · 前后文</p><ol>";
+    rows.forEach(function (row) {
+      html += "<li><p class=\"loc\">" + esc("《" + (row.title || "") + "》第" + row.page + "页") + "</p>";
+      if (row.found) {
+        if (row.before) html += "<p class=\"excerpt\"><span class=\"k\">前</span> " + esc(row.before) + "</p>";
+        html += "<p class=\"excerpt\"><span class=\"k\">答案</span> " + markSnippet(row.hit) + "</p>";
+        if (row.after) html += "<p class=\"excerpt\"><span class=\"k\">后</span> " + esc(row.after) + "</p>";
+      } else if (row.preview) {
+        html += "<p class=\"excerpt\">这一页上没有定位到验收短语。正文开头：</p>";
+        html += "<p class=\"excerpt\">" + esc(row.preview) + "</p>";
+      } else {
+        html += "<p class=\"excerpt\">这一页上没有定位到验收短语。</p>";
+      }
+      html += "</li>";
+    });
+    html += "</ol></div>";
+    return html;
+  }
+
   function answerHtml(item) {
     var engines = enginesFor(item);
     if (!engines.length || !item.hits) {
@@ -811,6 +838,12 @@
     }
     engines.forEach(function (name) { html += engineBlock(name, item.hits[name], item); });
     return html;
+  }
+
+  function contextHay(item) {
+    return (item.contexts || []).map(function (row) {
+      return [row.title, row.before, row.hit, row.after, row.preview].join(" ");
+    }).join(" ");
   }
 
   function hitHay(item) {
@@ -843,7 +876,7 @@
     if (metric.value && evalKey(item) !== metric.value) return false;
     var needle = (query.value || "").trim();
     if (!needle) return true;
-    var hay = item.id + " " + item.question + " " + item.company + " " + item.answer + " " + item.gate + " " + hitHay(item);
+    var hay = item.id + " " + item.question + " " + item.company + " " + item.answer + " " + item.gate + " " + hitHay(item) + " " + contextHay(item);
     return hay.indexOf(needle) >= 0;
   }
 
@@ -878,6 +911,7 @@
         html += " · " + esc(item.company) + "</span></p>";
         html += "<p>" + esc(item.question) + "</p>";
         html += "<p><b>对照：</b>" + esc(item.expected) + "</p>";
+        html += contextHtml(item);
         html += answerHtml(item);
         if (item.extra) html += "<p class=\"lead\">" + esc(item.extra) + "</p>";
         html += "<p class=\"lead\">判定用：" + esc(item.gate) + "</p>";

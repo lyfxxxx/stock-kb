@@ -19,7 +19,7 @@ python tools/audit_notes.py
 |---|---|---|
 | FTS keyword Recall@5 | ≥ 0.75 | 0.80 |
 | FTS keyword Neg@5 | ≤ 0.65 | 0.55 |
-| hybrid semantic Recall@5 | ≥ 0.20 | 0.15（2026-09-04 复测 0.30） |
+| hybrid semantic Recall@5 | ≥ 0.85 | 0.15（2026-10-23 复测 0.30，未过 0.85） |
 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 |
 | 结构化 hit / parse_hit | 29/29 | 29/29 |
 | FTS diag `indicators` | 12/12 | 12/12 |
@@ -222,3 +222,17 @@ freeze keyword 测不到向量。新增 `python -m stock_kb eval-embed`：44 道
 5. **评测**：no_answer 引擎哨兵（engine_error 不计 empty_rate）；`recall_soft_at_k` 软分；题集 146→156（+5 英文 cross、+5 中报 semantic，全 diag）；回归测试新增覆盖矩阵。回归测试全过后已 `--write-baseline`。
 
 遗留：分部收入结构化、美/港双版本 canonical、OCR 行数字人工复核、观点层（R1/R2/R11）仍靠人工 rubric。
+
+### 5.7 拆实体约束：语义召回 0.30 → 0.50（2026-10-25）
+
+按 `docs/retrieval-fix-plan-20261025.md` 执行到 P4a。诊断先行：P0 新增 `tools/diag_semantic_pages.py`，四列名次（全库块序号 / 本公司页名次 / 含短语页名次 / 含短语页最近块序号）、硬过滤开/关各一份，先复现官方 6/20 与「无过滤 002 第 1、005 第 3、011 第 26」才动代码——此前「向量召不回」的结论都是过滤后量出的。
+
+1. **P1 拆职责**：`claim_needles` 退出运行时，`search.entity_words` 按名词连续段重抽（校准 `tools/diag_needle_coverage.py`：noans-002/003/004/005/007 实体全 0 命中可判空；noans-006 瑞幸在库、会返回页，是 ≥7/8 用掉的那 1 题；freeze+diag 语义/跨语言 48 题零误空；「欧洲门店数量」整段保留不拆）。`vector_search` 去掉 `_content_has_needle` 硬过滤，入口加 `all_entities_out_of_corpus` 预检。011 守成走备用查询名单（初值仅「突破」，整句 FTS 为空才触发）。实测 G3 0.30→0.40：七题硬集合（002/005/008/011/014/016/018）全中，noans hybrid 7/8，回归仅 G3 红（预期红，不回滚）。
+2. **P2 候选池**：`hybrid_search` 内部 `candidate_k` 20→50（评测 top_k 仍 5）。Recall 与 P1 相同（排序键不变前 5 不变），013/017/015/012 的含短语页最近块序号 73/66/186/47 ≤ 500，进入重排输入。
+3. **P3 查询指令前缀**：bge-*-zh-v1.5 查询侧加「为这个句子生成表示以用于检索相关文章：」（`_query_embed_text`，m3 不加）。七题守成全过，G3 0.40→**0.50**（003、006 新进前 5；001 页名次 107→9、013→12、017→15、010→10、007→7、012→49、015→32——这 7 题含短语页全在前 50 页窗口内）。前缀保留，§12 名次表已重打。
+4. **P4a**：bge-m3 建索引（按 model 隔离）后 `eval-embed` 判定 **`lean_better`**（better_at_50=18 vs worse=8，Wilson 区间重叠）——按 §5.1 规则不换默认，bge-small 留任。
+5. **P4b 重排器**：`vector.hybrid_search` 增加 `rerank` 参数（config `embedding.rerank`），对融合候选前 50 页按**命中文本块**（超长块前后各 480 字取最大）用 bge-reranker-base 重排；库外预检在重排之前。权重从 ModelScope 直链补齐（hf-mirror 大文件停滞，ModelScope 约 11MB/s）。
+   三轮实测迭代：纯重排整序把 003/006/011 挤出前 5 → 改为**重排名次与融合名次再做一次 RRF**（不整序替换），G3 0.50→0.60（001/007/013 新进，硬集合全中）；融合分路先建的分项不并入向量分路的 `chunk_content` 的缺陷一并修复。019 同文件邻页实验按计划实现（向量第 1 名文档的 ±3 页以种子名次进重排、按分竞争不硬插），但**指令前缀改变了向量第 1 名**（019 的最近页从国信 2024Q4 p1 变成 2024 中报 p50），锚点文档漂移，该题未翻绿——「邻页锚点」对查询侧改动敏感，是这条通道的边界。
+   **bge-m3 + 重排器组合实测 0.70（14/20，硬集合全中）**：比 small+重排多进 010/012/015、丢 007。换默认按 §5.1 仍需 eval-embed 判 `better`（现为 lean_better），留给维护者决策。
+
+剩余缺口（0.60→0.85）：003/007/009/017/019/004。003（重排分 0.358，双语表格页吃亏）与 017（同主题竞对普遍高分）是 base 重排器的判别力上限；009@192/004@835 在窗口外。下一步候选：bge-reranker-large/v2-m3、m3 换默认、或 120 页窗口实验。
