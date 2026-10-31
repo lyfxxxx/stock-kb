@@ -13,14 +13,14 @@
 
 | 层 | 测什么 | 主要题型 | 通道 |
 |---|---|---|---|
-| 结构化 | 三表行能否对上 PDF 数字 | freeze `exact` / 部分 `cross` | `statements` |
+| 结构化 | 报表行项目能否对上 PDF 数字 | freeze `exact` / 部分 `cross` | `statements` |
 | 指标 | `indicators` 口径（归母净利等） | diag `indicator` | `indicators` 表 |
 | 检索 | 问句能否在 top-5 拿到可用出处 | freeze `keyword` / `semantic` / `cross`；diag 真语义 / 跨语言 | FTS / 向量 / hybrid |
 | 无答案 | 库里没有时是否空 | diag `no_answer` | 同上，期望 0 条 |
 | 生成 | 笔记数字与引用 | freeze `end2end` | 组稿 `eval-generation` + `audit_notes.py` + 材料覆盖 |
 | 路由 | 问句该走哪把工具 | freeze `route` | `stock_kb.route`（不检索） |
 
-不要用「总 Recall」概括所有层。keyword 高不代表语义强；结构化 29/29 只说明三表查询和 PDF golden 一致。
+不要用「总 Recall」概括所有层。keyword 高不代表语义强；结构化 29/29 只说明报表行项目查询和 PDF golden 一致。
 
 当前题集 **161 道**：
 
@@ -51,7 +51,7 @@ GT 是 yaml 里「怎样算对」的标注，不是模型输出。
 - 数字必须 `golden_source: pdf`，禁止从 `statements.value` / `indicators` 抄回 yaml。
 - 净利润 = 归母（港股「本公司拥有人应占」，美国 `Net income — Yum China Holdings`），不是年内溢利合计。
 - 比较数字优先**当年年报正文页**，不用次年报比较列当正样本。
-- 指标与结构化三表题容差均为 `0.0001`（0.01%）。2% 会把合计和归母当成同一个数。
+- 指标与结构化报表行项目题的容差均为 `0.0001`（0.01%）。2% 会把合计和归母当成同一个数。
 
 **检索**
 
@@ -109,7 +109,7 @@ diag 对照脚本 `tools/diag_retrieval.py`：同一题跑 FTS@5、vector@50、h
 
 `end2end` 看检索材料是否覆盖要点。
 
-组稿路径（无 LLM）：`python -m stock_kb compose-note` / `eval-generation` 按扫描体顺序调 indicators → 三表 → 检索，填模板，每条数字带 `《文件》第N页`。同时写出 HTML（内嵌 SVG 图）。审计看「引用明细」表：数字须出现在引用页的 `pages.content` / `content_orig`。手写试点笔记仍用 `python tools/audit_notes.py`。二者都进 `run_eval_regression.py`。组稿不写无市价的 PE、不摘无出处行业预测。
+组稿路径（无 LLM）：`python -m stock_kb compose-note` / `eval-generation` 按扫描体顺序调 indicators → 报表行项目 → 检索，填模板，每条数字带 `《文件》第N页`。同时写出 HTML（内嵌 SVG 图）。审计看「引用明细」表：数字须出现在引用页的 `pages.content` / `content_orig`。手写试点笔记仍用 `python tools/audit_notes.py`。二者都进 `run_eval_regression.py`。组稿不写无市价的 PE、不摘无出处行业预测。
 
 ### 3.6 工具路由
 
@@ -132,9 +132,20 @@ wrong-tool rate = 1 − accuracy。MCP 工具 `route_query` 与 CLI `python -m s
 |---|---|
 | fts | FTS5 trigram；短于 3 字走 LIKE（按词频）；多词 AND，丢掉「是多少」等虚词；无 trigram OR 硬填。问句里的年份不参与 MATCH：超出该公司入库年则空，否则 **硬过滤** `reports.year`。无年份的问句不按新近排序（freeze keyword 多为旧研报） |
 | vector | sqlite-vec；问句年份超出该公司 `reports.year` 区间则空，否则同样按报告年过滤。**库外实体预检**：`search.entity_words` 抽出的名词连续段全部 0 命中（该公司当前使用文档）则空；实体命中不再过滤候选（2026-10-25 前的「实体必须出现在命中页」硬过滤已拆除，见 process-log 第 59 条）。bge-*-zh-v1.5 查询侧加指令前缀 |
-| hybrid | query 短于 6 字 → 只 FTS；否则 RRF（内部候选 50 页）。整句 FTS 为空时，问句含**备用查询名单**词（初值仅「突破」）则以该词重查 FTS 分路。`embedding.rerank` 开时，对融合候选前 50 页按**命中文本块**（480 字截断）用 bge-reranker-base 重排。预检与年份清空后仍空 |
+| hybrid | query 短于 6 字 → 只 FTS；否则按**查询意图**分派融合权重与重排（见下）。RRF 内部候选 50 页。整句 FTS 为空时，问句含**备用查询名单**词（初值仅「突破」）则以该词重查 FTS 分路。预检与年份清空后仍空 |
 
 默认嵌入：`BAAI/bge-small-zh-v1.5`，分块约 **800 字**（`embedding.chunk_size`）。命中聚合成**页**（引用单位）。
+
+**查询意图分派（2026-10-30）**：`vector.INTENT_PROFILE` 按问句形态定融合倍率与是否重排。
+
+| 意图 | 判定 | fts / vec 倍率 | 重排 |
+|---|---|---|---|
+| `numeric` | 剥掉四位年份后仍含具体数值（`3.9次`、`15,776`、`2.8%`） | 3.0 / 0.5 | 关 |
+| `term` | 命中科目术语表（已付股息、资本开支、客单价、翻台率、肩并肩…） | 2.0 / 0.8 | 关 |
+| `narrative` | 含疑问词（为什么/哪种/多少/是不是…）且无具体数值 | 0.6 / 1.6 | 开 |
+| `neutral` | 其余，或数值与疑问词同时出现 | 1.0 / 1.0 | 开 |
+
+重排为什么按意图关掉：实测 22 道关键词题，重排关 19/22 命中、重排开 8/22；语义题反向（关 7/20、开 9/20）。交叉编码器只看命中文本块，会把「年报 p19 含精确数字」判给研报长块。效果：hybrid keyword Recall@5 0.455 → **1.00**，融合保留率 0.455 → **1.00**，semantic 0.60 不变。分类只影响排序，不参与过滤。
 
 `index --rebuild` 只删当前模型向量，**不重切** chunks。改粒度必须 `index --rebuild-chunks`（清空所有模型）。
 
@@ -154,23 +165,36 @@ python tools/diag_retrieval.py
 python tools/audit_notes.py
 ```
 
-回归测试脚本现测：freeze FTS、freeze hybrid、FTS diag、hybrid diag（无答案）、路由、年份过滤、组稿生成、`audit_notes.py`。  
+回归测试脚本现测：freeze FTS、freeze hybrid、FTS diag、hybrid diag（无答案）、融合保留率、短查询短路一致性、路由、年份过滤、组稿生成、`audit_notes.py`、门禁覆盖统计。  
 对照 `eval/regression_baseline.json` 打印每题翻红/翻绿（lost/gained）；翻题默认只打印，不单独当失败。改 GT 或题集后门槛通过再用 `--write-baseline`。
 
-| 检查 | 门槛 | 最近实测（2026-10-25，拆实体约束后） |
+2026-10-30 起补了六类门（起因：`hybrid.keyword.Recall@5` 长期只算不卡，实测 0.455，而同题集 FTS 是 1.00）。当日随即用查询意图分派把 keyword 与融合保留率都修到 1.00，详见 §4 的意图分派表。
+
+| 检查 | 门槛 | 最近实测（2026-10-31 复跑一致） |
 |---|---|---|
-| FTS keyword Recall@5 | ≥ 0.75 | 0.955（回归门内 1.00） |
+| FTS keyword Recall@5 | ≥ 0.75 | **1.00（22/22）** |
 | FTS keyword Neg@5 | ≤ 0.65 | 0.00 |
-| hybrid semantic Recall@5 | ≥ 0.85 | **0.60（12/20，重排默认开），未过**（bge-m3+重排实测 0.70） |
+| hybrid semantic Recall@5 | ≥ 0.85 | **0.60（12/20），未过**（bge-m3+重排实测 0.70） |
 | hybrid semantic Neg@5 | ≤ 0.20 | 0.00 |
+| hybrid keyword Neg@5 | ≤ 0.20 | 0.045 |
+| **融合保留率** | ≥ 0.85 | **1.00（22/22）**：意图分派后不再挤掉精确命中（改前 0.455 = 10/22） |
+| **短查询短路一致性** | 0 异常 | 6/6 通过 |
 | 结构化 hit / parse_hit | 29/29 | 29/29 |
+| 结构化 parse_hit / page_match / source_match | 29/29 | 29/29 |
 | FTS diag indicators | 12/12 | 12/12 |
 | FTS diag no_answer empty_rate | ≥ 0.75 | 1.00 |
 | hybrid diag no_answer empty_rate | ≥ 0.75 | 0.875（7/8；noans-006 瑞幸在库会返回页，为用掉的 1 题） |
 | route accuracy | = 1.0（24 题） | 1.00 |
-| year_filter precision_mean | ≥ 0.60（4 题） | 1.00 |
+| year_filter precision_mean / empty | ≥ 0.60（4 题）/ = 0 | 1.00 / 0 |
 | generation_compose | fail_count = 0；引用页含该数 | 1.00 faithful |
-| audit_notes | 0 项失败；净利走归母 | 见脚本 |
+| audit_notes | 失败 0；数字准确 ≥ 0.95；无出处 ≤ 0.10；引用 ≥ 0.95 | 0；0.988；0.012；0.957 |
+| audit-report | 0 失败 | 17 份稿全缺 `run_id`，记 `PASS (audit unverified)` |
+
+**融合保留率**的分母是「FTS 已命中的关键词题」，不是全部关键词题，也不是 hybrid 的绝对召回。它回答的是「融合把已经精确命中的页挤掉了多少」，因此与 FTS 的绝对能力无关。语义是融合应为加法而非替换。
+
+**短查询短路一致性**用 6 条 <6 字查询（翻台率、客单价、师徒制、阿米巴、肩并肩、资本开支）做断言，不写进 `questions.yaml`——短词天然跨文档，定不出单一期望页。断言内容：FTS 有命中时 hybrid 必须逐页相同且 `hybrid_fused=False`；FTS 为空才允许兜底融合。这补上了此前 `<6` 字短路与「FTS 零命中兜底」两条分支零覆盖的盲区（22 道关键词题最短 11 字，全部走融合）。
+
+**门禁覆盖统计**（`[gate_coverage]`）：新增 recall / empty_rate / accuracy / precision_mean 类指标，若既没设门、也没登记进 `SKIPPED_METRICS`，`未分类` 计数会大于 0 并直接把 RESULT 打成 FAIL。排序类指标（Hit@1、MRR、nDCG、Precision@5、Neg@1）只展示，不进统计——n=20~22 时点估计会跳，且产品只要求 top-5 里有出处。
 
 Wilson 区间会打在报告里。n=20 时点估计仍会跳。G3 从 2026-10-24 起按企业知识库里单事实召回的常用起点定为 ≥ 0.85：本题每题一个事实，Recall@5 与 Hit@5 是同一个数，20 题里要中 17 题。2026-10-23 现状页重跑是 0.30（6/20）；2026-10-25 按 `docs/retrieval-fix-plan-20261025.md` 拆实体约束（预检 + 备用查询 + 指令前缀 + 重排）后到 **0.60**，仍未过 0.85；bge-m3+重排实测 0.70，换默认待 eval-embed 判 better。剩余缺口见 `eval/EVAL_PLAN.md` §5.7。见 `eval/METRICS_CONTRACT.md` §5.1。Neg@5 上限仍是 0.20。
 
@@ -180,7 +204,7 @@ Wilson 区间会打在报告里。n=20 时点估计仍会跳。G3 从 2026-10-24
 
 freeze keyword 测不到向量（短句 hybrid 短路回 FTS）。要挑 embedding，用单独套件，只含**会长句、真走向量**的题：
 
-- freeze `semantic` 20 + freeze 无三表 `cross` 6
+- freeze `semantic` 20 + freeze 无报表行项目 `cross` 6
 - diag `semantic` 8 + diag `cross` 10
 - 共 44 道；问句归一化后短于 6 字的排除
 
@@ -206,6 +230,8 @@ n=44 时点估计仍跳。差 1 题不当作赢。keyword、结构化、无答�
 
 换模落地顺序：`eval-embed` 得 `better` → `eval --engine hybrid --model <候选> --split freeze` 过 hybrid semantic 门槛 → `run_eval_regression.py` → 改 `config.yaml` 的 `embedding.model`。
 
+**2026-10-30 实测（n=54）**：bge-small @5/@50 = 0.167 / 0.370、miss 34；bge-m3 = 0.241 / 0.481、miss 28，四项分桶全面变好但 @50 的 Wilson 区间仍重叠，判 `lean_better`。补跑 freeze 看净效果：hybrid semantic 0.60 → **0.70**，但 hybrid keyword **1.00 → 0.909**，total 0.729 不变。拿已绿的门换仍不达标的门，净亏，**不换默认模型**。结论：换模前必须看目标引擎 freeze 的净效果，不能只看 vector@50。
+
 ---
 
 ## 6. 明确不采用
@@ -223,7 +249,7 @@ n=44 时点估计仍跳。差 1 题不当作赢。keyword、结构化、无答�
 
 1. 收入、归母净利、毛利、总资产、净资产、经营现金流 → `get_indicators`
 2. 已付股息、资本开支等行项目 → `get_financial_statements(keyword=, year=)`（「资本开支」匹配购置物业行）
-3. 减值等多在附注、三表常空 → 再 `search_reports`
+3. 减值等多在附注、报表行项目常空 → 再 `search_reports`
 4. 翻台率、同店、师徒、品牌 → `search_reports`
 
 不确定走哪把工具时先 `route_query`。`get_financial_statements(year=)` 默认只要 **当年年报正文**（`r.year = s.year`）；次年报比较列需 `include_comparatives=True`。
@@ -238,6 +264,7 @@ CLI：`python -m stock_kb statements --company 海底捞 --keyword 已付股息 
 **评测债**
 
 - freeze 46 道检索 GT 已于 2026-08-30 按 `pages.content` 通读；8 道改了 required 页，另有跨公司/同页负样本替换（见 `EVAL_PLAN.md` §5.3）。keyword 20 道 required 页主题词均在页上，未改。
+- **2026-10-31 语义题 GT 复核（结论：无需修改）**：用 `tools/audit_semantic_gt.py` 复核 20 道 freeze 语义题的 36 个「文档×页」对，验收短语全部命中（判定走 `fold_fact_text`，会去掉换行、全角空格、千分位与 `╱`）。8 道失败题的实际 top5 逐页用 `fact_phrase_hit` 比对，**无一含答案短语**，说明失败不是 GT 漏收，也不是「返回了同样正确的页却没被认」。题型上只有 semantic-003 属「比上一年」的比较型，但它的 GT 页同时列出两年数字，仍是单页可答，移出后也只是 12/19 = 0.63。因此 GT、题型、0.85 门槛都不动。
 - diag 真语义 / 跨语言：证据清单后仍有约 11 道向量 50 名内没有；英文问中文页、附注减值仍是检索问题。
 - 组稿评测覆盖「工具顺序 + 数字在引用页上」，不覆盖 LLM 是否遵守 skill。无年份的 keyword 题 `year_mismatch` 仍高，那是排序不是过滤。
 
@@ -245,4 +272,6 @@ CLI：`python -m stock_kb statements --company 海底捞 --keyword 已付股息 
 
 - 再改分块（400 已试：diag 抬一题，freeze hybrid semantic 0.10→0.05，已回滚）。
 - 先上 reranker（页不在 top-50 时无用）。
+- **换更强的重排器**（2026-10-31 把 v2-m3 与 large 都试完：freeze semantic 是 base **0.60** > large 0.55 > v2-m3 0.50，耗时 96 / 132 / 242 秒。三者分数分布宽度不同——base 0.36–0.89、large 0.44–0.97、v2-m3 0.79–0.95——分布越平，二次 RRF 里名次越挤，原来排对的位置越容易被冲掉。见 process-log 第 64、66 条）。
+- **扩邻页窗口 / 整页滑窗重排**（2026-10-30 试过：前 5 名各扩 ±5 页 + 邻页整页滑窗全段，语义召回仍 0.60；直接打分显示 reranker 给错误页 0.887、正确页 0.528，是判别力上限。见 process-log 第 61 条）。
 - 用整句语言 ID 在中/英引擎间切换；财务问句默认中英混排，按片段扩词表，不要判整句语言。

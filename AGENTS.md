@@ -12,7 +12,7 @@ scan（NAS 与已有 raw_dir）→ stats 看缺口 → stock-collect / fetch 只
 ```
 
 - 试点公司：海底捞（06862.HK）、百胜中国（YUMC/09987.HK），已在 `config.yaml` 配置。
-- 当前规模：64 份文档、8,534 页、8,823 条三表行项目、237 条指标（2026-10-04：60 nas / 4 collect；OCR 分层与折行胶水后。评测体系见 `eval/EVAL_SYSTEM.md`，目标到门槛的映射见 `eval/METRICS_CONTRACT.md`，过程记录见 `eval/EVAL_PLAN.md`，数据缺口清单见 `eval/data_gaps.md`）。
+- 当前规模：566 份文档、18,926 页、18,204 条报表行项目、310 条指标、60,340 个 chunk（2026-10-30 实测，`stats --json`）。2026-10-04 时还是 64 份 / 8,534 页，10 月补入库后翻了约 9 倍；文档里旧的 64 份数字已作废。仓库另带 `demo/`（8 份文档 / 1,016 页 / 1,985 报表行 / 19 题），不依赖 NAS 即可跑通。评测体系见 `eval/EVAL_SYSTEM.md`，目标到门槛的映射见 `eval/METRICS_CONTRACT.md`，过程记录见 `eval/EVAL_PLAN.md`，数据缺口清单见 `eval/data_gaps.md`。
 - 核心目标：笔记中的关键数字必须能追溯到「文件 + 页码/表名」，不允许凭记忆编数。
 
 ## 2. 环境与安装
@@ -38,7 +38,7 @@ python -m stock_kb index --model BAAI/bge-small-zh-v1.5       # 增量建向量�
 python -m stock_kb index --model BAAI/bge-small-zh-v1.5 --rebuild-chunks  # 按 chunk_size 重切；清空所有模型向量
 python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json
 python -m stock_kb indicators                       # 重算/写入财务指标
-python -m stock_kb reparse-statements --company 海底捞        # 从已存页文本重算三表（不重读 NAS）
+python -m stock_kb reparse-statements --company 海底捞        # 从已存页文本重算报表行项目（不重读 NAS）
 python tools/audit_notes.py                         # 审计两篇试点笔记数字与 DB 交叉验证（归母净利）
 python tools/run_eval_regression.py                 # freeze + diag + 路由/年份 + audit-report（无终稿则跳过，不是通过）
 python tools/run_eval_regression.py --write-baseline
@@ -56,6 +56,9 @@ python tools/backfill_ocr_quality.py                # 一次性：回填 OCR 噪
 python tools/reprocess_reports.py <report_id...>    # 定向重扫指定文档（读 NAS，走 OCR 闸门）
 python tools/diag_semantic_pages.py                # 语义题四列名次（块序/页名次/短语页名次/短语页块序），复现官方前 5
 python tools/diag_needle_coverage.py               # 实体词语料覆盖度校准；剥词表改动后必跑，全绿才合并预检
+python tools/build_status_items.py                 # 按最新评测重建 docs/status/items.js（现状页逐题判定）；--dry-run 只看差异
+python tools/make_demo_db.py --docs 8              # 导出可公开的 demo 小库到 demo/（别人不用 NAS 也能跑）
+python tools/audit_semantic_gt.py                  # 审计 freeze 语义题 GT：短语是否在对照页上、分散度、摘录
 ```
 
 MCP 联调：
@@ -68,6 +71,52 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 ```
 
 `scan` 会访问 NAS，较重且沙箱内可能需要提权；除非用户明确要求或确需验证扫描逻辑，不要跑全量 `scan`。全部 CLI 子命令见 `stock_kb/cli.py`。
+
+### 3.1 回归门禁速查（2026-10-30 起，10-31 复跑一致）
+
+权威定义在 `tools/run_eval_regression.py` 顶部常量；口径说明在 `eval/EVAL_SYSTEM.md` §5 与 `eval/METRICS_CONTRACT.md` §1。**改任何检索/解析/生成代码后跑一次，红了先看是哪一项。**
+
+| 段 | 检查 | 门槛 | 2026-10-31 实测 |
+|---|---|---|---|
+| `[fts]` | keyword Recall@5 / Neg@5 | ≥0.75 / ≤0.65 | 1.00 / 0.00 |
+| `[hybrid]` | semantic Recall@5 / Neg@5 | ≥0.85 / ≤0.20 | **0.60（12/20）未过** / 0.00 |
+| `[hybrid]` | keyword Neg@5 | ≤0.20 | 0.045 |
+| `[fts]`/`[hybrid]` | 结构化 hit / n | 29 / 29 | 29 / 29 |
+| `[fts]`/`[hybrid]` | 结构化 parse_hit / page_match / source_match | 29 / 29 / 29 | 29 / 29 / 29 |
+| `[fusion_retention]` | 融合保留率（FTS 已中的关键词题里 hybrid 仍中的比例） | ≥0.85 | 1.00（22/22） |
+| `[hybrid_short_circuit]` | 6 条 <6 字短查询：FTS 有命中必须短路且逐页一致；FTS 为空才允许兜底融合 | 0 异常 | 通过 |
+| `[fts_diag]` | indicator.hit / no_answer.empty_rate | 12 / ≥0.75 | 12/12 / 1.00 |
+| `[hybrid_diag]` | no_answer.empty_rate | ≥0.75 | 0.875 |
+| `[route]` | accuracy / n | =1.0 / 24 | 1.00 / 24 |
+| `[year_filter]` | precision_mean / empty | ≥0.60 / =0 | 1.00 / 0 |
+| `[audit_notes]` | fail_count / number_accuracy / orphan_rate / citation_precision | 0 / ≥0.95 / ≤0.10 / ≥0.95 | 0 / 0.988 / 0.012 / 0.957 |
+| `[audit-report]` | 终稿出处审计 | 0 失败 | 17 份全缺 `run_id`，记 **PASS (audit unverified)** |
+
+两种失败性质不同，修法也不同：
+
+- **G3（semantic 0.60）是能力缺口**：真语义题没召回到对照页，要靠检索改造或换模型，不是调参。剩余 8 道里 5 道是「文档找对了、页找错了」，但页级重排已试无效（§12），主攻方向是换重排器/embedding 或做章节索引，不是换架构。
+- **融合保留率**：2026-10-30 已从 0.455 修到 1.00，见下面的「查询意图分派」。根因不是 RRF 权重，是**全局重排把精确命中压掉了**。
+
+### 3.2 查询意图分派（2026-10-30）
+
+`stock_kb/vector.py` 的 `INTENT_PROFILE` 按问句形态决定融合权重与是否重排。倍率乘在调用方传入的 `fts_weight` / `vec_weight` 上，默认基准仍为 1.0。
+
+| 意图 | 判定 | fts | vec | rerank |
+|---|---|---|---|---|
+| `numeric` | 剥掉四位年份后仍含具体数值（`3.9次`、`15,776`、`2.8%`） | 3.0 | 0.5 | 关 |
+| `term` | 命中科目术语表（已付股息、资本开支、客单价、翻台率、肩并肩…） | 2.0 | 0.8 | 关 |
+| `narrative` | 含疑问词（为什么/哪种/多少/是不是…）且无具体数值 | 0.6 | 1.6 | 开 |
+| `neutral` | 其余，或数值与疑问词同时出现（保守不偏袒） | 1.0 | 1.0 | 开 |
+
+**为什么重排要按意图关掉**：实测 22 道关键词题，重排关时 19/22 命中，重排开只剩 8/22；语义题正相反（关 7/20，开 9/20）。交叉编码器只看命中文本块，会把「年报 p19 有精确数字」这种页判给研报长块。所以 `numeric`/`term` 不做重排，`narrative`/`neutral` 保持。
+
+实测效果：hybrid keyword Recall@5 **0.455 → 1.00**，total 0.479 → 0.729，融合保留率 **0.455 → 1.00**；semantic 0.60 不变（叙述型仍走重排）。
+
+调参只改这张表，改完必须跑 `run_eval_regression.py`，同时看 G1、G3、融合保留率，并确认 Neg@5 没被放大（当前 keyword Neg@5 = 0.045）。`classify_query_intent()` 只决定排序，不参与过滤，判错不会让结果为空。
+
+`[gate_coverage]` 会打印 `已设门 / 显式跳过 / 未分类` 三个数。**未分类必须为 0**：新增一个 recall / empty_rate / accuracy 类指标却没配门，或没登记跳过理由，它会直接把 RESULT 打成 FAIL。排序类指标（Hit@1 / MRR / nDCG / Precision@k / Neg@1）只展示，不进覆盖统计。
+
+`[flips vs baseline]` 只打印翻题。基线是 2026-09-13 的，题集 SHA 已变（`a4349cd2b893` → `2f4f07f5acb8`），**翻红翻绿不可读成退化/进步**；要让它重新有意义，得先让门禁全绿再 `--write-baseline`。
 
 ## 4. 目录与模块职责
 
@@ -83,13 +132,13 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 | `stock_kb/retrieval_log.py` | 只读查询旁路日志 `retrieval_log.jsonl` |
 | `stock_kb/audit_report.py` | 终稿出处、run_id 日志和事实清单 |
 | `stock_kb/classify.py` | 按文件名/目录分类文档类型、语言、年份 |
-| `stock_kb/parsers/pdf_parser.py` | PDF 页文本提取、OCR 兜底、三表按行解析 |
+| `stock_kb/parsers/pdf_parser.py` | PDF 页文本提取、OCR 兜底、报表行项目按行解析 |
 | `stock_kb/parsers/xls_parser.py` | 旧版 `.xls` 矩阵读取 |
 | `stock_kb/textutil.py` | 繁体→简体归一化（opencc t2s，带进程级缓存） |
 | `stock_kb/search.py` | FTS5 检索、统计 |
 | `stock_kb/vector.py` | 分块、多后端 embedding、sqlite-vec 索引、向量/混合检索 |
-| `stock_kb/indicators.py` | 从三表行项目计算基础指标并写 `indicators` 表 |
-| `stock_kb/reparse.py` | 从 `pages` 表重新提取三表，无需重新读 PDF |
+| `stock_kb/indicators.py` | 从报表行项目计算基础指标并写 `indicators` 表 |
+| `stock_kb/reparse.py` | 从 `pages` 表重新提取报表行项目，无需重新读 PDF |
 | `stock_kb/eval_runner.py` | 评测问题集执行、评分、报告输出 |
 | `stock_kb/route.py` | skill 规则：问句 → 工具（indicators / statements / search / no_answer） |
 | `stock_kb/note_builder.py` | 按 skill 顺序组稿可审计笔记（无 LLM） |
@@ -102,6 +151,7 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 | `stock_kb/serve/mcp_server.py` | FastMCP 服务：8 个只读工具（含 `route_query`）+ HTTP Bearer 鉴权 |
 | `tools/` | 一次性/运维脚本（审计、检查、迁移、下载模型、生成人工复核底稿） |
 | `eval/` | `questions.yaml` 评测集、`EVAL_SYSTEM.md` 回归测试门槛、`METRICS_CONTRACT.md` 目标到门槛、`reports/` 历史评测报告、人工审核表 |
+| `demo/` | 可公开的 8 份文档小库 + 配套题集 + `config.demo.yaml`：`STOCK_KB_CONFIG=demo/config.demo.yaml` 即可跑，不依赖 NAS。库文件入库，`demo/eval/` 与 `demo/runtime/` 是运行时产物、不入库 |
 | `data/` | SQLite 库、出处 JSON（`meta/`）、下载原文（`raw/`）、日志、pid 文件（运行时产物） |
 | `models/` | Hugging Face 模型缓存（运行时产物） |
 | `skill/stock-collect/` | 收集 skill：发现财报、电话会、研报直链并调用 `fetch` |
@@ -135,9 +185,9 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 1. `scan` 遍历 `nas.root/<company>` 和 `collect.raw_dir/<company>`，仅处理 `.pdf/.xls/.html/.htm/.csv/.txt/.md`，跳过 `nas.exclude_dirs`。文件留在原处，不互拷。`scan` 对 NAS 和 `raw_dir` 都只读。出处 JSON 在 `collect.meta_dir`（默认 `data/meta/{origin}/{公司}/{相对路径}.source.json`）：`fetch` 写网络文件，`scan` 给 NAS 和网络文件都更新。先读 `meta_dir`，没有则读原文旁旧 sidecar。`source_url` 与 `retrieved_at` 写入 `reports`，`origin` 为 `nas` 或 `collect`。查询目录是 `reports`。
 2. `manifest` 按路径 + SHA-256 判断是否已处理；未变化则跳过，`--rebuild` 强制重解析。
 3. PDF：pdfplumber 逐页提文本；文本量低于 `ocr.min_chars` 的页走 tesseract OCR 兜底；随后繁体转简体存 `pages.content`，原文存 `pages.content_orig`。
-4. 三表：按报表页标题定位（前 10 行内），按「行标签 + 行尾数字」解析（独立短横「–」视为零值列参与对齐，不产生行项目），不依赖 `extract_tables()`（港股双栏表格会错位）。
+4. 报表行项目：按报表页标题定位（前 10 行内），按「行标签 + 行尾数字」解析（独立短横「–」视为零值列参与对齐，不产生行项目），不依赖 `extract_tables()`（港股双栏表格会错位）。
 5. 页文本同步写入 `pages_fts`（FTS5 trigram 分词，短于 3 字的查询走 `LIKE` 兜底）。
-6. 向量：`pages.content` 按行合并成约 800 字/块写入 `chunks`（`embedding.chunk_size`）；`index` 用指定模型嵌入未索引块。`--rebuild` 只删当前模型向量；`--rebuild-chunks` 重切页面并清空**所有**模型索引（chunk_id 会变）。400 字块已在 diag 试过，freeze hybrid semantic 从 0.10 掉到 0.05，未采用（该结论测于实体硬过滤生效期，见 process-log 第 59 条，重切块前需重估）。查询侧对 bge-*-zh-v1.5 加检索指令前缀（`vector._query_embed_text`，bge-m3 不加）；`vector_search` 入口做库外实体预检（`search.entity_words` 名词连续段全 0 命中则空），实体命中不再过滤候选；`hybrid_search` 整句 FTS 为空时按备用查询名单（`_FALLBACK_QUERY_TERMS`，初值仅「突破」）重查 FTS 分路，内部候选 50 页；`embedding.rerank`（默认开）时对融合候选前 50 页按命中文本块用 bge-reranker-base 重排，重排名次与融合名次再做一次 RRF、不整序替换——纯重排整序会把已命中的页挤出前 5；同文件邻页候选锚定「向量第 1 名」文档，查询侧改动会移动锚点。
+6. 向量：`pages.content` 按行合并成约 800 字/块写入 `chunks`（`embedding.chunk_size`）；`index` 用指定模型嵌入未索引块。`--rebuild` 只删当前模型向量；`--rebuild-chunks` 重切页面并清空**所有**模型索引（chunk_id 会变）。400 字块已在 diag 试过，freeze hybrid semantic 从 0.10 掉到 0.05，未采用（该结论测于实体硬过滤生效期，见 process-log 第 59 条，重切块前需重估）。查询侧对 bge-*-zh-v1.5 加检索指令前缀（`vector._query_embed_text`，bge-m3 不加）；`vector_search` 入口做库外实体预检（`search.entity_words` 名词连续段全 0 命中则空），实体命中不再过滤候选；`hybrid_search` 整句 FTS 为空时按备用查询名单（`_FALLBACK_QUERY_TERMS`，初值仅「突破」）重查 FTS 分路，内部候选 50 页；`embedding.rerank`（默认开）时对融合候选前 50 页按命中文本块用 bge-reranker-base 重排，重排名次与融合名次再做一次 RRF、不整序替换——纯重排整序会把已命中的页挤出前 5；**但 `numeric` / `term` 意图不重排**（见 §3.2，重排会把精确命中判给研报长块）。同文件邻页候选锚定「向量第 1 名」文档，查询侧改动会移动锚点。
 7. `indicators` 从 `statements` 行项目关键词匹配提取收入/净利/资产等，再派生毛利率、净利率、ROE。`net_profit` 是归母（港股「本公司拥有人应占」，美国 `Net income — Yum China Holdings`），不是年内溢利合计。挑选顺序：当年干净页 → 干净比较列 → 当年 OCR=1 且与比较列一致（无比较列则用 OCR）。`source_kind` 为 `own_year` / `comparative` / `ocr_own` / `derived`。OCR=2 永不入选。
 8. MCP 以 `mode=ro` 打开 SQLite，只暴露只读工具（含 `route_query`）；HTTP 传输外包 Starlette 中间件做 Bearer 鉴权。`get_financial_statements(year=)` 默认当年年报正文。
 9. `stock-collect` 先 `scan` NAS，用 `stats` 看缺口，再找直链并 `fetch`，然后 `scan` 收进新文件。`stock-note` 在设置 `STOCK_KB_RUN_ID` 后查数写稿，再 `audit-report`。查询日志不进 SQLite。
@@ -152,7 +202,7 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 | `reports` | 文档元数据，`path` 唯一，`origin` 为 `nas`/`collect`，`status` 生命周期 pending/parsing/ok |
 | `pages` | 每页文本；`content` 为简体索引用，`content_orig` 为原文引用用 |
 | `pages_fts` | FTS5 虚拟表，与 `pages` 一对一镜像 |
-| `statements` | 三表行项目；数值未换算（海底捞 `千元/CNY`，百胜 `百万美元/USD`） |
+| `statements` | 报表行项目，含利润表 / 资产负债表 / 现金流量表 / 权益变动表四类（不止「三表」）；数值未换算（海底捞 `千元/CNY`，百胜 `百万美元/USD`） |
 | `indicators` | 指标值，`(company, year, period_type, name)` 唯一；`source_kind` 为 own_year / comparative / ocr_own / derived |
 | `sources` | 统一来源引用表，**目前未填充**（MCP 现场拼 locator） |
 | `manifest` | 扫描清单：路径 + SHA-256 + 状态 |
@@ -195,7 +245,7 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 
 ### 修改解析器或分块逻辑
 
-1. 用 `python -m stock_kb reparse-statements --company <公司>` 验证三表提取（不重读 NAS）；
+1. 用 `python -m stock_kb reparse-statements --company <公司>` 验证报表行项目提取（不重读 NAS）；
 2. 页面文本变化时跑 `scan --company <公司> --limit 1` 或单文件脚本验证；
 3. 分块逻辑变化时：备份 DB → 改 `embedding.chunk_size` → `index --rebuild-chunks`（会清空所有模型）→ `python tools/run_eval_regression.py`；不劣化才能留下。`--rebuild` 不会重切 chunks。
 4. 对比 `eval/reports/` 历史基线与当前差异，不劣化才能收尾。
@@ -233,7 +283,7 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 - [ ] `python tools/run_eval_regression.py` 跑通（门槛见 `eval/EVAL_SYSTEM.md` §5；含 `audit_notes.py`）；
 - [ ] 涉及 MCP 时 `tools/test_mcp_http.py` 通过（stdio 与 HTTP 至少各验证一次）；
 - [ ] 输出路径、环境变量、新增命令已写进文档。
-- [ ] 已查看 `docs/status/index.html`。本次改动若改变了页里已写的实现、查询、门槛、实测、逐题判定或后续工作，已同步修改；没有对应内容则不必改页。
+- [ ] 已查看 `docs/status/index.html`。本次改动若改变了页里已写的实现、查询、门槛、实测、逐题判定或后续工作，已同步修改；没有对应内容则不必改页。**逐题判定用 `python tools/build_status_items.py` 重建，不要手改 `docs/status/items.js`**——它的静态字段从旧文件继承，动态字段按最新四份报告重算。
 
 ## 11. 已知陷阱速查（详见 docs/process-log.md）
 
@@ -247,13 +297,13 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 - 模型缓存后仍可能联网：离线环境变量必须在相关库 import 之前设置。
 - `mcp` 锁定 1.x；`streamable_http_app()` 路径默认 `/mcp`；客户端 header 通过 `httpx.AsyncClient` 传。
 - `data/*.pid` 与 `*.log` 是历史后台任务产物，不要据 pid 文件假设进程状态。
-- 三表英文行名两套形态：美版常无空格（`Cashdividendspaidoncommonstock`/`Capitalspending`），港版有空格；`db._STATEMENT_ALIASES` 的 needle 要同时覆盖 `line_name_norm`（instr 区分大小写）与 `lower(line_name_orig)` 两条路径。
+- 报表行项目的英文科目名两套形态：美版常无空格（`Cashdividendspaidoncommonstock`/`Capitalspending`），港版有空格；`db._STATEMENT_ALIASES` 的 needle 要同时覆盖 `line_name_norm`（instr 区分大小写）与 `lower(line_name_orig)` 两条路径。
 - 港股年报用独立短横「–」表示零值列：解析器按 `CELL_RE` 对齐，短横列不产生行项目；真零值年份在图上留洞是诚实表现，不要补数。
-- 指标缺口的根因要先查三表行名再改规则：两家公司无「毛利」行属报表格式（详见 `eval/data_gaps.md`），不要自造口径硬算；海底捞总资产已用「资产总额减流动负债 + 流动负债小计」组合口径修复（`indicators._haidilao_total_assets`），改报表页识别或小计逻辑时必须重跑 30 期勾稽。
+- 指标缺口的根因要先查报表行项目的科目名再改规则：两家公司无「毛利」行属报表格式（详见 `eval/data_gaps.md`），不要自造口径硬算；海底捞总资产已用「资产总额减流动负债 + 流动负债小计」组合口径修复（`indicators._haidilao_total_assets`），改报表页识别或小计逻辑时必须重跑 30 期勾稽。
 - 中报标题 `Condensed …`、百胜早期 10-K `Consolidated and Combined …`：报表页识别先剥前缀/后缀再整行精确匹配，新报告类型标题先查 `_STATEMENT_TITLE_TYPES` 是否覆盖。
 - OCR 有两道闸门：触发看 `(cid:` 密度（不只 char_count），输出要过质量校验（长度+有效占比），失败置 `is_ocr=2`。`statements.is_ocr` 与页一致（0/1/2）。`query_statements` 默认排除 OCR（`include_ocr=True` 才返回）。指标按当年干净页 → 比较列 → 当年 OCR=1 质量门提升，OCR=2 永不入选；不要把过滤整档关掉。OCR=1 页若标签块和数字块上下分离，解析器按行序配对。tesseract 报「找不到 traineddata」时解析器会自动推导 tessdata 目录（见 `pdf_parser._tessdata_env`）。
 - 港股双语表折行发生在 pdfplumber 视觉行，不是向量 `chunk_size`。小节标题只允许资产负债表白名单；`June 30, December 31,` 当表头 junk；行尾「的/及/金融/預/資/負」与下半句拼接，拼不回的短残片丢弃。改胶水后用 `reparse-statements`，不必重扫 NAS。
-- 检索行为约定：见 `docs/report-system.md`「混合检索」。`hybrid_search` 在归一化后长度小于 6 且 FTS 有命中时不融合；长度达到 6，或短查询 FTS 为空，才按页做 RRF。实体约束硬过滤已于 2026-10-25 拆除（docs/retrieval-fix-plan-20261025.md）：无答案安全走 `entity_words` 库外实体预检，noans-006（瑞幸在库）会返回页属预期、是 7/8 里用掉的那 1 题；改剥词表后必须重跑 `tools/diag_needle_coverage.py`，freeze+diag 语义/跨语言零误空、noans 5 题可判空，全绿才算数。备用查询名单只含「突破」，扩词前先重测 002/005。CLI 默认只做 FTS；MCP `search_reports` 默认 FTS，零命中才升级。FTS 无年份问句有 1.5%/年的新近度软排序（打散跨年份重复页并列，改动幅度前先跑 G1/G2）；检索引用格式与 MCP locator 统一为 `《title》第N页`，审计正则只认此格式。标题含「清单」或「清單」的目录文件不进当前使用文档。
+- 检索行为约定：见 `docs/report-system.md`「混合检索」。`hybrid_search` 在归一化后长度小于 6 且 FTS 有命中时不融合；长度达到 6，或短查询 FTS 为空，才按页做 RRF。实体约束硬过滤已于 2026-10-25 拆除（docs/retrieval-fix-plan-20261025.md）：无答案安全走 `entity_words` 库外实体预检，noans-006（瑞幸在库）会返回页属预期、是 7/8 里用掉的那 1 题；改剥词表后必须重跑 `tools/diag_needle_coverage.py`，freeze+diag 语义/跨语言零误空、noans 5 题可判空，全绿才算数。备用查询名单只含「突破」，扩词前先重测 002/005。CLI 默认只做 FTS；MCP `search_reports` 默认 FTS，零命中才升级。**短查询短路与兜底两条分支由 `[hybrid_short_circuit]` 用 6 条 <6 字查询做一致性断言守着**（FTS 有命中时 hybrid 必须逐页相同且 `hybrid_fused=False`）；改 `hybrid_search` 的短路条件必须同步改那张 `SHORT_CIRCUIT_QUERIES` 表，否则测试会失真。融合是否挤掉精确命中看 `[fusion_retention]`（分母是 FTS 已命中的关键词题）。**融合权重与重排开关按查询意图分派**，见 §3.2：`numeric`/`term` 类加权 FTS 并关掉重排，`narrative`/`neutral` 保持向量 + 重排。改这部分必须同时验证 G1、G3、融合保留率与 keyword Neg@5 四个数。FTS 无年份问句有 1.5%/年的新近度软排序（打散跨年份重复页并列，改动幅度前先跑 G1/G2）；检索引用格式与 MCP locator 统一为 `《title》第N页`，审计正则只认此格式。标题含「清单」或「清單」的目录文件不进当前使用文档。
 - 市场只看文件名和标题，不看父目录。文件名含年报、年度报告、中报、中期报告 → HK；文件名含 Annual Report 且还没有港股标记 → US。不要用 `reclassify` 改语言。扫描结束会 `refresh_logical_keys`，不重读 PDF。路由年份上界是该公司当前使用文档的最大年；`route()` 未传入上界时只拒绝 1999 及更早。
 - `tools/test_mcp_http.py` 已内置 30s 超时与 `trust_env=False`：系统代理会劫持 127.0.0.1、httpx 默认 5s 超时扛不住冷启动加载 sqlite-vec。
 
@@ -261,8 +311,15 @@ python -m stock_kb eval-embed --base BAAI/bge-small-zh-v1.5 --challenger <新模
 
 > 2026-08-16 自动修复后的最新状态见 `docs/fix-record-20260816.md`；2026-09-13 数据/审计轮次见 `eval/data_gaps.md` 与 `docs/process-log.md` 45–47 条；以下只列仍未完成或需要人工的事项。
 
-- 评测现状见 `eval/EVAL_PLAN.md`。`indicators.net_profit` 已改为归母；no_answer 带引擎健康哨兵（engine_error 不计入 empty_rate）。问句带年份时检索硬过滤 `reports.year`；三表 `year=` 默认当年正文且默认排除 OCR 行、未指定 `period_type` 时只取年报。路由 24/24；组稿 faithful_rate=1.0（含趋势句口径一致性自检）。freeze hybrid semantic Recall@5 在语义题改为单事实换说法后为 0.30（6/20）。2026-10-24 起门槛按企业知识库单事实召回的常用起点定为 ≥ 0.85，这次实测未过。真语义/跨语言仍是 diag 盲区（已扩英文+中报题；2026-10-04 加 freeze exact-021–023 后题集 159 道；2026-10-07 关键词改为 22 道单点事实，语义召回改为 20 道单事实，题集 161 道，其中 48 diag）。行情走 `python -m stock_kb quote`，不入库；TTM 已能用中报拼 `interim_plus_stub`。
-- 扫描报告数据面：中报三表、百胜 2016–2018、海底捞总资产、折行残片均已修复；OCR 指标分层已落地（2017 五个核心仍标 comparative）。剩余缺口（两家无毛利率序列、分部收入未结构化、美/港双版本 canonical）见 `eval/data_gaps.md` 待办。
+- 评测现状见 `eval/EVAL_PLAN.md`。`indicators.net_profit` 已改为归母；no_answer 带引擎健康哨兵（engine_error 不计入 empty_rate）。问句带年份时检索硬过滤 `reports.year`；报表行项目 `year=` 默认当年正文且默认排除 OCR 行、未指定 `period_type` 时只取年报。路由 24/24；组稿 faithful_rate=1.0（含趋势句口径一致性自检）。freeze hybrid semantic Recall@5 在语义题改为单事实换说法后为 0.30（6/20），2026-10-25 拆实体约束 + 上 bge-reranker-base 后到 **0.60（12/20）**，2026-10-30 复跑逐位一致；门槛自 2026-10-24 起为 ≥ 0.85，仍未过。真语义/跨语言仍是 diag 盲区（已扩英文+中报题；题集 2026-10-07 起 161 道，其中 48 道 diag）。行情走 `python -m stock_kb quote`，不入库；TTM 已能用中报拼 `interim_plus_stub`。
+- **2026-10-30 门禁扩项**（细节见 §3.1）：补 `structured.parse_hit/page_match/source_match`、`hybrid.keyword.Neg@5`、`year_filter.empty`、生成层三项（number_accuracy / orphan_rate / citation_precision）、`[fusion_retention]`、`[hybrid_short_circuit]` 与 `[gate_coverage]`。起因是 `hybrid.keyword.Recall@5` 长期只算不卡（0.455），而它在同一题集上对应 FTS 1.00——融合净损 12 题、零增益。同一轮发现 `<6` 字短路与 FTS 零命中兜底两条分支此前**没有任何题目覆盖**（22 道关键词题最短 11 字，全部走融合），已用 6 条短查询的一致性断言补上，不改题集、不动 GT。
+- **2026-10-30 查询意图分派**（规则见 §3.2）：hybrid keyword Recall@5 **0.455 → 1.00**，融合保留率 **0.455 → 1.00**，total 0.479 → 0.729，semantic 0.60 不变。根因是全局 rerank 而非 RRF 权重——同一批关键词题，重排关时 19/22 命中，重排开只剩 8/22；语义题相反（关 7/20，开 9/20）。现在 `numeric`/`term` 关重排并加权 FTS，`narrative`/`neutral` 保持向量 + 重排。
+- **2026-10-30 换模否决**：`eval-embed`（n=54）显示 bge-m3 的 vector@50 从 0.370 到 0.481、miss 34→28，四项分桶全面变好，但 Wilson 区间重叠判 `lean_better`；补跑 freeze 后 semantic 0.60→**0.70**、keyword **1.00→0.909**、total 不变。拿已绿的门换仍不达标的门是净亏，默认模型保持 `BAAI/bge-small-zh-v1.5`。**换模前必须看目标引擎 freeze 的净效果，不能只看 vector@50。**
+- **2026-10-31 换重排器否决（三个都试完）**：freeze semantic 是 base **0.60** > large 0.55 > v2-m3 0.50，耗时 96 / 132 / 242 秒。三者分数分布宽度不同（base 0.36–0.89、large 0.44–0.97、v2-m3 0.79–0.95），分布越平，二次 RRF 里名次越挤。已回滚，`embedding.reranker_model` 保持 `bge-reranker-base`；`get_reranker(cache_dir, model)` 已参数化，复现只改 config 一行。三个模型都留在 `models/`。
+- **2026-10-30 页级重排验证到上限（已回滚）**：语义 8 道失败里 5 道是「文档找对了、页找错了」，但扩邻页（±3→±5、前 5 名都扩）加邻页整页滑窗重排后召回仍 0.60，耗时 +5%。直接打分显示 `bge-reranker-base` 给错误页 p23 打 0.887、正确页 p27 打 0.528，是判别力上限，不是候选覆盖或文本截断问题。`hybrid_search` 的 rerank 段留了注释。embedding、页级重排、三个重排器都已否决，下一步只剩章节索引。
+- **2026-10-31 工程补齐**：`.github/workflows/ci.yml`（`compileall` + 132 项单测 + 门禁常量 sanity）；`demo/` 新增可复现小库（8 份文档 / 1,016 页 / 1,985 报表行 / 19 题 / 22 MB）与 `config.demo.yaml`，`STOCK_KB_CONFIG=demo/config.demo.yaml` 即可跑，不依赖 NAS，根 README 已加「快速开始」；`tools/build_status_items.py` 把现状页逐题判定改成按最新四份报告重建（不再手改 `items.js`）；`docs/report-system.md` 补同库三路对比——FTS 0.479 / 纯向量 0.354 / hybrid 0.729，证明必须按问句分派而非二选一。
+- 不设门的指标及理由登记在 `run_eval_regression.py` 的 `SKIPPED_METRICS`：跨语言（n=6）、total（分层不合成总 Recall）、FTS 的语义召回、hybrid 的 keyword 绝对召回（改由融合保留率表达）、freeze 的空 `no_answer`（n=0）。排序类指标一律只展示——n=20~22 时点估计会跳，且产品只要求 top-5 里有出处。
+- 扫描报告数据面：中报报表行项目、百胜 2016–2018、海底捞总资产、折行残片均已修复；OCR 指标分层已落地（2017 五个核心仍标 comparative）。剩余缺口（两家无毛利率序列、分部收入未结构化、美/港双版本 canonical）见 `eval/data_gaps.md` 待办。
 - 正式稿程序化审计已落地（`tools/audit_formal_notes.py`，接入回归测试；样张缺失时自动跳过），但 R1/R2/R11（判断段分布、心算复核）仍靠人工 rubric。
 - 两字查询已建 `pages_bigram_fts`，但 bigram 排序暂未启用（避免牺牲 keyword 基线），需独立评测集调权。
 - reranker / jina 对比未完成（可选）。

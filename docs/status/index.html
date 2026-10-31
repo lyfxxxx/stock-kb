@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>stock-kb 现状 · 2026-10-23</title>
+<title>stock-kb 现状 · 2026-10-30</title>
 <style>
   :root {
     --ink: #1c1917;
@@ -304,7 +304,7 @@
 
 <section id="now">
   <h2>库里现在有什么</h2>
-  <p>统计来自 2026-10-23 对本地库的只读查询。库文件最后写入是 2026-10-07。当前使用文档指非重复、status 为空或 ok、标题不含「清单」或「清單」的目录行。</p>
+  <p>统计来自 2026-10-30 对本地库的只读复核（数字与 2026-10-23 一致）。库文件最后写入是 2026-10-25。当前使用文档指非重复、status 为空或 ok、标题不含「清单」或「清單」的目录行。</p>
   <div class="grid">
     <div class="stat"><b>487</b><span>当前使用文档</span></div>
     <div class="stat"><b>18,926</b><span>页文本</span></div>
@@ -438,73 +438,82 @@
 
 <section id="metrics">
   <h2>各层门槛和实测</h2>
-  <p>三层不合成一个总 Recall。冻结回归测试看下面这些评测指标。题集 161 道，SHA-256 前缀 <code>2f4f07f5</code>。检索实测是 2026-10-23 当场跑的，没有写入 <code>eval/reports</code>。对不上的题在 <a href="#items">逐题判定</a>。</p>
-  <p class="lead">题集构成：冻结回归测试里 exact 23、keyword 22、semantic 20、cross 12、end2end 8、route 24、year_filter 4。诊断集里 indicator 12、no_answer 8、semantic 13、cross 15。诊断集里只有指标表对照和无答案卡住回归测试。</p>
+  <p>三层不合成一个总 Recall。冻结回归测试看下面这些评测指标。题集 161 道，SHA-256 前缀 <code>2f4f07f5</code>。下面所有数都来自 <b>2026-10-31 的完整回归实测</b>（15 项门禁，14 过 1 未过；与 10-30 逐位一致）。当天加入查询意图分派后，关键词召回从 0.455 提到 1.00、融合保留率从 0.455 提到 1.00；语义召回 0.60 与 10-25 一致，是唯一未过项。对不上的题在 <a href="#items">逐题判定</a>。</p>
+  <p class="lead">题集构成：冻结回归测试里 exact 23、keyword 22、semantic 20、cross 12、end2end 8、route 24、year_filter 4。诊断集里 indicator 12、no_answer 8、semantic 13、cross 15。诊断集里只有指标表对照和无答案卡住回归测试。排序类指标（Hit@1、MRR、nDCG、Precision@5、Neg@1）只展示，不设门槛：n=20~22 时点估计会跳，产品也只要求 top-5 里有出处。</p>
 
   <div class="card">
     <h3>越高越好的评测指标</h3>
     <p class="lead">深色条是实测。浅色轨道是 0 到 1。竖线是门槛。</p>
     <div class="svg-wrap">
-      <svg viewBox="0 0 720 340" width="720" height="340" role="img" aria-label="越高越好的评测指标，实测对照门槛">
+      <svg viewBox="0 0 720 380" width="720" height="380" role="img" aria-label="越高越好的评测指标，实测对照门槛">
         <g font-size="13" fill="#1c1917">
-          <text x="168" y="28" text-anchor="end">FTS 关键词召回</text>
-          <text x="168" y="62" text-anchor="end">hybrid 语义召回</text>
-          <text x="168" y="96" text-anchor="end">FTS 无答案空结果</text>
-          <text x="168" y="130" text-anchor="end">hybrid 无答案空结果</text>
-          <text x="168" y="164" text-anchor="end">路由准确率</text>
-          <text x="168" y="198" text-anchor="end">年份过滤</text>
-          <text x="168" y="232" text-anchor="end">结构化 29/29</text>
-          <text x="168" y="266" text-anchor="end">指标表 12/12</text>
-          <text x="168" y="300" text-anchor="end">页保真 23/23</text>
+          <text x="168" y="31" text-anchor="end">FTS 关键词召回</text>
+          <text x="168" y="65" text-anchor="end">hybrid 语义召回</text>
+          <text x="168" y="99" text-anchor="end">融合保留率</text>
+          <text x="168" y="133" text-anchor="end">FTS 无答案空结果</text>
+          <text x="168" y="167" text-anchor="end">hybrid 无答案空结果</text>
+          <text x="168" y="201" text-anchor="end">路由准确率</text>
+          <text x="168" y="235" text-anchor="end">年份过滤</text>
+          <text x="168" y="269" text-anchor="end">结构化 29/29</text>
+          <text x="168" y="303" text-anchor="end">指标表 12/12</text>
+          <text x="168" y="337" text-anchor="end">页保真 23/23</text>
         </g>
         <g fill="#e7e1d6">
-          <rect x="180" y="14" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="48" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="82" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="116" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="150" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="184" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="218" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="252" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="286" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="18" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="52" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="86" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="120" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="154" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="188" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="222" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="256" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="290" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="324" width="500" height="18" rx="3"></rect>
         </g>
         <g fill="#1f6b56">
-          <rect x="180" y="14" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="82" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="116" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="150" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="184" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="218" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="252" width="500" height="18" rx="3"></rect>
-          <rect x="180" y="286" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="18" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="86" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="120" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="154" width="438" height="18" rx="3"></rect>
+          <rect x="180" y="188" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="222" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="256" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="290" width="500" height="18" rx="3"></rect>
+          <rect x="180" y="324" width="500" height="18" rx="3"></rect>
+        </g>
+        <g fill="#9f3d32">
+          <rect x="180" y="52" width="300" height="18" rx="3"></rect>
         </g>
         <g stroke="#9a5b12" stroke-width="2">
-          <line x1="555" y1="12" x2="555" y2="34"></line>
-          <line x1="605" y1="46" x2="605" y2="68"></line>
-          <line x1="555" y1="80" x2="555" y2="102"></line>
-          <line x1="555" y1="114" x2="555" y2="136"></line>
-          <line x1="680" y1="148" x2="680" y2="170"></line>
-          <line x1="480" y1="182" x2="480" y2="204"></line>
-          <line x1="680" y1="216" x2="680" y2="238"></line>
-          <line x1="680" y1="250" x2="680" y2="272"></line>
-          <line x1="680" y1="284" x2="680" y2="306"></line>
+          <line x1="555" y1="16" x2="555" y2="38"></line>
+          <line x1="605" y1="50" x2="605" y2="72"></line>
+          <line x1="605" y1="84" x2="605" y2="106"></line>
+          <line x1="555" y1="118" x2="555" y2="140"></line>
+          <line x1="555" y1="152" x2="555" y2="174"></line>
+          <line x1="680" y1="186" x2="680" y2="208"></line>
+          <line x1="480" y1="220" x2="480" y2="242"></line>
+          <line x1="680" y1="254" x2="680" y2="276"></line>
+          <line x1="680" y1="288" x2="680" y2="310"></line>
+          <line x1="680" y1="322" x2="680" y2="344"></line>
         </g>
         <g font-size="11" fill="#fffcf7" text-anchor="end">
-          <text x="668" y="27">1.00</text>
-          <text x="668" y="95">1.00</text>
-          <text x="668" y="129">1.00</text>
-          <text x="668" y="163">1.00</text>
-          <text x="668" y="197">1.00</text>
-          <text x="668" y="231">1.00</text>
-          <text x="668" y="265">1.00</text>
-          <text x="668" y="299">1.00</text>
+          <text x="668" y="31">1.00</text>
+          <text x="668" y="99">1.00</text>
+          <text x="668" y="133">1.00</text>
+          <text x="606" y="167">0.875</text>
+          <text x="668" y="201">1.00</text>
+          <text x="668" y="235">1.00</text>
+          <text x="668" y="269">1.00</text>
+          <text x="668" y="303">1.00</text>
+          <text x="668" y="337">1.00</text>
         </g>
-        <rect x="180" y="48" width="150" height="18" rx="3" fill="#9f3d32"></rect>
-        <text x="338" y="61" font-size="12" fill="#1c1917">0.30</text>
+        <g font-size="12" fill="#1c1917">
+          <text x="488" y="65">0.60</text>
+        </g>
         <g font-size="12" fill="#57534e">
-          <text x="180" y="328">0</text>
-          <text x="672" y="328" text-anchor="end">1</text>
-          <text x="400" y="328">竖线 = 门槛</text>
+          <text x="180" y="368">0</text>
+          <text x="672" y="368" text-anchor="end">1</text>
+          <text x="380" y="368">竖线 = 门槛；红条 = 未过</text>
         </g>
       </svg>
     </div>
@@ -514,16 +523,20 @@
     <h3>越低越好的负样本</h3>
     <p class="lead">条是前 5 条里出现难负样本的比例。竖线是允许的上限。</p>
     <div class="svg-wrap">
-      <svg viewBox="0 0 720 110" width="720" height="110" role="img" aria-label="负样本命中率对照上限">
-        <text x="168" y="32" font-size="13" text-anchor="end" fill="#1c1917">FTS 关键词 Neg@5</text>
-        <text x="168" y="70" font-size="13" text-anchor="end" fill="#1c1917">hybrid 语义 Neg@5</text>
+      <svg viewBox="0 0 720 148" width="720" height="148" role="img" aria-label="负样本命中率对照上限">
+        <text x="168" y="30" font-size="13" text-anchor="end" fill="#1c1917">FTS 关键词 Neg@5</text>
+        <text x="168" y="68" font-size="13" text-anchor="end" fill="#1c1917">hybrid 语义 Neg@5</text>
+        <text x="168" y="106" font-size="13" text-anchor="end" fill="#1c1917">hybrid 关键词 Neg@5</text>
         <line x1="180" y1="26" x2="680" y2="26" stroke="#e6dfd4"></line>
         <line x1="180" y1="64" x2="680" y2="64" stroke="#e6dfd4"></line>
+        <line x1="180" y1="102" x2="680" y2="102" stroke="#e6dfd4"></line>
         <circle cx="180" cy="26" r="5" fill="#1f6b56"></circle>
         <circle cx="180" cy="64" r="5" fill="#1f6b56"></circle>
+        <circle cx="203" cy="102" r="5" fill="#1f6b56"></circle>
         <line x1="505" y1="16" x2="505" y2="36" stroke="#9a5b12" stroke-width="2"></line>
         <line x1="280" y1="54" x2="280" y2="74" stroke="#9a5b12" stroke-width="2"></line>
-        <text x="180" y="96" font-size="12" fill="#57534e">实测都是 0。上限分别是 0.65 和 0.20。圆点画在 0。</text>
+        <line x1="280" y1="92" x2="280" y2="112" stroke="#9a5b12" stroke-width="2"></line>
+        <text x="180" y="134" font-size="12" fill="#57534e">实测 0.00、0.00、0.045。上限分别是 0.65、0.20、0.20。</text>
       </svg>
     </div>
   </div>
@@ -533,19 +546,23 @@
       <tr><th>层</th><th>评测指标</th><th>门槛</th><th class="num">实测</th><th>结果</th></tr>
     </thead>
     <tbody>
-      <tr><td>证据层</td><td>结构化 L1 / L3</td><td>29/29</td><td class="num">29/29</td><td class="ok">过</td></tr>
-      <tr><td>证据层</td><td>页保真</td><td>非 OCR 缺句则失败</td><td class="num">23/23 命中</td><td class="ok">过</td></tr>
-      <tr><td>证据层</td><td>覆盖矩阵</td><td>只展示</td><td class="num">本页未重跑</td><td class="show">只展示</td></tr>
-      <tr><td>知识库层</td><td>FTS keyword Recall@5</td><td>≥ 0.75</td><td class="num">1.00（22/22）</td><td class="ok">过</td></tr>
-      <tr><td>知识库层</td><td>FTS keyword Neg@5</td><td>≤ 0.65</td><td class="num">0.00</td><td class="ok">过</td></tr>
-      <tr><td>知识库层</td><td>hybrid semantic Recall@5</td><td>≥ 0.85</td><td class="num">0.60（12/20，2026-10-25 拆实体约束+重排后；此前 0.30）</td><td class="bad">未过</td></tr>
-      <tr><td>知识库层</td><td>hybrid semantic Neg@5</td><td>≤ 0.20</td><td class="num">0.00</td><td class="ok">过</td></tr>
+      <tr><td>证据层</td><td>结构化（L3 / L1 / 出处）</td><td>hit 29、parse 29、页码 29、来源 29</td><td class="num">29 / 29 / 29 / 29</td><td class="ok">过</td></tr>
+      <tr><td>证据层</td><td>页保真</td><td>非 OCR 缺句则失败</td><td class="num">23/23 命中</td><td class="show">只展示</td></tr>
+      <tr><td>证据层</td><td>覆盖矩阵</td><td>只展示</td><td class="num">海底捞 2018–2025 年报、2019–2026 中报全绿</td><td class="show">只展示</td></tr>
+      <tr><td>知识库层</td><td>FTS 关键词 Recall@5</td><td>≥ 0.75</td><td class="num">1.00（22/22）</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>FTS 关键词 Neg@5</td><td>≤ 0.65</td><td class="num">0.00</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>hybrid 语义 Recall@5</td><td>≥ 0.85</td><td class="num">0.60（12/20，2026-10-25 拆实体约束+重排后；10-30 复跑一致）</td><td class="bad">未过</td></tr>
+      <tr><td>知识库层</td><td>hybrid 语义 Neg@5</td><td>≤ 0.20</td><td class="num">0.00</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td>hybrid 关键词 Neg@5</td><td>≤ 0.20</td><td class="num">0.045</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td><b>融合保留率</b></td><td>≥ 0.85</td><td class="num">1.00（22/22）：意图分派后融合不再挤掉精确命中（改前 0.455 = 10/22）</td><td class="ok">过</td></tr>
+      <tr><td>知识库层</td><td><b>短查询短路一致性</b></td><td>0 异常</td><td class="num">6/6 通过：FTS 有命中时 hybrid 逐页相同且不融合；FTS 为空才允许兜底</td><td class="ok">过</td></tr>
       <tr><td>知识库层</td><td>指标表对照</td><td>12/12，容差 0.0001</td><td class="num">12/12</td><td class="ok">过</td></tr>
       <tr><td>知识库层</td><td>无答案 empty_rate</td><td>FTS、hybrid 都 ≥ 0.75</td><td class="num">FTS 1.00（8/8）；hybrid 0.875（7/8，瑞幸在库那题返回页，属预期）</td><td class="ok">过</td></tr>
       <tr><td>知识库层</td><td>路由 accuracy</td><td>1.0（24 题）</td><td class="num">1.00</td><td class="ok">过</td></tr>
-      <tr><td>知识库层</td><td>year_filter</td><td>≥ 0.60（4 题）</td><td class="num">1.00</td><td class="ok">过</td></tr>
-      <tr><td>报告层</td><td>组稿 faithful_rate</td><td>1.00，趋势句 0 处不一致</td><td class="num">1.00</td><td class="old">2026-09-13 存档</td></tr>
-      <tr><td>报告层</td><td>手写笔记审计</td><td>硬失败 0</td><td class="num">0</td><td class="old">2026-10-04 存档</td></tr>
+      <tr><td>知识库层</td><td>年份过滤</td><td>precision ≥ 0.60（4 题）；empty = 0</td><td class="num">1.00；empty 0</td><td class="ok">过</td></tr>
+      <tr><td>报告层</td><td>组稿 faithful_rate</td><td>1.00，趋势句 0 处不一致</td><td class="num">1.00</td><td class="ok">过</td></tr>
+      <tr><td>报告层</td><td>手写笔记审计</td><td>失败 0；数字准确 ≥ 0.95；无出处 ≤ 0.10；引用 ≥ 0.95</td><td class="num">0；0.988；0.012；0.957</td><td class="ok">过</td></tr>
+      <tr><td>报告层</td><td>终稿出处审计</td><td>0 失败</td><td class="num">17 份稿全缺 <code>run_id</code>，记 PASS (audit unverified)</td><td class="show">未验证</td></tr>
     </tbody>
   </table>
 
@@ -556,43 +573,45 @@
       <svg viewBox="0 0 720 168" width="720" height="168" role="img" aria-label="只展示的召回">
         <g font-size="13" fill="#1c1917">
           <text x="250" y="28" text-anchor="end">FTS 关键词分桶 22/22</text>
-          <text x="250" y="58" text-anchor="end">hybrid 关键词 21/22</text>
-          <text x="250" y="88" text-anchor="end">hybrid 语义分桶 6/22</text>
-          <text x="250" y="118" text-anchor="end">hybrid 跨语言 0/6</text>
-          <text x="250" y="148" text-anchor="end">诊断集语义 1/13</text>
+          <text x="250" y="58" text-anchor="end">hybrid 关键词 22/22</text>
+          <text x="250" y="88" text-anchor="end">hybrid 语义分桶 12/22</text>
+          <text x="250" y="118" text-anchor="end">hybrid 跨语言 2/20</text>
+          <text x="250" y="148" text-anchor="end">诊断集语义 2/13</text>
         </g>
         <g fill="#1f6b56">
           <rect x="262" y="14" width="420" height="16" rx="3"></rect>
-          <rect x="262" y="44" width="401" height="16" rx="3"></rect>
+          <rect x="262" y="44" width="420" height="16" rx="3"></rect>
         </g>
         <g fill="#c4a574">
-          <rect x="262" y="74" width="115" height="16" rx="3"></rect>
-          <rect x="262" y="134" width="32" height="16" rx="3"></rect>
+          <rect x="262" y="74" width="229" height="16" rx="3"></rect>
+          <rect x="262" y="134" width="65" height="16" rx="3"></rect>
         </g>
         <g fill="#9f3d32">
-          <rect x="262" y="104" width="4" height="16" rx="2"></rect>
+          <rect x="262" y="104" width="42" height="16" rx="3"></rect>
         </g>
-        <text x="262" y="164" font-size="12" fill="#57534e">满宽是 1。跨语言 0 画成短条。诊断集跨语言 hybrid 是 3/15。</text>
+        <text x="262" y="164" font-size="12" fill="#57534e">满宽是 1（420px）。关键词两路都已 22/22；跨语言用红条标出。</text>
       </svg>
     </div>
   </div>
   <ul>
-    <li><b>关键词题都进了融合。</b>显式 hybrid 时 22 道全部 <code>hybrid_fused</code>。FTS 是 22/22。融合后是 21/22，有 1 道掉出前 5。</li>
-    <li><b>语义召回已按 <code>docs/retrieval-fix-plan-20261025.md</code> 改造。</b>2026-10-25 拆实体约束（库外实体预检 + 备用查询名单 + 查询指令前缀）后 Recall@5 是 0.50，再上 bge-reranker-base 重排（重排名次与融合名次做 RRF、不整序替换）后是 0.60（12/20），返回空的题从 10 道降到 0 道；bge-m3+重排组合实测 0.70。门槛 0.85 仍未过，剩 003/007/009/017/019/004。下页逐题判定仍是 2026-10-23 快照。</li>
+    <li><b>关键词题全部进了融合，修复前是净损失。</b>22 道题面归一化后是 11–21 字，全部超过 6 字阈值，因此全部 <code>hybrid_fused=True</code>，<b>没有一题走短路</b>。修复前 FTS 22/22 全中、hybrid 只剩 10/22，逐题比对是「由中变不中 12 题、增益 0 题」。根因不是 RRF 权重，是<b>全局重排</b>：交叉编码器只看命中文本块，把「年报 p19 含精确数字」判给了研报长块。2026-10-30 加入查询意图分派后，数值型与术语型问句关掉重排并加权 FTS，keyword 回到 <b>22/22</b>，融合保留率 <b>1.00</b>。</li>
+    <li><b>重排对两类题的作用相反。</b>同一批关键词题，重排关时 19/22 命中、重排开只剩 8/22；语义题正相反（关 7/20、开 9/20）。所以规则按意图分派：<code>numeric</code>（剥掉年份后仍含具体数值）和 <code>term</code>（命中科目术语表）不重排、FTS 加权 3.0 / 2.0；<code>narrative</code>（含疑问词且无数值）保留重排、向量加权 1.6；<code>neutral</code> 维持 1:1。分类只影响排序，不参与过滤，判错不会返回空。</li>
+    <li><b>短路与兜底两条分支此前没有任何题目覆盖。</b>22 道关键词题最短 11 字，题集里 8 道 &lt;8 字的题全是 <code>route</code> 类型、不执行检索，所以 <code>len&lt;6</code> 短路和「FTS 零命中走向量兜底」长期是评测盲区。2026-10-30 起用 6 条短查询（翻台率、客单价、师徒制、阿米巴、肩并肩、资本开支）做<b>一致性断言</b>：FTS 有命中时 hybrid 必须逐页相同且 <code>hybrid_fused=False</code>，FTS 为空才允许兜底。不改题集、不动 GT，6/6 通过。</li>
+    <li><b>语义召回已按 <code>docs/retrieval-fix-plan-20261025.md</code> 改造。</b>2026-10-25 拆实体约束（库外实体预检 + 备用查询名单 + 查询指令前缀）后 Recall@5 是 0.50，再上 bge-reranker-base 重排（重排名次与融合名次做 RRF、不整序替换）后是 0.60（12/20），返回空的题从 10 道降到 0 道；bge-m3+重排组合实测 0.70。门槛 0.85 仍未过，剩 003/007/009/017/019/004。2026-10-30 复跑逐位一致。</li>
     <li><b>跨语言没有单独门槛。</b>冻结回归测试里纯检索 cross 是 6 道。FTS Recall@5 是 0.167。hybrid 是 0。</li>
     <li><b>向量筛选是旧诊断。</b>2026-08-30，<code>bge-small-zh</code> 在 44 道长句上 Recall@5 = 0.159，Recall@50 = 0.364，50 名内没有 28 道。这组数不进 G1–G11。今天没有重跑。</li>
     <li><b>两家都没有毛利行。</b>损益表不单列毛利。不自造毛利率。指标里也就没有这条序列。</li>
   </ul>
-  <div class="note">组稿 faithful_rate 和手写笔记审计用的是已保存的评测报告，不是今天重跑。页保真、FTS、hybrid、路由、年份过滤、结构化、指标表对照和无答案是今天对当前库和当前题集跑的。</div>
+  <div class="note">本页门槛表与逐题判定同源，都来自 2026-10-31 的评测：门槛表取自完整回归（15 项门禁 14 过 1 未过），逐题明细由 <code>tools/build_status_items.py</code> 按当天四份报告（FTS/hybrid × freeze/diag）重建。页保真不是回归门禁，最近一次仍是 23/23 存档。语义题的 GT 已于 2026-10-31 用 <code>tools/audit_semantic_gt.py</code> 复核：36 个「文档×页」对的验收短语全部命中，8 道失败题的实际 top5 无一含答案短语，<b>失败不是标注问题</b>，GT 与 0.85 门槛均未改动。</div>
 </section>
 
 <section id="items">
   <h2>逐题判定</h2>
-  <p>下面是题集里的 161 道。FTS 用了 1.1 秒，hybrid 用了 40.6 秒，模型是 <code>BAAI/bge-small-zh-v1.5</code>，top 5。默认只留下没过的题。评测指标按回归测试的那几项来分，选项里写着有几道未过。</p>
+  <p>下面是题集里的 161 道，<b>已按 2026-10-31 的评测重建</b>（FTS 0.7 秒、hybrid 94 秒，模型 <code>BAAI/bge-small-zh-v1.5</code>，top 5）。默认只留下没过的题。评测指标按回归测试的那几项来分，选项里写着有几道未过。</p>
   <p>检索题按页判定。《文件》第 N 页是对错单位。FTS 搜的是整页，摘录是命中附近的页文本。hybrid 先在约 800 字的文本块上找近邻，再收成页；选段是该页最近的一块。只考一路的题只列这一路。无答案要两路都空，所以两路都列。被 hybrid 挤出前 5 的那道关键词，两路都列。结构化、指标表对照和路由不列检索页。</p>
   <p>有页码的对照答案下面会列出三段页文本：答案所在段，以及它前面、后面各一段。文本取自当前库，用来和检索摘录对照。页上定位不到短语时，只列正文开头。</p>
   <p class="legend"><span class="swatch gold">对照</span>答案所在段及其前后文。<span class="swatch fts">FTS</span>整页与页内摘录。<span class="swatch hybrid">hybrid</span>按页排序，并附文本块选段。</p>
-  <p>结构化 29 道、指标表对照 12 道、路由 24 道、无答案 8 道、年份过滤 4 道、关键词的 FTS 22 道都对上了。对不上的有 53 道（2026-10-23 快照）：语义召回 14 道没有回到对照页，1 道关键词被 hybrid 挤出前 5，另外 38 道是只展示的检索未命中。语义整组 Recall@5 在 2026-10-25 改造后是 0.60，门槛 0.85，仍整组未过。组稿和手写笔记没有逐题清单。</p>
+  <p>结构化 29 道、指标表对照 12 道、路由 24 道、年份过滤 4 道全部对上；关键词 22 道 FTS 与 hybrid 都是 22/22；无答案 8 道里 7 道两路皆空（noans-006 瑞幸在库会返页，属预期）。<b>未过门槛的一共 9 道</b>：语义召回 8 道加 noans-006，与门槛表的 0.60、0.875 对得上。语义召回整组 Recall@5 是 0.60，门槛 0.85，整组未过。组稿和手写笔记没有逐题清单。</p>
   <div class="filters">
     <label>范围
       <select id="f-scope">
@@ -630,6 +649,7 @@
     <input id="f-q" type="search" placeholder="题号或问句">
     <span id="f-count"></span>
   </div>
+  <p class="lead">筛选器只列<b>可逐题判定</b>的指标，名称与上方门槛表一致。「融合保留率」在意图分派后已无掉出前 5 的题（22/22），选中时列表为空属正常。短查询短路一致性（6 条查询不在题集里）、页保真、覆盖矩阵、组稿 / 手写笔记 / 终稿审计不是逐题指标，不出现在筛选器里。「题型」下拉是题集分类（如「年份」），「评测指标」下拉是评测口径（如「年份过滤」），两者一一对应。</p>
   <div id="q-list"></div>
 </section>
 
@@ -644,7 +664,9 @@
       <tr><td>百胜 2017 的 OCR 页</td><td>五个核心指标仍是比较列。当年利润表和现金流页是 OCR=2，不能升成当年数。</td></tr>
       <tr><td>「股东」检索</td><td>这个词常打到章程条款页。收窄用词后，控股和持股比例更容易排到前面。</td></tr>
       <tr><td>两字排序</td><td><code>pages_bigram_fts</code> 已建。有结果时还没用它排序，避免把关键词基线打乱。要单独评测再开。</td></tr>
-      <tr><td>真语义和跨语言</td><td>冻结语义召回 0.30 → <b>0.50</b>（2026-10-25）。计划 <code>docs/retrieval-fix-plan-20261025.md</code> 的 P0–P4a 已落地：拆实体约束（库外实体预检 + 备用查询名单「突破」）、候选池 50 页、bge-small 查询指令前缀；bge-m3 判 lean_better 不换默认。P4b 重排器已落地（RRF 二次融合 + 前后两段打分 + 同文件邻页候选），G3 到 0.60；bge-m3+重排组合 0.70，换默认待 eval-embed 判 better。剩 003/007/009/017/019/004：003/017 是 base 重排器判别力上限（换 large/v2-m3 可试），019 邻页通道因指令前缀改变向量第 1 名而锚点漂移，009/004 在窗口外。004 留分母不指望。400 字分块旧结论受过滤干扰，重切块前重估。</td></tr>
+      <tr><td><b>重排器能力</b></td><td>语义题 8 道失败里 <b>5 道是「文档找对了、页找错了」</b>（003 期望 p27 实返 p23；017 招股书 p134→p130；015 差 11 页）。<b>页级重排（2026-10-30）</b>：邻页 ±3→±5、前 5 名都扩、整页滑窗，召回仍 0.60，已回滚——直接打分显示 base 给错误页 0.887、正确页 0.528。<b>更强重排器（2026-10-31）</b>：<code>bge-reranker-v2-m3</code>（2.27 GB）单题判别力确实变强（另一张正确页 0.358→0.851），但仍把错误页排第一；freeze semantic <b>0.60→0.50</b>、keyword 1.00 不变、耗时 <b>96→242 秒</b>，已回滚。原因是它的分数分布更平缓（0.79–0.95），与 RRF 二次融合不匹配。下一步只剩 <code>bge-reranker-large</code> 或章节索引。<br><span style="color:#57534e">已完成：融合权重与重排开关已按意图分派（keyword 0.455→1.00，融合保留率 0.455→1.00）。</span></td></tr>
+      <tr><td><b>门禁覆盖</b></td><td>2026-10-30 起 <code>[gate_coverage]</code> 会统计「已计算但未设门」的 recall / empty_rate / accuracy 类指标。新增指标既没门也没登记跳过理由时，RESULT 直接 FAIL。当前：已设门 6 项、显式跳过 8 项、未分类 0 项。</td></tr>
+      <tr><td>真语义和跨语言</td><td>冻结语义召回 0.30 → <b>0.60</b>（2026-10-25，10-30 复跑一致）。计划 <code>docs/retrieval-fix-plan-20261025.md</code> 的 P0–P4a 已落地：拆实体约束（库外实体预检 + 备用查询名单「突破」）、候选池 50 页、bge-small 查询指令前缀；bge-m3 判 lean_better 不换默认。P4b 重排器已落地（RRF 二次融合 + 前后两段打分 + 同文件邻页候选），G3 到 0.60。剩 003/007/009/017/019/004。400 字分块旧结论受过滤干扰，重切块前重估。<br><b>2026-10-30 换模已否决</b>：<code>eval-embed</code>（n=54）显示 m3 的 vector@50 从 0.370 到 0.481、miss 34→28，四项分桶全面变好，但 Wilson 区间重叠判 <code>lean_better</code>；补跑 freeze 后 semantic 0.60→<b>0.70</b>，而 keyword <b>1.00→0.909</b>、total 不变——拿已绿的门换仍不达标的门，净亏，默认模型保持不动。<br><b>段落级切块也已评估</b>：10 道失败题里 5 道答案块本就在全库前 50（瓶颈在页聚合），3 道块序 &gt;900（属模型能力），只有 2 道可能受益；而财报页按段落切会把表头和数据行拆散，风险大于收益，暂不做。</td></tr>
       <tr><td>判断段</td><td>R1、R2、R11 仍靠人工。回归测试只审数字、出处和必备节。观点层还不能批量放行。</td></tr>
       <tr><td>Docker 与 Hermes</td><td>库还在这台机器上。迁到 DXP-4800、接 Hermes 都还没开始。</td></tr>
       <tr><td><code>scan --watch-interval</code></td><td>开关已有。还没在真实新增文件上验过。</td></tr>
@@ -687,14 +709,14 @@
   };
   var ORDER = ["gate-miss", "hybrid-drop", "display-miss", "pass"];
   var EVALS = [
-    { key: "hybrid-semantic", label: "hybrid 语义 Recall@5", note: "门槛 ≥ 0.85", order: 1 },
+    { key: "structured", label: "结构化", note: "29 道：L3 命中 / L1 抽取 / 页码 / 来源 都要相符", order: 1 },
     { key: "fts-keyword", label: "FTS 关键词 Recall@5", note: "门槛 ≥ 0.75", order: 2 },
-    { key: "structured", label: "结构化", note: "29 道都要相符", order: 3 },
-    { key: "indicator", label: "指标表对照", note: "12 道都要相符", order: 4 },
-    { key: "no-answer", label: "无答案 empty_rate", note: "FTS 和 hybrid 都要空", order: 5 },
-    { key: "route", label: "路由 accuracy", note: "24 道都要相符", order: 6 },
-    { key: "year", label: "年份过滤", note: "门槛 ≥ 0.60", order: 7 },
-    { key: "hybrid-keyword", label: "hybrid 关键词", note: "只展示", order: 8 },
+    { key: "hybrid-semantic", label: "hybrid 语义 Recall@5", note: "门槛 ≥ 0.85", order: 3 },
+    { key: "hybrid-keyword", label: "融合保留率", note: "22/22 = 1.00，门槛 ≥ 0.85；意图分派后无掉出题", order: 4 },
+    { key: "indicator", label: "指标表对照", note: "12 道都要相符", order: 5 },
+    { key: "no-answer", label: "无答案 empty_rate", note: "FTS 和 hybrid 都要空", order: 6 },
+    { key: "route", label: "路由 accuracy", note: "24 道都要相符", order: 7 },
+    { key: "year", label: "年份过滤", note: "门槛 ≥ 0.60", order: 8 },
     { key: "diag-semantic", label: "诊断集语义", note: "只展示", order: 9 },
     { key: "cross", label: "跨语言检索", note: "只展示", order: 10 },
     { key: "end2end", label: "材料题", note: "只展示", order: 11 }

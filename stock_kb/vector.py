@@ -22,6 +22,90 @@ MODEL_DIMS: dict[str, int] = {
 CHUNK_SIZE = 800
 _EMBEDDER_CACHE: dict[tuple[str, str], object] = {}
 
+# 融合权重与重排开关按查询意图分派（2026-10-30）。对称的 1:1 对两类题都不合适：
+# 数值型问句里 FTS 的精确命中是强信号，向量分路会把研报长块顶上来；更关键的是
+# 交叉编码器重排会把已经精确命中的页压下去——实测 22 道关键词题，重排关时
+# 19/22 命中，重排开只剩 8/22。叙述型问句正相反：FTS 几乎不命中
+# （freeze 语义题 FTS Recall@5 = 0），向量与重排才是主力（关重排 7/20，开 9/20）。
+# fts / vec 是乘在调用方传入权重上的倍率，默认基准 1.0。
+# 调参只改这张表；改完必须跑 `python tools/run_eval_regression.py`，
+# 同时看 G1、G3、融合保留率三项，并确认 Neg@5 没被放大。
+INTENT_PROFILE: dict[str, dict[str, float | bool]] = {
+    "numeric": {"fts": 3.0, "vec": 0.5, "rerank": False},
+    "term": {"fts": 2.0, "vec": 0.8, "rerank": False},
+    "narrative": {"fts": 0.6, "vec": 1.6, "rerank": True},
+    "neutral": {"fts": 1.0, "vec": 1.0, "rerank": True},
+}
+
+# 叙述型信号：疑问/口语化标记。命中且不含具体数值时走向量。
+_NARRATIVE_MARKERS = (
+    "为什么",
+    "怎么",
+    "怎样",
+    "哪种",
+    "哪个",
+    "哪些",
+    "什么",
+    "是不是",
+    "如何",
+    "多少",
+    "凭什么",
+    "靠什么",
+    "还是",
+)
+
+# 术语型信号：财报/研报里的固定说法，FTS 精确匹配比向量可靠。
+_TERM_QUERY_WORDS = (
+    "已付股息",
+    "资本开支",
+    "客单价",
+    "翻台率",
+    "同店",
+    "门店",
+    "净增",
+    "肩并肩",
+    "肯悦咖啡",
+    "KCOFFEE",
+    "股息",
+    "营业收入",
+    "净利",
+    "毛利",
+    "总资产",
+    "经营现金流",
+    "减值",
+    "开店",
+    "闭店",
+    "加盟",
+)
+
+# 四位年份不算「数值型证据」，先剥掉再找数字。
+_YEAR_RE = re.compile(r"(?:19|20)\d{2}\s*年?")
+_NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)*\s*(?:%|次|家|元|亿|万|个|倍|间|人)?")
+
+
+def classify_query_intent(query: str) -> str:
+    """把问句分成 numeric / narrative / term / neutral。
+
+    只用来决定融合权重，不参与过滤。判错只影响排序，不会让结果为空。
+    """
+
+    text = search.normalize_query(query)
+    if not text:
+        return "neutral"
+    stripped = _YEAR_RE.sub(" ", text)
+    has_number = bool(_NUMBER_RE.search(stripped))
+    has_marker = any(word in text for word in _NARRATIVE_MARKERS)
+    if has_marker and not has_number:
+        return "narrative"
+    if has_number and not has_marker:
+        return "numeric"
+    if has_number and has_marker:
+        # 两类信号同时出现（如「2024 年回馈股东多少钱」），保守起见不偏袒。
+        return "neutral"
+    if any(word in text for word in _TERM_QUERY_WORDS):
+        return "term"
+    return "neutral"
+
 _BILINGUAL = (
     ("翻台率", "table turnover"),
     ("同店", "same-store"),
@@ -538,18 +622,26 @@ _FALLBACK_QUERY_TERMS = ("突破",)
 # 8.3 万字（网页电话会纪要），整页会占住近邻并拉高延迟。库外实体预检在
 # vector_search 入口、重排之前，无答案问句到不了这里。仅对有文本块的
 # 候选（向量腿命中）重排；纯 FTS/fallback 命中保序跟在后面。
-_RERANKER_MODEL = "BAAI/bge-reranker-base"
+DEFAULT_RERANKER_MODEL = "BAAI/bge-reranker-base"
+_RERANKER_MODEL = DEFAULT_RERANKER_MODEL
 _RERANK_WINDOW = 50
 _RERANK_MAX_CHARS = 480
 _RERANKER_CACHE: dict[str, Any] = {}
 
 
-def get_reranker(cache_dir: str | None):
+def get_reranker(cache_dir: str | None, model: str | None = None):
+    """按模型名加载交叉编码器；model 为空时用默认 base。
+
+    模型必须已在 cache_dir 里（`tools/download_models.py --model <ID>`），
+    加载走 `local_files_only=True`，不会联网。
+    """
+
     if not cache_dir:
         return None
-    key = f"{_RERANKER_MODEL}|{cache_dir}"
+    name = model or _RERANKER_MODEL
+    key = f"{name}|{cache_dir}"
     if key not in _RERANKER_CACHE:
-        if (Path(cache_dir) / "models--BAAI--bge-reranker-base").exists():
+        if (Path(cache_dir) / ("models--" + name.replace("/", "--"))).exists():
             os.environ["HF_HUB_OFFLINE"] = "1"
             os.environ["TRANSFORMERS_OFFLINE"] = "1"
         try:
@@ -558,7 +650,7 @@ def get_reranker(cache_dir: str | None):
             return None
         try:
             _RERANKER_CACHE[key] = CrossEncoder(
-                _RERANKER_MODEL,
+                name,
                 max_length=512,
                 cache_folder=cache_dir,
                 local_files_only=True,
@@ -633,8 +725,9 @@ def _rerank_fused(
     window: int = _RERANK_WINDOW,
     extra: list[dict[str, Any]] | None = None,
     seed_pos: int = _SIBLING_SEED_POS,
+    reranker_model: str | None = None,
 ) -> list[dict[str, Any]]:
-    ce = get_reranker(cache_dir)
+    ce = get_reranker(cache_dir, reranker_model)
     if ce is None or not items:
         return items
     # (候选, 融合名次)：窗口内名次即原序；邻页种子名次紧跟锚页之后
@@ -699,6 +792,7 @@ def hybrid_search(
     vec_weight: float = 1.0,
     rrf_k: int = 60,
     rerank: bool = False,
+    reranker_model: str | None = None,
 ) -> list[dict[str, Any]]:
     query = search.normalize_query(query)
     if not query:
@@ -725,6 +819,11 @@ def hybrid_search(
     # P2（docs/retrieval-fix-plan-20261025.md §5）：只加深内部候选页数，
     # 评测/回归的 top_k 仍是 5。FTS 分路为空时排序键不变，前 5 成员不变；
     # 目的是让 013/017/015/012 的含短语页（最近块序号 ≤500）进入重排输入。
+    intent = classify_query_intent(query)
+    profile = INTENT_PROFILE.get(intent, INTENT_PROFILE["neutral"])
+    fts_weight *= float(profile["fts"])
+    vec_weight *= float(profile["vec"])
+    use_rerank = bool(rerank and profile["rerank"])
     candidate_k = max(top_k * 4, 50)
     fts = search.fts_search(
         conn,
@@ -787,9 +886,12 @@ def hybrid_search(
         fused.values(),
         key=lambda x: (-x.get("_rrf", 0.0), x.get("score", 1e9)),
     )
-    if rerank:
+    if use_rerank:
         # 邻页锚点是「向量第 1 名」那份文档（计划 §7 4b），不是融合榜第 1：
         # 融合榜头常被 FTS 分路带上来的页占据，锚错文档邻页就全错。
+        # 2026-10-30 试过扩到「前 5 名各扩 ±5 页 + 整页滑窗全段重排」，
+        # 语义召回仍是 0.60：reranker 给错误页打分反而更高（p23 0.887 vs
+        # p27 0.528），是判别力上限，不是文本覆盖问题，已回滚。
         anchor = next(
             (it for it in ranked if it.get("vec_rank") == 1), ranked[0] if ranked else None
         )
@@ -798,7 +900,14 @@ def hybrid_search(
         if anchor is not None:
             extra = _sibling_candidates(conn, anchor)
             anchor_pos = ranked.index(anchor) + 1
-        ranked = _rerank_fused(query, ranked, cache_dir, extra=extra, seed_pos=anchor_pos + 1)
+        ranked = _rerank_fused(
+            query,
+            ranked,
+            cache_dir,
+            extra=extra,
+            seed_pos=anchor_pos + 1,
+            reranker_model=reranker_model,
+        )
     out = ranked[:top_k]
     for item in out:
         item["fusion_score"] = round(item.get("_rrf", 0.0), 6)

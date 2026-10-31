@@ -7,7 +7,6 @@
 """
 from __future__ import annotations
 
-import re
 import sys
 from pathlib import Path
 
@@ -18,10 +17,17 @@ import yaml
 
 from stock_kb import db, search
 from stock_kb.config import load_config
+from stock_kb.eval_runner import fold_fact_text
 
 
 def norm_text(s: str) -> str:
-    return re.sub(r"[\s,，]", "", s or "")
+    """与评测判定用同一套归一化（去掉空白、千分位、全角空格、╱）。
+
+    历史上这里自己写了 `re.sub(r"[\\s,，]", "", s)`，与 `fold_fact_text`
+    差在全角空格和 ╱ 上——短语含这两类字符时，工具会报「短语不在 GT 页」而
+    评测认为命中。两套归一化必须只有一套。
+    """
+    return fold_fact_text(s)
 
 
 def main() -> None:

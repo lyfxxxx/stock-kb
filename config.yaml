@@ -38,6 +38,10 @@ embedding:
   # bge-reranker-base（权重自 ModelScope 补齐）。重排名次与融合名次再做 RRF，不整序替换；
   # 已过门禁验收（G3 0.60、其余门槛不回退）后默认开。bge-m3+重排实测 0.70，换默认待 eval-embed 判 better
   rerank: true
+  # 交叉编码器重排模型。换更强的重排器只改这一行（模型需先下载到 models/）。
+  # 2026-10-31 试过 BAAI/bge-reranker-v2-m3：freeze semantic 0.60→0.50、耗时 96→242 秒，
+  # 更差，已回滚。见 eval/EVAL_SYSTEM.md §5.1 与 docs/process-log.md 第 64 条。
+  reranker_model: "BAAI/bge-reranker-base"
 
 mcp:
   host: "127.0.0.1"

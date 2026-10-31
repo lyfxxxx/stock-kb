@@ -43,6 +43,8 @@ flowchart TB
 
 `audit_notes.py` 另检手写试点笔记：0 项失败、净利走归母。它进 `python tools/run_eval_regression.py`，不单独占一行门槛数字。
 
+> **2026-10-30 扩项**：G1–G11 之外新增六类门（融合保留率、短查询短路一致性、结构化 parse/page/source、hybrid keyword Neg@5、year_filter empty、生成层三项），并把 `audit-report` 全跳过改记 `PASS (audit unverified)`。权威表与实测见 [`EVAL_SYSTEM.md`](EVAL_SYSTEM.md) §5；本表 G1–G11 的「最近实测」列停留在 2026-08-30，不要再引用。同日的查询意图分派把 keyword 与融合保留率都修到 1.00（见 `EVAL_SYSTEM.md` §4），**当前唯一红项是 G3（hybrid semantic 0.60）**。
+
 ### 1.1 三个目标分别看哪些门
 
 | 目标 | 已经能交差的门 | 还挡着批量雪球稿的缺口 |
@@ -61,13 +63,15 @@ G1–G11 全绿，只说明「科目数字能回到文件+页、短术语能搜�
 
 ### Embedding-change measurement（换 embedding 模型）
 
-主指标是 **vector@5 / vector@50 分桶**（top5 / 6–50 / miss），命令是 `python -m stock_kb eval-embed`。套件是 44 道会长句（freeze semantic 20 + freeze 无三表 cross 6 + diag semantic 8 + diag cross 10）；问句归一化后短于 6 字的排除。
+主指标是 **vector@5 / vector@50 分桶**（top5 / 6–50 / miss），命令是 `python -m stock_kb eval-embed`。套件是 44 道会长句（freeze semantic 20 + freeze 无报表行项目 cross 6 + diag semantic 8 + diag cross 10）；问句归一化后短于 6 字的排除。
 
 不用 FTS keyword 当选模分数：keyword 评测会剥公司名，hybrid 对短于 6 字的查询短路回 FTS，测不到向量。
 
 判定标签见 [`EVAL_SYSTEM.md`](EVAL_SYSTEM.md) §5.1：只有 `better`（Recall@50 的 Wilson 区间与基线分开且更高）才考虑改 `config.yaml` 的 `embedding.model`。`indistinguishable` / `lean_better` / `better_at_5_only` 不够。换模落地顺序：`eval-embed` 得 `better` → `python -m stock_kb eval --engine hybrid --model <候选> --split freeze` 过 G3/G4 → `python tools/run_eval_regression.py`。
 
-当前默认模型 `BAAI/bge-small-zh-v1.5` 在该套件上：Recall@5 = 0.159，Recall@50 = 0.364，miss = 28/44。这是诊断数，不进 G1–G11。
+当前默认模型 `BAAI/bge-small-zh-v1.5` 在该套件上（2026-10-30 复测，n=54）：Recall@5 = 0.167，Recall@50 = 0.370，miss = 34/54；`BAAI/bge-m3` 为 0.241 / 0.481 / 28，判 `lean_better` 不换。这是诊断数，不进 G1–G11。
+
+> **2026-10-30 换模否决**：m3 的 vector@50 从 0.370 涨到 0.481，四项分桶指标全面变好，但 Wilson 区间仍重叠，按规则不换。补跑 freeze 看净效果：hybrid semantic 0.60 → 0.70，但 hybrid keyword **1.00 → 0.909**，total 不变、耗时 +5 秒。拿一个已绿的门换一个仍不达标的门，净亏，因此默认模型保持不变。见 `docs/process-log.md` 第 62 条。
 
 ### Skill-change measurement（改 skill / 生成笔记）
 
@@ -86,7 +90,7 @@ G1–G11 全绿，只说明「科目数字能回到文件+页、短术语能搜�
 
 入库新报告、新公司、或重解析之后：
 
-1. `python -m stock_kb stats --json`：报告数 / 页数 / 三表行 / 指标是否按预期增加；未改解析器时旧公司数字不应无故下降。
+1. `python -m stock_kb stats --json`：报告数 / 页数 / 报表行项目 / 指标是否按预期增加；未改解析器时旧公司数字不应无故下降。
 2. `python tools/run_eval_regression.py`：对照 [`eval/regression_baseline.json`](regression_baseline.json) 打印每题 lost / gained。翻题默认只打印，不单独当失败。
 3. 问句带新年份时看 G10；库外实体仍须 G7/G8 empty_rate。
 
