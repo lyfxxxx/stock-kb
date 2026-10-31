@@ -17,6 +17,17 @@ analysis-notes/
 *.log
 *.pid
 
+# SQLite 运行时（WAL 模式下打开 demo 库会生成）
+*.db-wal
+*.db-shm
+*.db-journal
+
+# 覆盖率与密钥，防误提交
+.coverage
+htmlcov/
+*.pem
+*.key
+
 # 本地环境
 .env
 .env.*
