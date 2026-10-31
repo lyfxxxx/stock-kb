@@ -141,7 +141,7 @@ flowchart LR
 | intfloat/multilingual-e5-small | 约 230 MB | 100+ 语言、支持跨语言检索、体积小、MIT 许可 | 中文单项不如中文专用模型；512 token 上限 | 多语言小候选 |
 | **Alibaba-NLP/gte-multilingual-base** | 305M / fp32 约 1.2GB，ONNX int8 约 324MB | 100+ 语言、8192 token、中英跨语言检索强 | 比 100MB 级模型慢，但 NAS 可接受 | 多语言中量级首选候选 |
 | Qwen/Qwen3-Embedding-0.6B | 0.6B / 约 1.2GB（fp16），可用 GGUF/ONNX 压缩 | MTEB 多语言榜前列、Apache-2.0、32K 上下文、中英检索强 | 比 100MB 级模型慢；NAS 上属「可跑但偏重」档 | 榜单前列小模型候选 |
-| BGE-M3 | 约 2 GB（0.57B） | 100+ 语言、8K 长文本、跨语言检索质量高 | NAS 8GB 内存偏紧；本机 4070 Ti SUPER 跑没问题 | 本机对比候选 |
+| BGE-M3 | 约 2 GB（0.57B） | 100+ 语言、8K 长文本、跨语言检索质量高 | NAS 8GB 内存偏紧；有 GPU 的开发机跑没问题 | 本机对比候选 |
 | OpenAI text-embedding-3-small | API | 质量好、省本地资源 | 需要联网+API Key+按量付费；财报文本出机器 | 不选（隐私/成本） |
 
 **增量策略**：manifest 记录文件哈希，只有新增/变更文件才重新解析和嵌入，不会全量重跑。

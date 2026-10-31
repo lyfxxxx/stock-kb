@@ -26,7 +26,7 @@ STOCK_KB_CONFIG=demo/config.demo.yaml python -m stock_kb eval
 pip install -e ".[mcp,ml]"
 ```
 
-GPU 嵌入（推荐，本机 4070 Ti SUPER）：
+GPU 嵌入（推荐，需 CUDA）：
 
 ```powershell
 pip install torch --index-url https://download.pytorch.org/whl/cu124
