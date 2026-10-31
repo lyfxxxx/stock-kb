@@ -1,0 +1,48 @@
+# demo 专用配置：只用 demo 小库，不碰 NAS、不需要原始 PDF。
+#
+#   STOCK_KB_CONFIG=demo/config.demo.yaml python -m stock_kb stats --json
+#   STOCK_KB_CONFIG=demo/config.demo.yaml python -m stock_kb search "翻台率" --top-k 3
+#   STOCK_KB_CONFIG=demo/config.demo.yaml python -m stock_kb eval
+#
+# 相对路径都相对本文件所在目录（demo/）。
+
+nas:
+  root: ""
+  companies:
+    - "海底捞"
+    - "百胜中国"
+  read_only: true
+  exclude_dirs: []
+
+data_dir: "runtime"
+db_path: "demo_stock_kb.db"
+models_dir: "../models"
+
+ocr:
+  enabled: false
+  langs: "chi_sim+eng"
+  min_chars: 80
+
+# demo 库不含向量索引。想跑 hybrid：
+#   python -m stock_kb models download --model BAAI/bge-small-zh-v1.5
+#   STOCK_KB_CONFIG=demo/config.demo.yaml python -m stock_kb index --model BAAI/bge-small-zh-v1.5
+embedding:
+  model: "BAAI/bge-small-zh-v1.5"
+  device: "cpu"
+  backend: "auto"
+  chunk_size: 800
+  rerank: false
+  reranker_model: "BAAI/bge-reranker-base"
+
+mcp:
+  host: "127.0.0.1"
+  port: 8931
+
+eval:
+  questions: "questions_demo.yaml"
+  top_k: 5
+
+collect:
+  user_agent: "stock-kb demo"
+  raw_dir: "runtime/raw"
+  meta_dir: "runtime/meta"

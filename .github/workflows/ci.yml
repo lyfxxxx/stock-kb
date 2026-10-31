@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # 只装运行依赖，不装 gpu/torch（单测不碰 embedding 与重排）。
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[mcp]" pytest
+
+      - name: Syntax check
+        run: python -m compileall -q stock_kb tools
+
+      - name: Unit tests
+        run: python -m pytest tests/ -q
+
+      # 回归门禁需要本地库（data/stock_kb.db 不入库），CI 里跑不了；
+      # 这里只校验门禁常量与覆盖表没被写坏。
+      - name: Gate constants sanity
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, "tools")
+          import run_eval_regression as r
+          assert r.FTS_MIN["keyword.recall_at_k"] >= 0.75
+          assert r.HYBRID_MIN["semantic.recall_at_k"] >= 0.85
+          assert r.FUSION_MIN_PCT >= 0.85
+          assert r.GEN_NUMBER_ACCURACY_MIN > 0
+          # 每个已设门的 key 都必须在 SKIPPED 之外登记清楚
+          assert "retrieval.total.recall_at_k" in r.SKIPPED_METRICS
+          from stock_kb.vector import INTENT_PROFILE
+          for name, prof in INTENT_PROFILE.items():
+              assert set(prof) == {"fts", "vec", "rerank"}, name
+          print("gate constants ok")
+          PY

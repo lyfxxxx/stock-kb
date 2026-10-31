@@ -5,6 +5,19 @@ Codex / Hermes Agent，配合 `stock-note` skill 生成股票分析笔记。
 
 三层怎么转换、每层怎么评测、海底捞 2024 年营业收入怎么走完全程，见 [docs/report-system.md](docs/report-system.md)。零基础说明仍在 [docs/knowledge-base-rag-eval-tutorial.md](docs/knowledge-base-rag-eval-tutorial.md)。
 
+## 快速开始（不用 NAS）
+
+仓库自带一个 8 份文档的 demo 库（[`demo/`](demo/README.md)）：1,016 页页文本、1,985 条报表行项目、19 道题，clone 下来就能查数和跑评测，不需要 NAS、不需要原始 PDF。
+
+```bash
+pip install -e ".[mcp]"
+STOCK_KB_CONFIG=demo/config.demo.yaml python -m stock_kb stats --json
+STOCK_KB_CONFIG=demo/config.demo.yaml python -m stock_kb search "翻台率" --top-k 5
+STOCK_KB_CONFIG=demo/config.demo.yaml python -m stock_kb eval
+```
+
+想跑混合检索（hybrid）需要再下模型、建索引，两步命令见 [`demo/README.md`](demo/README.md)。完整库（566 份文档）需要自己配 `nas.root` 后 `scan`。
+
 ## 安装
 
 在仓库根目录：
@@ -143,7 +156,7 @@ python -m stock_kb quote --company 海底捞 --json   # 最新价/市值/TTM PE�
 # eval/data_gaps.md        （报告数据面缺口诊断清单：根因/修复/待办）
 # eval/EVAL_PLAN.md        （过程中改掉的问题）
 
-# 三表行项目（科目数字；不要先全文搜；--year 默认当年年报正文）
+# 报表行项目（科目数字；不要先全文搜；--year 默认当年年报正文）
 python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --json
 python -m stock_kb statements --company 海底捞 --keyword 已付股息 --year 2024 --include-comparatives --json
 
@@ -191,5 +204,5 @@ stock-kb/
 
 - NAS 只读访问；沙箱内访问共享需要提权；
 - 港股/繁体年报在入库时已归一化为简体，简体关键词可直接检索；
-- 三表解析按「报表页标题 + 文本行数字」方式提取，跨页/续表自动拼接；
+- 报表行项目解析按「报表页标题 + 文本行数字」方式提取，跨页/续表自动拼接；
 - 详细设计与选型见 [PLAN.md](PLAN.md)。

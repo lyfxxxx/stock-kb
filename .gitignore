@@ -31,3 +31,10 @@ eval/reports/visual/
 # 固定名对照文件（diag_retrieval*.json）被文档引用，保留跟踪
 eval/reports/*_20[0-9][0-9][0-9][0-9][0-9][0-9]_*.md
 eval/reports/*_20[0-9][0-9][0-9][0-9][0-9][0-9]_*.json
+
+# demo 运行时产物（库文件本身要提交，报告与临时数据不提交）
+demo/eval/
+demo/runtime/
+
+# WorkBuddy 本地工作记忆，不入库
+.workbuddy/
