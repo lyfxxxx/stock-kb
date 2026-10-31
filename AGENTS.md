@@ -19,6 +19,7 @@ scan（NAS 与已有 raw_dir）→ stats 看缺口 → stock-collect / fetch 只
 
 - Windows 11 + Python 3.12.5（`pyproject.toml` 要求 `>=3.11`）。
 - 开发安装：`pip install -e ".[mcp,ml]"`；GPU 嵌入用 `pip install -e ".[gpu]"`（本机 4070 Ti SUPER）。
+- **本机专属配置走 `config.local.yaml`**：仓库里的 `config.yaml` 只放占位符（`nas.root: '\\NAS-HOST\share\财报&研报'`）。本机真实路径写到同目录的 `config.local.yaml`（`*.local.yaml` 已 gitignore），`load_config()` 会按 key 深度合并这一层。换机器只改本地文件，**不要把内网主机名、`C:\Users\<name>`、`D:\workspace\...` 写回任何入库文件**。
 - **本项目已纳入 Git 版本管理**（2026-08-15 初始化并完成首次提交；远端：`https://github.com/lyfxxxx/stock-kb`，私有仓库）。`data/`、`models/`、日志与 pid 由 `.gitignore` 排除、不入库；`data/stock_kb.db` 仍不属于源码，破坏性操作前先备份。
 - 嵌入模型缓存在 `models/`，索引、查询全程离线；`models/`、`data/` 属于数据，不要当源码修改。
 - 语言与文档统一用简体中文；读者用词以 `docs/glossary.md` 为准，新概念先补术语库再写正文。代码注释/标识符现状为中英混合，新代码跟随所在模块风格。

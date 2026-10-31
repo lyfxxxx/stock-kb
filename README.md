@@ -59,6 +59,16 @@ python -m stock_kb models download --model BAAI/bge-m3 --mirror https://hf-mirro
 - `collect.raw_dir`：网络下载原文（默认 `data/raw`；`scan` 只读）
 - `collect.meta_dir`：出处 JSON（默认 `data/meta/{origin}/{公司}/{相对路径}.source.json`）
 
+仓库里的 `config.yaml` 只写占位符（如 `nas.root: '\\NAS-HOST\share\财报&研报'`）。本机真实路径写到同目录的 `config.local.yaml`：
+
+```yaml
+# config.local.yaml —— 已 gitignore，不会入库
+nas:
+  root: '\\你的NAS\共享目录'
+```
+
+`load_config()` 会把 `config.local.yaml` 深度合并到 `config.yaml` 上，所以换机器只改这一个文件，不需要动仓库里的配置。
+
 ## 运行顺序
 
 `data/` 和 `models/` 不入库。公司目录（`nas.root` 与 `collect.raw_dir`）都不存在、也没有任何已扫描文件时，`scan` 退出码为 2。已有文件但字节和解析版本都没变、因而被跳过时，退出码仍为 0。冻结回归测试 `python tools/run_eval_regression.py` 只在维护者本机、库里已经有试点数据时跑，不是别人安装后的完成条件。
