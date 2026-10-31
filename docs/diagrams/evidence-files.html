@@ -4840,7 +4840,7 @@
       </div>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"filing","label":"财报与招股","focus":["ingest","f_kind","f_page","f_stmt","elect"],"note":"年报、中报、招股写成页后，再从报表页抽出三表行。"},{"id":"research-call","label":"研报与电话会","focus":["ingest","r_kind","t_kind","r_page","t_page","fidelity"],"note":"这两类通常只成页、不抽三表。电话会关键词优先于研报。"},{"id":"catalog","label":"出处、当前使用文档与验收","focus":["ingest","elect","fidelity"],"note":"scan 给 NAS 与 collect 都写出处 JSON。目录再选出当前使用文档。"}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"filing","label":"财报与招股","focus":["ingest","f_kind","f_page","f_stmt","elect"],"note":"年报、中报、招股写成页后，再从报表页抽出报表行项目。"},{"id":"research-call","label":"研报与电话会","focus":["ingest","r_kind","t_kind","r_page","t_page","fidelity"],"note":"这两类通常只成页、不抽报表行项目。电话会关键词优先于研报。"},{"id":"catalog","label":"出处、当前使用文档与验收","focus":["ingest","elect","fidelity"],"note":"scan 给 NAS 与 collect 都写出处 JSON。目录再选出当前使用文档。"}]</script>
 
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
@@ -5004,8 +5004,8 @@
           <text data-detail="context" x="430" y="131" class="t-muted" font-size="7.7" text-anchor="middle">简体检索，原文引用</text>
         </g>
 
-        <g id="node-r_page" data-node-id="r_page" data-node-label="只成页" tabindex="0" role="button" aria-label="Focus 只成页, 不抽三表, 研报 › 成页与抽出" aria-pressed="false" data-node-kind="database" data-node-sublabel="不抽三表" data-node-context="研报 › 成页与抽出">
-          <title>只成页 · 不抽三表 · 研报 › 成页与抽出</title>
+        <g id="node-r_page" data-node-id="r_page" data-node-label="只成页" tabindex="0" role="button" aria-label="Focus 只成页, 不抽报表行项目, 研报 › 成页与抽出" aria-pressed="false" data-node-kind="database" data-node-sublabel="不抽报表行项目" data-node-context="研报 › 成页与抽出">
+          <title>只成页 · 不抽报表行项目 · 研报 › 成页与抽出</title>
           <rect x="384" y="217" width="92" height="52" rx="6" class="c-mask"/>
           <rect x="384" y="217" width="92" height="52" rx="6" class="c-database" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(390 223) scale(0.6875)">
@@ -5013,7 +5013,7 @@
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
           <text data-detail-anchor x="430" y="238" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">只成页</text>
-          <text data-detail="context" x="430" y="255" class="t-muted" font-size="8" text-anchor="middle">不抽三表</text>
+          <text data-detail="context" x="430" y="255" class="t-muted" font-size="8" text-anchor="middle">不抽报表行项目</text>
         </g>
 
         <g id="node-t_page" data-node-id="t_page" data-node-label="整篇成页" tabindex="0" role="button" aria-label="Focus 整篇成页, 保留说话人, 电话会 › 成页与抽出" aria-pressed="false" data-node-kind="database" data-node-sublabel="保留说话人" data-node-context="电话会 › 成页与抽出">
@@ -5028,20 +5028,20 @@
           <text data-detail="context" x="430" y="379" class="t-muted" font-size="8" text-anchor="middle">保留说话人</text>
         </g>
 
-        <g id="node-f_stmt" data-node-id="f_stmt" data-node-label="抽出三表" tabindex="0" role="button" aria-label="Focus 抽出三表, 数字保持原单位, 财报与招股 › 目录与验收" aria-pressed="false" data-node-kind="database" data-node-sublabel="数字保持原单位" data-node-context="财报与招股 › 目录与验收">
-          <title>抽出三表 · 数字保持原单位 · 财报与招股 › 目录与验收</title>
+        <g id="node-f_stmt" data-node-id="f_stmt" data-node-label="抽出报表行项目" tabindex="0" role="button" aria-label="Focus 抽出报表行项目, 数字保持原单位, 财报与招股 › 目录与验收" aria-pressed="false" data-node-kind="database" data-node-sublabel="数字保持原单位" data-node-context="财报与招股 › 目录与验收">
+          <title>抽出报表行项目 · 数字保持原单位 · 财报与招股 › 目录与验收</title>
           <rect x="579" y="93" width="92" height="52" rx="6" class="c-mask"/>
           <rect x="579" y="93" width="92" height="52" rx="6" class="c-database" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(585 99) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-detail-anchor x="625" y="114" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">抽出三表</text>
+          <text data-detail-anchor x="625" y="114" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">抽出报表行项目</text>
           <text data-detail="context" x="625" y="131" class="t-muted" font-size="8" text-anchor="middle">数字保持原单位</text>
         </g>
 
-        <g id="node-elect" data-node-id="elect" data-node-label="当前使用文档" tabindex="0" role="button" aria-label="Focus 当前使用文档, 三表题 29/29, 目录与验收 › 目录与验收" aria-pressed="false" data-node-kind="security" data-node-sublabel="三表题 29/29" data-node-tag="卡住回归测试" data-node-context="目录与验收 › 目录与验收">
-          <title>当前使用文档 · 三表题 29/29 · 目录与验收 › 目录与验收 · 卡住回归测试</title>
+        <g id="node-elect" data-node-id="elect" data-node-label="当前使用文档" tabindex="0" role="button" aria-label="Focus 当前使用文档, 报表行项目 29/29, 目录与验收 › 目录与验收" aria-pressed="false" data-node-kind="security" data-node-sublabel="报表行项目 29/29" data-node-tag="卡住回归测试" data-node-context="目录与验收 › 目录与验收">
+          <title>当前使用文档 · 报表行项目 29/29 · 目录与验收 › 目录与验收 · 卡住回归测试</title>
           <rect x="579" y="457" width="92" height="68" rx="6" class="c-mask"/>
           <rect x="579" y="457" width="92" height="68" rx="6" class="c-security" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(585 463) scale(0.6875)">
@@ -5049,7 +5049,7 @@
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
           <text data-detail-anchor x="625" y="478" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">当前使用文档</text>
-          <text data-detail="context" x="625" y="495" class="t-muted" font-size="8" text-anchor="middle">三表题 29/29</text>
+          <text data-detail="context" x="625" y="495" class="t-muted" font-size="8" text-anchor="middle">报表行项目 29/29</text>
         <text data-detail="fine" x="625" y="513" class="t-security" font-size="7" text-anchor="middle">卡住回归测试</text>
         </g>
 
@@ -5285,7 +5285,7 @@
           <h3>三类文件</h3>
         </div>
         <ul>
-          <li>&bull; 财报和招股：页 + 三表，科目数字走这里</li>
+          <li>&bull; 财报和招股：页 + 报表行项目，科目数字走这里</li>
           <li>&bull; 研报和电话会：通常只成页，靠检索引用</li>
         </ul>
       </div>
@@ -5307,7 +5307,7 @@
           <h3>验收</h3>
         </div>
         <ul>
-          <li>&bull; 三表题核对原值、页码和来源文件</li>
+          <li>&bull; 报表行项目核对原值、页码和来源文件</li>
           <li>&bull; 页保真抽检原文；空清单不算通过</li>
         </ul>
       </div>

@@ -4840,7 +4840,7 @@
       </div>
     </div>
 
-    <script id="archify-guided-views-data" type="application/json">[{"id":"ingest","label":"从原文到产物","focus":["nas","web","fetch","scan","catalog","pages","stmts"],"note":"先扫 NAS，stats 看缺口；只把缺失直链 fetch 到 data/raw，再扫一次。"},{"id":"gates","label":"验收指标体系","focus":["pages","stmts","live","fidelity","structured","coverage"],"note":"页保真抽检原文；三表题 29/29 卡住回归测试；覆盖矩阵只展示，不卡住回归测试。"},{"id":"handoff","label":"交给知识库层","focus":["live","pages","stmts","kb"],"note":"默认检索只读当前使用文档。页文本供全文检索，三表行供科目。"}]</script>
+    <script id="archify-guided-views-data" type="application/json">[{"id":"ingest","label":"从原文到产物","focus":["nas","web","fetch","scan","catalog","pages","stmts"],"note":"先扫 NAS，stats 看缺口；只把缺失直链 fetch 到 data/raw，再扫一次。"},{"id":"gates","label":"验收指标体系","focus":["pages","stmts","live","fidelity","structured","coverage"],"note":"页保真抽检原文；报表行项目 29/29 卡住回归测试；覆盖矩阵只展示，不卡住回归测试。"},{"id":"handoff","label":"交给知识库层","focus":["live","pages","stmts","kb"],"note":"默认检索只读当前使用文档。页文本供全文检索，报表行项目供科目。"}]</script>
 
     <div class="guided-views no-print" id="guided-views" hidden aria-label="Guided diagram views">
       <button id="guided-view-prev" type="button" aria-label="Previous guided view" title="Previous guided view ([)">&#8592;</button>
@@ -4930,7 +4930,7 @@
         <path data-edge-from="fetch" data-edge-to="scan" data-edge-label="data/raw" data-edge-key="2" data-edge-id="fetch-scan" data-composition-points="315,356;315,356;315,186;315,186" d="M 315 356 L 315 356 L 315 186 L 315 186" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="scan" data-edge-to="catalog" data-edge-label="目录与出处" data-edge-key="3" data-edge-id="scan-catalog" data-composition-points="371,157;474,157" d="M 371 157 L 474 157" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
         <path data-edge-from="scan" data-edge-to="pages" data-edge-label="页" data-edge-key="4" data-edge-id="scan-pages" data-composition-points="371,150;422.5,150;422.5,271;474,271" d="M 371 150 L 422.5 150 L 422.5 271 L 474 271" class="a-emphasis" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="scan" data-edge-to="stmts" data-edge-label="三表" data-edge-key="5" data-edge-id="scan-stmts" data-composition-points="371,164;422.5,164;422.5,385;474,385" d="M 371 164 L 422.5 164 L 422.5 385 L 474 385" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="scan" data-edge-to="stmts" data-edge-label="行项目" data-edge-key="5" data-edge-id="scan-stmts" data-composition-points="371,164;422.5,164;422.5,385;474,385" d="M 371 164 L 422.5 164 L 422.5 385 L 474 385" class="a-default" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <path data-edge-from="catalog" data-edge-to="live" data-edge-label="版本选举" data-edge-key="6" data-edge-id="catalog-live" data-composition-points="586,157;689,157" d="M 586 157 L 689 157" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
         <path data-edge-from="pages" data-edge-to="fidelity" data-edge-label="原文句子" data-edge-key="7" data-edge-id="pages-fidelity" data-composition-points="586,271;689,271" d="M 586 271 L 689 271" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
         <path data-edge-from="stmts" data-edge-to="structured" data-edge-label="科目原值" data-edge-key="8" data-edge-id="stmts-structured" data-composition-points="586,385;689,385" d="M 586 385 L 689 385" class="a-security" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
@@ -5013,15 +5013,15 @@
         <text data-detail="fine" x="530" y="289" class="t-database" font-size="7" text-anchor="middle">pages</text>
         </g>
 
-        <g id="node-stmts" data-node-id="stmts" data-node-label="三表行" tabindex="0" role="button" aria-label="Focus 三表行, 数字保持原单位, 03 / 产物" aria-pressed="false" data-node-kind="database" data-node-sublabel="数字保持原单位" data-node-tag="statements" data-node-context="03 / 产物">
-          <title>三表行 · 数字保持原单位 · 03 / 产物 · statements</title>
+        <g id="node-stmts" data-node-id="stmts" data-node-label="报表行项目" tabindex="0" role="button" aria-label="Focus 报表行项目, 数字保持原单位, 03 / 产物" aria-pressed="false" data-node-kind="database" data-node-sublabel="数字保持原单位" data-node-tag="statements" data-node-context="03 / 产物">
+          <title>报表行项目 · 数字保持原单位 · 03 / 产物 · statements</title>
           <rect x="474" y="356" width="112" height="58" rx="6" class="c-mask"/>
           <rect x="474" y="356" width="112" height="58" rx="6" class="c-database" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(480 362) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-detail-anchor x="530" y="377" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">三表行</text>
+          <text data-detail-anchor x="530" y="377" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">报表行项目</text>
           <text data-detail="context" x="530" y="393" class="t-muted" font-size="7" text-anchor="middle">数字保持原单位</text>
         <text data-detail="fine" x="530" y="403" class="t-database" font-size="7" text-anchor="middle">statements</text>
         </g>
@@ -5052,15 +5052,15 @@
         <text data-detail="fine" x="745" y="289" class="t-security" font-size="7" text-anchor="middle">fidelity</text>
         </g>
 
-        <g id="node-structured" data-node-id="structured" data-node-label="三表评测" tabindex="0" role="button" aria-label="Focus 三表评测, 值 / 页 / 来源, 04 / 验收" aria-pressed="false" data-node-kind="security" data-node-sublabel="值 / 页 / 来源" data-node-tag="29/29" data-node-context="04 / 验收">
-          <title>三表评测 · 值 / 页 / 来源 · 04 / 验收 · 29/29</title>
+        <g id="node-structured" data-node-id="structured" data-node-label="报表行项目评测" tabindex="0" role="button" aria-label="Focus 报表行项目评测, 值 / 页 / 来源, 04 / 验收" aria-pressed="false" data-node-kind="security" data-node-sublabel="值 / 页 / 来源" data-node-tag="29/29" data-node-context="04 / 验收">
+          <title>报表行项目评测 · 值 / 页 / 来源 · 04 / 验收 · 29/29</title>
           <rect x="689" y="356" width="112" height="58" rx="6" class="c-mask"/>
           <rect x="689" y="356" width="112" height="58" rx="6" class="c-security" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(695 362) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
-          <text data-detail-anchor x="745" y="377" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">三表评测</text>
+          <text data-detail-anchor x="745" y="377" class="t-primary" font-size="10" font-weight="600" text-anchor="middle">报表行项目评测</text>
           <text data-detail="context" x="745" y="393" class="t-muted" font-size="7" text-anchor="middle">值 / 页 / 来源</text>
         <text data-detail="fine" x="745" y="403" class="t-security" font-size="7" text-anchor="middle">29/29</text>
         </g>
@@ -5113,9 +5113,9 @@
           <rect x="433.5" y="189.5" width="34" height="16" rx="4" class="c-mask"/>
           <text x="450.5" y="200.5" class="t-backend" font-size="8" text-anchor="middle">页</text>
         </g>
-        <g data-detail="context" data-edge-from="scan" data-edge-to="stmts" data-edge-label="三表" data-edge-key="5" data-edge-id="scan-stmts">
+        <g data-detail="context" data-edge-from="scan" data-edge-to="stmts" data-edge-label="行项目" data-edge-key="5" data-edge-id="scan-stmts">
           <rect x="433.5" y="231.5" width="34" height="16" rx="4" class="c-mask"/>
-          <text x="450.5" y="242.5" class="t-muted" font-size="8" text-anchor="middle">三表</text>
+          <text x="450.5" y="242.5" class="t-muted" font-size="8" text-anchor="middle">行项目</text>
         </g>
         <g data-detail="context" data-edge-from="catalog" data-edge-to="live" data-edge-label="版本选举" data-edge-key="6" data-edge-id="catalog-live">
           <rect x="611.9" y="136" width="51.2" height="27" rx="4" class="c-mask"/>
@@ -5368,7 +5368,7 @@
         </div>
         <ul>
           <li>&bull; 目录登记身份、出处和当前使用文档</li>
-          <li>&bull; 页留简体与原文；财报再抽出三表行</li>
+          <li>&bull; 页留简体与原文；财报再抽出报表行项目</li>
         </ul>
       </div>
 
@@ -5378,7 +5378,7 @@
           <h3>验收</h3>
         </div>
         <ul>
-          <li>&bull; 三表 29/29 卡住回归测试；页保真空清单不算通过</li>
+          <li>&bull; 报表行项目 29/29 卡住回归测试；页保真空清单不算通过</li>
           <li>&bull; 覆盖矩阵只展示，不卡住回归测试</li>
         </ul>
       </div>

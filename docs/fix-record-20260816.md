@@ -10,7 +10,7 @@
 | 问题 | 修复 | 涉及文件 |
 |---|---|---|
 | `replace_pages()` 删除页面时外键报错，`scan --rebuild` 无法重放 | 删页面前按 page→chunk→embedding_index→vec 顺序级联清理；页面与 FTS/bigram 同步重建 | `stock_kb/db.py` |
-| 三表页定位过宽，附注页/会计师报告续页被当成报表页 | 改为整行标题白名单 + 续页精确匹配；`Notes/APPENDIX/Financial Summary` 不再进入三表 | `stock_kb/parsers/pdf_parser.py` |
+| 报表页定位过宽，附注页/会计师报告续页被当成报表页 | 改为整行标题白名单 + 续页精确匹配；`Notes/APPENDIX/Financial Summary` 不再进入报表行项目 | `stock_kb/parsers/pdf_parser.py` |
 | 年份列从任意前 20 行提取，产生 2001/2006/2014/2015 等垃圾年份 | 只从含 2 个以上年份的表头行识别，并用 `report_year` 约束 | 同上 |
 | unit/currency 全为空，且 `rmb` 误匹配 `short-termbank` | 从报表头解析单位/币种并归一化（千元/百万元/百万美元 等），使用词边界匹配 | 同上 |
 | `indicators` 用 `sales` 误把 Company sales 当收入；期间不区分；旧值残留 | 指标绑定报表类型 + 优先级/负向词；按年度与期间选择最优候选；先删后插并记录来源 | `stock_kb/indicators.py` |
@@ -29,7 +29,7 @@
 | 向量表按维度命名，同维度模型会互相覆盖 | `embedding_index` 增加 `vec_table`；新索引表按模型名+哈希隔离；rebuild 只删当前模型 | `stock_kb/db.py`、`stock_kb/vector.py` |
 | 向量以 JSON 文本传参，候选少、公司过滤在召回后 | 直接传 float32 blob；过滤存在时扩大候选；增加 year/report_type/language 过滤 | `stock_kb/vector.py` |
 | 混合检索简单交错，向量补位效果差 | 短术语（<6 字符）保留 FTS 精确性；长语义问题使用 RRF 融合 | 同上 |
-| MCP 只暴露 FTS；引用不是原文；结构化无 report_id/source 定位 | `search_reports` 支持 fts/vector/hybrid 与过滤参数；`get_report_text` 返回 `content_orig`；`get_source_excerpt` 支持关键词居中；三表返回 `statement_id/report_id/locator` | `stock_kb/serve/mcp_server.py` |
+| MCP 只暴露 FTS；引用不是原文；结构化无 report_id/source 定位 | `search_reports` 支持 fts/vector/hybrid 与过滤参数；`get_report_text` 返回 `content_orig`；`get_source_excerpt` 支持关键词居中；报表行项目返回 `statement_id/report_id/locator` | `stock_kb/serve/mcp_server.py` |
 
 ### 1.3 分类与工程
 
@@ -56,7 +56,7 @@
 | 英文报告标为 zh | 17 | 0 |
 | 重复 SHA 文档（可检索） | 2 | 1 canonical + 1 标记重复 |
 
-> 指标数量下降是预期结果：删除了误提取的噪音行，且只写入有明确三表候选的年度指标。
+> 指标数量下降是预期结果：删除了误提取的噪音行，且只写入有明确报表行项目候选的年度指标。
 
 ## 3. 验证结果
 
