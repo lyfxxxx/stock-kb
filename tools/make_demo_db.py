@@ -14,7 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.stdout.reconfigure(encoding="utf-8")
@@ -60,21 +60,48 @@ def build(src_path: str, out_path: Path, docs: list[dict]) -> None:
     ids = [d["id"] for d in docs]
     marks = ",".join("?" * len(ids))
 
-    conn.execute("INSERT INTO companies SELECT * FROM src.companies")
-    conn.execute(f"INSERT INTO reports SELECT * FROM src.reports WHERE id IN ({marks})", ids)
-    conn.execute(f"INSERT INTO pages SELECT * FROM src.pages WHERE report_id IN ({marks})", ids)
-    conn.execute(
-        f"INSERT INTO statements SELECT * FROM src.statements WHERE report_id IN ({marks})", ids
-    )
-    conn.execute(
-        "INSERT INTO chunks SELECT * FROM src.chunks WHERE page_id IN (SELECT id FROM pages)"
-    )
-    conn.execute("INSERT INTO indicators SELECT * FROM src.indicators")
+    def copy(table: str, where: str = "", params: tuple = ()) -> None:
+        """按列名复制，不用 SELECT *。
+
+        主库经过多次 ALTER TABLE 迁移，列顺序与新建的空库不同（origin 在后加
+        的表里位置不一致），`INSERT ... SELECT *` 会整体错位——实测把
+        logical_key 写进了 supersedes_id。只复制两边都有的列。
+        """
+        dst_cols = [r[1] for r in conn.execute(f"PRAGMA table_info({table})")]
+        src_cols = {r[1] for r in conn.execute(f"PRAGMA src.table_info({table})")}
+        cols = [c for c in dst_cols if c in src_cols]
+        collist = ",".join(f'"{c}"' for c in cols)
+        conn.execute(f"INSERT INTO {table} ({collist}) SELECT {collist} FROM src.{table} {where}", params)
+
+    copy("companies")
+    copy("reports", f"WHERE id IN ({marks})", ids)
+    copy("pages", f"WHERE report_id IN ({marks})", ids)
+    copy("statements", f"WHERE report_id IN ({marks})", ids)
+    copy("chunks", "WHERE page_id IN (SELECT id FROM pages)")
+    copy("indicators")
     conn.execute(
         "INSERT INTO pages_fts(page_id, company, report_id, content) "
         "SELECT p.id, r.company, p.report_id, p.content FROM pages p "
         "JOIN reports r ON r.id = p.report_id"
     )
+    # 脱敏：reports.path 原本是 `\\NAS主机\共享\...` 或本机绝对路径，
+    # demo 库要入库，只留「公司/文种/文件名」，不暴露内网拓扑与本机目录。
+    # logical_key 的末段有时直接是完整路径（`公司|文种|\\NAS\...pdf`），同样处理。
+    for row in conn.execute("SELECT id, company, report_type, path, logical_key FROM reports").fetchall():
+        name = PureWindowsPath(str(row["path"] or "")).name or f'{row["id"]}.pdf'
+        conn.execute(
+            "UPDATE reports SET path=? WHERE id=?",
+            (f'{row["company"]}/{row["report_type"]}/{name}', row["id"]),
+        )
+        lk = row["logical_key"]
+        if lk and "|" in str(lk):
+            parts = [
+                PureWindowsPath(seg).name if ("\\" in seg or "/" in seg) else seg
+                for seg in str(lk).split("|")
+            ]
+            conn.execute(
+                "UPDATE reports SET logical_key=? WHERE id=?", ("|".join(parts), row["id"])
+            )
     conn.commit()
     conn.execute("DETACH DATABASE src")
     conn.execute("VACUUM")
