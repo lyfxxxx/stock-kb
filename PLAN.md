@@ -6,7 +6,7 @@
 
 ## 1. 目标
 
-把 NAS（`\\Dxp4800-1305\财报&研报`）里的财报与研报整理成一个**只读知识库**：
+把 NAS（`\\NAS-HOST\share\财报&研报`）里的财报与研报整理成一个**只读知识库**：
 
 - 任何支持 MCP 的 agent（Codex、Hermes Agent 等）都能查询公司报告、三大报表、财务指标和原文片段；
 - 通过一个可移植的 agent skill（`stock-note`）生成类似雪球《中国金茂笔记》风格的股票分析笔记；
@@ -161,7 +161,7 @@ flowchart LR
 
 1. **下载源**：以 Hugging Face 官方为主（`huggingface_hub` / `sentence-transformers`）；国内网络受限时自动切换 `hf-mirror.com` 或 ModelScope 镜像；
 2. **固定版本**：`models.yaml` 记录候选模型的 `model_id`、版本/commit、体积、许可证和 SHA-256，下载后校验，避免“今天能跑明天不能跑”；
-3. **存储位置**：本机放 `D:\workspace\stock-kb\models\`（与项目同目录，便于清理）；NAS Docker 用数据卷挂载 `models/`，迁移时直接复用，不重复下载；
+3. **存储位置**：本机放 `<repo>\models\`（与项目同目录，便于清理）；NAS Docker 用数据卷挂载 `models/`，迁移时直接复用，不重复下载；
 4. **下载方式**：提供 `stock-kb models download --all` 和 `--only <model>` 命令，支持断点续传与重试；评测时只加载当前要测的模型，不一次性全载入；
 5. **NAS 运行**：Docker 容器内优先用 ONNX int8 / GGUF 量化版本（如 gte-multilingual-base int8 约 324MB、Qwen3-Embedding-0.6B GGUF），模型文件持久化在 NAS 数据卷；
 6. **网络要求**：首次安装需联网下载候选模型（100MB–2GB 不等）；下载完成后索引、查询、评测均离线。
@@ -270,7 +270,7 @@ SQLite 主要表：
 
 ## 9. 笔记模板（确认版）
 
-输出：`D:\workspace\analysis-notes\<公司>\<日期>-<公司>-笔记.md`
+输出：`<notes>\<公司>\<日期>-<公司>-笔记.md`
 
 章节（参考《中国金茂笔记》，适配餐饮行业）：
 
@@ -294,13 +294,13 @@ SQLite 主要表：
 
 ### 阶段 0：项目骨架
 
-- 创建 `D:\workspace\stock-kb` Python 项目（pyproject、config.yaml、CLI）；
+- 创建 `<repo>` Python 项目（pyproject、config.yaml、CLI）；
 - 模块：`ingest / parse / normalize / index / serve / cli`；
 - 命令：`stock-kb scan`、`stock-kb search`、`stock-kb stats`、`stock-kb mcp`。
 
 ### 阶段 1：摄取与解析（试点）
 
-- 只读扫描 `\\Dxp4800-1305\财报&研报\海底捞` 和 `百胜中国`；
+- 只读扫描 `\\NAS-HOST\share\财报&研报\海底捞` 和 `百胜中国`；
 - 维护 manifest，支持手动扫描（默认）、可选定时扫描（默认关）；
 - 分类报告类型/语言/期间；PDF 提取文本+表格；无文本层页 OCR；XLS/HTML/MD 解析；
 - 产出：页级文本、三表行项目、研报预测摘要表（观点层）。
@@ -327,7 +327,7 @@ SQLite 主要表：
 
 ### 阶段 5：stock-note skill
 
-- 目录：`C:\Users\89462\.codex\skills\stock-note`；
+- 目录：`C:\Users\%USERNAME%\.codex\skills\stock-note`；
 - 自包含、可直接复制移植：SKILL.md + 模板 + 脚本 + README；
 - 不硬编码绝对路径，通过环境变量 `STOCK_KB_MCP_URL` 定位服务；
 - 实现「查数 → 组织 → 生成 → 自查引用」工作流。
@@ -463,9 +463,9 @@ SQLite 主要表：
 - MCP：只读工具（含 `route_query`），stdio + Streamable HTTP 双传输，HTTP 支持 Bearer token 鉴权；stdio 与 HTTP 均已端到端验证
 - 增量扫描：`scan --watch-interval 秒数` 开关，默认关闭
 - 模型下载：`models download` 支持 hf-mirror 镜像 + hf_transfer 多线程 + snapshot_download 断点续传；缓存完整后离线加载可用
-- Skill：`stock-note` 已复制到 `C:\Users\89462\.codex\skills\stock-note`，可整体移植
-- 试点笔记：`D:\workspace\analysis-notes\海底捞\2026-08-09-海底捞-笔记.md` 与
-  `D:\workspace\analysis-notes\百胜中国\2026-08-09-百胜中国-笔记.md`
+- Skill：`stock-note` 已复制到 `C:\Users\%USERNAME%\.codex\skills\stock-note`，可整体移植
+- 试点笔记：`<notes>\海底捞\2026-08-09-海底捞-笔记.md` 与
+  `<notes>\百胜中国\2026-08-09-百胜中国-笔记.md`
 - 笔记审计：`python tools/audit_notes.py` 已通过（两篇笔记关键数字与数据库交叉验证一致）
 - 版本管理：2026-08-15 初始化 Git 仓库并完成首次提交；`data/`、`models/`、日志与 pid 由 `.gitignore` 排除，不入库
 - GitHub 远端：`https://github.com/lyfxxxx/stock-kb`（私有仓库，2026-08-15 创建并完成首次推送，默认分支 master）

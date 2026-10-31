@@ -100,7 +100,7 @@ def test_remaining_gaps_include_required_blockers():
 
 def test_questions_section_includes_xueqiu_waf_and_three_plus():
     text = _read(CONTRACT)
-    assert "https://xueqiu.com/7305934056/407721579" in text
+    assert "https://xueqiu.com/{uid}/407721579" in text
     assert "WAF" in text or "Playwright" in text
     assert "安井食品扫描" in text
     assert "style-canon" in text

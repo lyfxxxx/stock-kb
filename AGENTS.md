@@ -161,7 +161,7 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 | `docs/process-log.md` | 历次踩坑记录与解法（现象/原因/解决/教训），改相关模块前必读；简历过程记录指定此文件 |
 | `docs/status/index.html` | 现状页：库怎么建、问句怎么查、门槛与实测、逐题判定、后续工作。完成工作时核对，有对应变动就改 |
 
-注意：`tools/*.py` 里多数脚本硬编码了 `D:\workspace\stock-kb\data\stock_kb.db`，是历史一次性脚本，**新代码不要模仿**。
+注意：`tools/*.py` 里多数脚本硬编码了 `<repo>\data\stock_kb.db`，是历史一次性脚本，**新代码不要模仿**。
 
 ## 5. 配置
 
@@ -171,7 +171,7 @@ python tools/test_mcp_http.py                       # 端到端测试（已内�
 
 - 相对路径一律相对 **配置文件所在目录** 解析；
 - 可用环境变量 `STOCK_KB_CONFIG` 指定其他配置文件；
-- 代码内必须通过 `load_config()` 取路径，禁止在 `stock_kb/` 包内硬编码 `D:\workspace\...`。
+- 代码内必须通过 `load_config()` 取路径，禁止在 `stock_kb/` 包内硬编码 `<repo>\...`。
 
 其他环境变量：
 

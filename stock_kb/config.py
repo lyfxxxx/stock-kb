@@ -9,10 +9,28 @@ import yaml
 DEFAULT_CONFIG = Path(__file__).resolve().parent.parent / "config.yaml"
 
 
+def _deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
+    """把 overlay 合进 base；嵌套 dict 逐层合并，其余类型直接覆盖。"""
+
+    for key, value in (overlay or {}).items():
+        if isinstance(value, dict) and isinstance(base.get(key), dict):
+            _deep_merge(base[key], value)
+        else:
+            base[key] = value
+    return base
+
+
 def load_config(path: str | Path | None = None) -> dict[str, Any]:
     p = Path(path) if path else Path(os.environ.get("STOCK_KB_CONFIG", DEFAULT_CONFIG))
     with open(p, "r", encoding="utf-8") as f:
         cfg = yaml.safe_load(f) or {}
+
+    # 本地覆盖：同目录下的 <配置名>.local.yaml 不入库，用来放 NAS 路径、内网地址
+    # 等只对本机有意义的值。仓库里的配置保持占位符，别人 clone 后不会读到你的环境。
+    local = p.with_suffix(".local.yaml")
+    if local.exists():
+        with open(local, "r", encoding="utf-8") as f:
+            _deep_merge(cfg, yaml.safe_load(f) or {})
 
     root = p.resolve().parent
     cfg["project_root"] = str(root)

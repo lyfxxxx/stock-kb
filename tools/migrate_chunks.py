@@ -1,10 +1,12 @@
 """迁移向量索引到分块模式：清空旧 page 级索引，重建 chunks 与 embedding_index 表。"""
 
 import sqlite3
+from pathlib import Path
 
 import sqlite_vec
 
-conn = sqlite3.connect(r"D:\workspace\stock-kb\data\stock_kb.db")
+DB = Path(__file__).resolve().parents[1] / "data" / "stock_kb.db"
+conn = sqlite3.connect(DB)
 conn.enable_load_extension(True)
 sqlite_vec.load(conn)
 conn.enable_load_extension(False)

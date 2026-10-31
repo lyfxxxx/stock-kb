@@ -114,9 +114,9 @@ G1–G11 全绿，只说明「科目数字能回到文件+页、短术语能搜�
 
 ## 4. 笔记风格杠（雪球样稿已读到）
 
-指定帖：https://xueqiu.com/7305934056/407721579 。无头 HTTP 被 Aliyun WAF 挡住；jina 停在雪球验证码；Wayback / Google 缓存无快照。2026-09-04 用 Playwright 真 Chrome 读到全文，整理在 [`eval/style-canon/xueqiu-407721579.md`](style-canon/xueqiu-407721579.md)。
+指定帖：https://xueqiu.com/{uid}/407721579 。无头 HTTP 被 Aliyun WAF 挡住；jina 停在雪球验证码；Wayback / Google 缓存无快照。2026-09-04 用 Playwright 真 Chrome 读到全文，整理在 [`eval/style-canon/xueqiu-407721579.md`](style-canon/xueqiu-407721579.md)。
 
-用户原链是《安井食品扫描》。同一专栏里「扫描」和「笔记」共用一套骨架；PLAN 里的《中国金茂笔记》也是这位作者（https://xueqiu.com/7305934056/403975353）。6 篇对照见 [`eval/style-canon/TEMPLATE.md`](style-canon/TEMPLATE.md)。
+用户原链是《安井食品扫描》。同一专栏里「扫描」和「笔记」共用一套骨架；PLAN 里的《中国金茂笔记》也是这位作者（https://xueqiu.com/{uid}/403975353）。6 篇对照见 [`eval/style-canon/TEMPLATE.md`](style-canon/TEMPLATE.md)。
 
 稳定顺序：股票标签 →（股东/激励）→ 利润表 →（分产品/地区）→ 资产负债（净现金写公式）→ 现金流与分红 →（行业/同行）→（看点）→ 总结用 PE × 派息率算股息率。没有开篇「一句话结论」；估值多半在总结里；风险可有可无。数字没有「文件 + 页码」。产品承诺仍要求可追溯，所以学结构、不学无出处。
 

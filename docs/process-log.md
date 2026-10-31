@@ -8,7 +8,7 @@
 
 ### 1. Codex 沙箱访问 NAS 共享被拒
 
-- 现象：`Test-Path \\Dxp4800-1305\财报&研报` 返回 True，但 `Get-ChildItem` 报 Access denied。
+- 现象：`Test-Path \\NAS-HOST\share\财报&研报` 返回 True，但 `Get-ChildItem` 报 Access denied。
 - 原因：沙箱文件系统限制，不是共享本身的问题。
 - 解决：读取共享的命令统一提权执行；全程只读，不写源目录。
 - 教训：涉及 NAS 的命令先 `Test-Path`，再提权；写操作永远只落在本地工作区。
@@ -484,7 +484,7 @@
 - `statements.unit/currency` 已回填；研报等单位未知项仍可能为空。
 - 两字查询 `pages_bigram_fts` 仍只作空结果兜底；LIKE 已改按词频排序。
 - 400 字分块已试过并回滚。跨语言（英文问中文页）未做；不要用整句语言 ID 分流。reranker / jina、US/HK 语义重复 canonical、Docker / Hermes、watch 真实新增文件：未做。
-- 雪球样稿 https://xueqiu.com/7305934056/407721579 ：无头 HTTP 被 WAF 挡住；Playwright 真浏览器可读。正文是《安井食品扫描》而非金茂笔记，见 `eval/style-canon/`。
+- 雪球样稿 https://xueqiu.com/{uid}/407721579 ：无头 HTTP 被 WAF 挡住；Playwright 真浏览器可读。正文是《安井食品扫描》而非金茂笔记，见 `eval/style-canon/`。
 
 ## 八、可复用经验清单
 

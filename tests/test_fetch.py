@@ -214,7 +214,7 @@ def test_origin_for_roots(tmp_path):
     both = {"nas": {"root": str(nas)}, "collect": {"raw_dir": str(nested)}}
     assert origin_for(both, nested_file) == "collect"
 
-    unc_root = r"\\Dxp4800-1305\财报&研报"
+    unc_root = r"\\NAS-HOST\share\财报&研报"
     unc_file = Path(unc_root) / "海底捞" / "2018年报.pdf"
     unc_cfg = {"nas": {"root": unc_root}, "collect": {"raw_dir": str(raw)}}
     assert origin_for(unc_cfg, unc_file) == "nas"

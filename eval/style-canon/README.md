@@ -1,8 +1,8 @@
 # 雪球样稿风格杠
 
-指定作者：modest_（https://xueqiu.com/7305934056），专栏 233 篇。多篇对照后的骨架见 [TEMPLATE.md](TEMPLATE.md)。
+指定作者：modest_（https://xueqiu.com/{uid}），专栏 233 篇。多篇对照后的骨架见 [TEMPLATE.md](TEMPLATE.md)。
 
-指定帖（用户原链）：https://xueqiu.com/7305934056/407721579
+指定帖（用户原链）：https://xueqiu.com/{uid}/407721579
 
 ## 怎么拿到的
 

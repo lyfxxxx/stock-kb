@@ -1,4 +1,4 @@
-"""抓取雪球用户 modest_（uid 7305934056）专栏的扫描/笔记全文，供风格归纳。
+"""抓取雪球用户 modest_（uid {uid}）专栏的扫描/笔记全文，供风格归纳。
 
 一次性运维脚本（不进回归）。用法：
     python tools/fetch_xueqiu_column.py --min-count 20 [--max-posts 30]
@@ -21,7 +21,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-USER_ID = "7305934056"
+USER_ID = "{uid}"
 BASE = "https://xueqiu.com"
 UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -116,7 +116,7 @@ def collect_links_dom(page, want: int) -> list[dict]:
         links = page.evaluate(
             """() => Array.from(document.querySelectorAll('a[href]'))
                 .map(a => ({href: a.getAttribute('href') || '', text: (a.innerText || '').trim()}))
-                .filter(x => new RegExp('^/7305934056/\\\\d+$').test(x.href))
+                .filter(x => new RegExp('^/{uid}/\\\\d+$').test(x.href))
             """
         )
         for x in links:
@@ -141,7 +141,7 @@ def collect_timeline(page, want: int) -> list[dict]:
         try:
             res = page.evaluate(
                 """async (pg) => {
-                    const r = await fetch(`/statuses/original/timeline.json?user_id=7305934056&page=${pg}&size=20`,
+                    const r = await fetch(`/statuses/original/timeline.json?user_id={uid}&page=${pg}&size=20`,
                         {headers: {'Accept': 'application/json'}});
                     const text = await r.text();
                     try { return {status: r.status, body: JSON.parse(text)}; }

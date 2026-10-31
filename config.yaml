@@ -1,5 +1,7 @@
 nas:
-  root: '\\Dxp4800-1305\财报&研报'
+  # 只读共享的 UNC 根。仓库里只放占位符；本机真实路径写到同目录的
+  # config.local.yaml（已 gitignore），加载时会自动覆盖这一层。
+  root: '\\NAS-HOST\share\财报&研报'
   companies:
     - "海底捞"
     - "百胜中国"
